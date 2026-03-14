@@ -63,10 +63,7 @@ async function main() {
     },
   });
 
-  // Wire stdio → HTTP → stdio
-  await stdio.start();
-  await http.start();
-
+  // Wire message forwarding (must be set before start)
   stdio.onmessage = async (message) => {
     await http.send(message);
   };
@@ -74,6 +71,10 @@ async function main() {
   http.onmessage = async (message) => {
     await stdio.send(message);
   };
+
+  // Start HTTP first (creates AbortController), then stdio (begins reading stdin)
+  await http.start();
+  await stdio.start();
 
   stdio.onclose = async () => {
     await http.close();
