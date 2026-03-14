@@ -1,0 +1,41 @@
+{
+  "name": "@unilytics/mcp-server",
+  "version": "1.0.0",
+  "description": "Unilytics MCP server — marketing analytics tools for Claude Desktop & Claude Code",
+  "type": "module",
+  "bin": {
+    "unilytics-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && node -e \"const fs=require('fs');const f='dist/index.js';const c=fs.readFileSync(f,'utf8');if(!c.startsWith('#!')){fs.writeFileSync(f,'#!/usr/bin/env node\\n'+c)}\"",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "marketing",
+    "seo",
+    "analytics",
+    "unilytics"
+  ],
+  "author": "Unilytics <admin@univsense.com>",
+  "license": "MIT",
+  "homepage": "https://unilytics.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TeamUnilytics/unilytics-mcp"
+  }
+}
