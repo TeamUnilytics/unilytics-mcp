@@ -2,7 +2,7 @@
 
 Marketing analytics tools for [Claude Desktop](https://claude.ai/desktop) and [Claude Code](https://claude.com/claude-code) via MCP.
 
-**16 tools** covering SEO, keyword research, backlinks, competitors, content audits, page speed, and more.
+**21 tools** covering SEO, keyword research, backlinks, competitors, content audits, page speed, your own Google Search Console data, and more.
 
 ## Quick Start
 
@@ -29,7 +29,9 @@ Marketing analytics tools for [Claude Desktop](https://claude.ai/desktop) and [C
 
 3. Restart Claude Desktop
 
-4. Ask Claude: *"Run a page speed audit on my website"*
+4. Set tool loading to **"Tools already loaded"** in Claude Desktop settings (click the ⚙️ icon → Tool access → select "Tools already loaded"). Without this, Claude may not load Unilytics tools and fall back to web search.
+
+5. Ask Claude: *"Run a page speed audit on my website"*
 
 ## Available Tools
 
@@ -51,6 +53,11 @@ Marketing analytics tools for [Claude Desktop](https://claude.ai/desktop) and [C
 | `domain_history` | Historical traffic and keyword trends |
 | `social_media_metrics` | Social media presence analysis |
 | `geo_dashboard` | Geographic performance dashboard |
+| `list_skills` | Discover built-in marketing workflow recipes |
+| `get_skill` | Load a step-by-step workflow guide |
+| `list_projects` | List your Unilytics projects |
+| `list_connections` | See connected data sources for a project |
+| `search_console_data` | Query your Google Search Console data |
 
 ## Authentication
 
