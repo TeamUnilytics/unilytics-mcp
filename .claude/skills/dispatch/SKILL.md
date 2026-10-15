@@ -22,8 +22,8 @@ This session always runs on Opus (plain `claude`, Max login) — never launch it
 - Repos: `ul-langgraph` (deploys from `dev`), `ul-backend`, `ul-frontend`, `unilytics-mcp` (the
   `@unilytics/mcp-server` npm bridge) — all others deploy from `main`.
 - Runner capacity: `curl -s 127.0.0.1:8080/health` (local model up? max 2 local workers at once — count
-  In Progress issues whose latest claim/`Started` comment says `runner local`); `glm` needs
-  `~/.claude/profiles/glm.json` to have a key.
+  In Progress issues whose latest claim/`Started` comment says `runner local`); `glm` is only available if
+  `grep -q PASTE_ZAI_API_KEY_HERE ~/.claude/profiles/glm.json` finds **nothing** (the placeholder means no key yet).
 
 ## 2. Pick the wave (default max 5 writing sessions; spikes/research/docs can be extra)
 
@@ -55,6 +55,7 @@ Also flag: issues labelled **Needs input** (show each `QUESTION:` so the human c
 ### 2c. Recommend a runner per issue (`docs/sop/model-runners.md` has the full rules)
 
 You **recommend**; the human **decides** (step 2d).
+Read the **Current status** and **Trial log** in `docs/sop/model-runners.md` first: they override the guide below.
 
 - A `Runner: opus|local|glm` line in the issue description wins.
 - **opus** (default): security fixes that change auth/permissions/data-access logic; payments, data deletion,
