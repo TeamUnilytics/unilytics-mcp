@@ -12,6 +12,31 @@ follow the rules in `docs/sop/linear-workflow.md`** (search before create, comme
 Process reference: `docs/sop/parallel-claude-sessions.md`. In repos without `docs/sop/` (unilytics-mcp),
 read these from `~/dev/ul-langgraph/docs/sop/`.
 
+## Required Linear trail — every runner, no exceptions (trial 2026-10-15: both Qwen and Opus skipped parts)
+
+Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
+1. **Before reading any code:** post `Started · runner <runner> · branch <branch> · <ts>`, then post the
+   **WORKLOG** comment (step 3b) and keep its comment id.
+2. **While working:** edit that WORKLOG (plan chosen, approach change, gotcha, human correction, Verify run).
+3. **Anything only the human can do** (rotate or revoke a key, console or dashboard changes, prod config):
+   post `QUESTION:` and add the label **Needs input**, even if you mention it in the handoff, so `/dispatch`
+   puts it in front of the human.
+4. **Before you stop:** a `CHECKPOINT` (unfinished) or a `Handoff` (PR open), each with `runner <runner>`.
+
+## Worktree safety — every runner (trial 2026-10-15, UNI-55)
+
+Parallel workers share this Mac and the human's main checkouts hold uncommitted work.
+- Run every command inside **your** worktree. Never `cd` into `~/dev/<repo>` (the main checkout) or another
+  worktree.
+- Never `git stash` (the stash is shared across worktrees) and never `git checkout` another branch here.
+- Baseline on the deploy branch: `git worktree add /tmp/<issue>-base origin/<dev|main>`, run there, then
+  `git worktree remove /tmp/<issue>-base`.
+- Never `pkill` / `killall` by pattern (e.g. `pkill -f 'npm test'` kills other workers' tests). Stop only your
+  own background task or PID.
+- Never print secret values: mask them (`sed -E 's/(=).{6,}/\1…[masked]/'`), even on the local runner.
+- Don't re-run a slow full test suite to read a different slice of its output. Save it once
+  (`--json --outputFile=…` or `> log`) and read the file.
+
 ## How a worker writes to its issue (the skill-authoring rules, applied to issues)
 
 The same rules we use to author Unilytics skills (`author_skill` in `mcp_server/tools/workflow_tools.py`):
