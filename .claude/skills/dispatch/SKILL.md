@@ -38,25 +38,13 @@ An issue is dispatchable only if:
 4. It is ~a day of work. Bigger → break into sub-issues now.
 5. Prefer the earliest milestone; P0 security before anything else.
 
-### 2c. Pick a runner per issue (`docs/sop/model-runners.md` has the full rules)
-
-- A `Runner: opus|local|glm` line in the issue description wins.
-- **opus** (default): security fixes that change auth/permissions/data-access logic; payments, data deletion,
-  migrations, breaking deploys; cross-repo contracts; Research/Spike/design; Needs input; thin specs; > ~400
-  changed lines.
-- **local**: well-specified Chore/Docs/Bug/Improvement with a runnable Verify, ≲150 changed lines, ≲5 files.
-  Removing hardcoded secrets is fine here (nothing leaves the Mac). Max 2 at once; server must be up.
-- **glm**: same eligibility as local with no size cap (big mechanical cleanups). **Never** for anything
-  touching secrets, `.env*`, credentials, client/customer data or prod data exports.
-- Trial period (until the trial log in `model-runners.md` has ~5 rows per runner): at most 1–2 local and
-  1–2 glm per wave. `--conserve`: everything eligible goes glm/local; opus only for what must be opus.
-- Show the chosen runner and a one-line reason for each issue in the wave table.
-
 Classify In Progress issues by their latest comment:
 - **Resume** — last comment is `CHECKPOINT` (session stopped cleanly) → print a resume command.
 - **Stale** — no comment and no new commit on its branch for > 24 h → ask the human: resume, reassign to a
   new session (starts from the branch + last comment), or move back to Todo (post `RELEASED — stale`).
 - **Running** — recent `Started`/`Claimed by`/`CHECKPOINT` < 24 h → leave alone.
+- **Escalated** — the last `CHECKPOINT` says `ESCALATE: needs opus` → recommend relaunching on opus (plain
+  `claude`, same worktree name), and show the one-line reason from the checkpoint.
 - **Never launched** — the last comment is still `DISPATCHED`, with no `Started` and no worktree, after a
   few hours → print the launch command again, or ask whether to release it (`RELEASED — not launched`,
   back to Todo).
@@ -64,9 +52,36 @@ Classify In Progress issues by their latest comment:
 Also flag: issues labelled **Needs input** (show each `QUESTION:` so the human can answer with
 `ANSWER: …` and remove the label), PRs waiting in review (the human's queue), and anything In Progress with no activity for a day.
 
+### 2c. Recommend a runner per issue (`docs/sop/model-runners.md` has the full rules)
+
+You **recommend**; the human **decides** (step 2d).
+
+- A `Runner: opus|local|glm` line in the issue description wins.
+- **opus** (default): security fixes that change auth/permissions/data-access logic; payments, data deletion,
+  migrations, breaking deploys; cross-repo contracts; Research/Spike/design; Needs input; thin specs; > ~400
+  changed lines.
+- **local**: well-specified Chore/Docs/Bug/Improvement with a runnable Verify, ≲150 changed lines, ≲5 files.
+  Removing hardcoded secrets is fine here (nothing leaves the Mac). Max 2 at once; server must be up.
+- **glm**: same eligibility as local with no size cap (big mechanical cleanups). Don't recommend it for
+  anything touching secrets, `.env*`, credentials, client/customer data or prod data exports, and flag ⚠
+  if the human picks it anyway.
+- Use the trial log in `model-runners.md` (what each runner got right or wrong) to sharpen recommendations.
+  `--conserve`: recommend glm/local for everything eligible; opus only for what must be opus.
+
+### 2d. Confirm the wave with the human (always — never skip)
+
+Show one table and **stop until the human answers**:
+
+| Issue | Repo | Title | Recommended runner | Why | ⚠ |
+|---|---|---|---|---|---|
+
+Under it: the local server status, how many local workers are already running, and "Reply `go`, or change
+runners / drop issues (e.g. `UNI-23 opus, drop UNI-54`)". Apply the edits, show the final table again if
+anything changed, and only then claim and print commands (step 3). Nothing is claimed before `go`.
+
 ## 3. Output launch commands
 
-**Claim at dispatch time** (avoids two sessions racing for the same issue): for each chosen issue,
+**Claim at dispatch time, after the human's `go`** (avoids two sessions racing for the same issue): for each chosen issue,
 `save_issue` (assignee `me`, state `In Progress`) and comment
 `DISPATCHED to <repo> session · runner <opus|local|glm> · <ISO timestamp>`. Then print, grouped by repo (resumes use the same command —
 it reopens the existing worktree/branch). Never tell a worker to run git in other repos' local clones.
@@ -98,6 +113,10 @@ Then the review order: merge at most one PR per repo at a time and check the dep
 
 - Read handoff comments on issues updated since the last dispatch (`list_issues updatedAt -P1D`). Include
   In Progress issues too: a worker blocked on a `QUESTION` posts its `Handoff` while the issue stays In Progress.
+- Read each handoff's Learnings and the WORKLOG gotchas. Fold each one into the **existing section** of its
+  target file (CLAUDE.md rule, SOP step, skill step, architecture doc). Don't append dated "learnings"
+  blocks, and remove an old note when a newer one supersedes it. Human corrections become concrete rules or
+  steps, worded as the human confirmed them.
 - Runner learnings (what local/glm got wrong, what they did well) go in `docs/sop/model-runners.md`.
 - Put each learning in its home: `CLAUDE.md` (rules), `docs/sop/*`, `docs/architecture/*`,
   `docs/plans/*`, or a skill file. Keep `CLAUDE.md` short — move detail to SOPs.
