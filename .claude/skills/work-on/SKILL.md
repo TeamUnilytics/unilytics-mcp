@@ -60,9 +60,10 @@ The same rules we use to author Unilytics skills (`author_skill` in `mcp_server/
 
 ## 0. Which runner am I? (`docs/sop/model-runners.md`)
 
-Run `echo "${UL_RUNNER:-opus}"`. `opus` = Claude on the Max login (plain `claude`); `local` = Qwen on this Mac
-(`claude-local`); `glm` = Z.ai GLM (`claude-glm`). Put `runner <name>` in every Linear comment you post.
-Not opus → Linear comes from the `linear` MCP server (claude.ai connectors don't load). No Linear tools →
+Run `echo "${UL_RUNNER:-opus}"`. `opus` = Claude on the Max login (plain `claude`); `api` = the same Opus on
+the API credit (`claude-api`), treated exactly like opus; `local` = Qwen on this Mac (`claude-local`). Put
+`runner <name>` in every Linear comment you post.
+`api` or `local` → Linear comes from the `linear` MCP server (claude.ai connectors don't load). No Linear tools →
 stop and tell the human: "run `claude mcp login linear`, then relaunch".
 
 ## 1. Read the issue (Linear MCP)
@@ -149,7 +150,7 @@ at the end — they are the most valuable thing a session leaves behind.
 - Run the issue's **Verify** command/check. Paste the **actual command and its output** (trimmed) into the
   handoff — measured, not claimed. No green Verify = not done.
 - Run a fresh-context review of the diff against the Acceptance criteria (`/code-review` or a review
-  subagent) before opening the PR. On local/glm this review uses the same model, so the dispatcher still
+  subagent) before opening the PR. On local this review uses the same model, so the dispatcher still
   runs the Opus review gate afterwards.
 
 ## 7. Docs in the same PR (definition of done)
@@ -160,7 +161,7 @@ at the end — they are the most valuable thing a session leaves behind.
   Only the dispatcher/orchestrator session edits `CLAUDE.md` and `docs/plans/*` to avoid merge conflicts
   between parallel sessions.
 
-## 7b. Hand back to Opus (local / glm only)
+## 7b. Hand back to Opus (local only)
 
 Hand back instead of grinding when: the same problem survives two different fix attempts; you notice
 you're repeating an action; you're unsure the approach is right; or the human types "escalate". Then:
@@ -188,11 +189,11 @@ you're repeating an action; you're unsure the approach is right; or the human ty
 ## 9. Ship + hand off
 
 - `/ship` (PR title starts with `UNI-123:`; Linear moves the issue to In Review automatically).
-  **Not opus:** open it as a draft (`gh pr create --draft …`, or `gh pr ready <n> --undo` right after
+  **Local:** open it as a draft (`gh pr create --draft …`, or `gh pr ready <n> --undo` right after
   `/ship`). The dispatcher's Opus review marks it ready for the human.
 - `save_comment` handoff on the issue:
   ```
-  Handoff — PR <url> · runner <opus|local|glm>
+  Handoff — PR <url> · runner <opus|api|local>
   Changed: <2–4 bullets>
   Verify: <command> → <result>
   Risks / deploy notes: <…>
@@ -201,7 +202,7 @@ you're repeating an action; you're unsure the approach is right; or the human ty
     Gotchas: <what — root cause — fix/rule — target file>
     Human corrections: <what — rule — target file>
     Decisions / dead ends worth keeping: <…>
-  Runner notes (local/glm only): <where the model struggled or did well, or none>
+  Runner notes (local only): <where the model struggled or did well, or none>
   ```
   The dispatcher folds these into the target file's existing section (no dated addenda). Write each so it
   makes sense to someone who never saw this session.
