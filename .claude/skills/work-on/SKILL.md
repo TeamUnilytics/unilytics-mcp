@@ -214,4 +214,55 @@ you're repeating an action; you're unsure the approach is right; or the human ty
   The dispatcher folds these into the target file's existing section (no dated addenda). Write each so it
   makes sense to someone who never saw this session.
 - New bugs or follow-ups you found → new issues in the right project, linked `relatedTo`/`blockedBy`.
-- Never merge to the deploy branch yourself unless the user says so — merging deploys to production.
+- **Opus runners (univ, ul, univ-api): continue with step 10.** You merge, watch the deploy and hand the human a
+  test prompt. **Local:** stop at the draft PR. The dispatcher reviews it, then does step 10 for it.
+
+## 10. Merge → deploy → test on the live product (univ, ul, univ-api)
+
+The human tests only on the deployed product, never locally. So an Opus worker finishes its own issue end to end.
+1. **Merge gate.** Merge only if ALL of these hold. Otherwise say which one failed, post a `QUESTION:` (+ Needs
+   input) if the human must act, and stop:
+   - Verify is green and the fresh-context review found nothing blocking.
+   - The PR isn't a draft, its title has no "DO NOT MERGE", and the issue isn't parked (e.g. under UNI-73).
+   - Every `blockedBy` issue is Done (merged and deployed), so multi-repo features land in dependency order.
+   - No other deploy is running in this repo (`gh run list -R <owner/repo> --limit 3`: nothing in progress).
+   - Nothing the deploy needs is missing: an env var or secret, a migration, a manual step. Never merge first
+     and fix production after.
+2. **Merge** into the repo's deploy branch (ul-langgraph → `dev`, the rest → `main`):
+   `gh pr merge <n> -R <owner/repo> --merge --delete-branch`. If the safety check blocks it, ask the human
+   "OK to merge PR #<n> into <branch>? It deploys to production." and merge after they say yes.
+3. **Watch the deploy:** `gh run watch <run id> -R <owner/repo> --exit-status`. If it fails: read the log, tell
+   the human, post a CHECKPOINT and stop (don't merge anything else). unilytics-mcp has no deploy; publishing to
+   npm is manual, so say so.
+4. **Deploy check, every change except docs-only.** Exercise the changed behaviour on the DEPLOYED version yourself:
+   call the live endpoint or MCP tool the change touches with a test account or project (never real customer
+   data, never anything that charges, emails customers or deletes), confirm the response is what the Acceptance
+   criteria expect, and check the Lambda error count for ~10 minutes after the deploy. Post the commands and
+   real responses (secrets masked) as a `DEPLOY CHECK` comment. Failed → tell the human and fix forward or ask
+   about reverting; don't move on.
+5. **Test prompt.** If the change can be seen or used by a person (app.unilytics.ai, the MCP tools from Claude,
+   an email, an export), post a `TEST PROMPT` comment on the issue and print the same prompt here in ONE copyable
+   block, for the human to paste into Claude in Chrome:
+   ```
+   TEST PROMPT · UNI-123 · deployed <short sha> to <where> at <time>
+   You are testing a change on the LIVE product for me. Only do what the steps say; don't change settings,
+   data or billing beyond them. Stop and ask me before anything you're unsure about.
+   What changed: <2–3 plain-language lines>
+   Where: <URL> · log in as <which account; never put passwords here>
+   Steps (each with the expected result):
+   1. … → expect …
+   2. … → expect …
+   Edge cases: <empty state, long text, wrong input, second project, mobile-width window…>
+   Also check: no errors on the page or in the console, nothing else on the page broke.
+   Report back in exactly this format:
+   Step 1 — PASS/FAIL — what you saw
+   …
+   Other issues: <anything odd, with screenshots of every FAIL>
+   ```
+   Backend changes nobody can see directly still get the step-4 deploy check; docs-only changes skip both.
+6. **Wait for the results in this tab.** The human pastes Chrome's report plus their own feedback. Then:
+   - Post it verbatim as a `TEST RESULT` comment.
+   - All pass → move the issue to Done, final WORKLOG update, and tell the human "Done — you can close this tab."
+   - Fails or feedback → treat the feedback as human corrections (route by kind, see the top of this skill),
+     fix it on a new branch, open a PR, and go back to 1, with a new TEST PROMPT. Small unrelated follow-ups →
+     new issue instead.
