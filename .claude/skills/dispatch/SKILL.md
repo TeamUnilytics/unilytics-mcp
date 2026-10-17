@@ -141,6 +141,17 @@ Merge at most one PR per repo at a time, and wait for its deploy before the next
 - Worktrees that can be deleted: run `git worktree list` here, and `ls ~/dev/<repo>/.claude/worktrees` for
   the other repos. A worktree can go once its issue is Done (PR merged); keep it while the issue is In
   Progress or In Review.
-- If the plan changed, update `docs/plans/pivot-consultant-skill-platform.md` and sync the Linear team
-  document "Pivot plan — consultant skill platform".
+- **Keep the plan current** (`docs/plans/pivot-consultant-skill-platform.md`). Do this at the end of the day,
+  and whenever this run sees issues that moved to Done:
+  - **Progress:** for each issue Done since the last update, find the plan section it implements (issues cite
+    it, e.g. "Plan §9") and mark it in place, right under that section's heading:
+    `✅ Completed <YYYY-MM-DD>: UNI-x (PR <repo>#n)` when every issue for that section is Done, or
+    `🟡 In progress: UNI-x done; UNI-y, UNI-z open` while some are still open. Update the marker; don't stack them.
+  - **Direction changes:** when the human changes the plan (an `ANSWER`, a correction, a new decision, scope
+    added or dropped), rewrite the affected section so it says what we do now, and add one line under it:
+    `Changed <YYYY-MM-DD>: <what and why> (UNI-x)`. Don't append dated addenda at the end, and don't leave
+    the old text in place.
+  - Keep the "Progress at a glance" table at the top of the plan in sync: one row per numbered section, with
+    status (not started / in progress / completed <date>) and its open issues.
+  - Then sync the Linear team document "Pivot plan — consultant skill platform" to match.
 - Commit these doc changes on a `docs/` branch and open one PR.
