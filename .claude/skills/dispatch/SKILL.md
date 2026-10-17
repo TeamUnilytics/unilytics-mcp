@@ -21,6 +21,8 @@ private jobs (step 2c).
 ## 1. Gather state (Linear MCP)
 
 - `list_issues` team `UNI`, state `In Progress` and `In Review` → what is already running / waiting on review.
+- Issues whose latest comments include a `TEST PROMPT` but no later `TEST RESULT` → report them under **Waiting for
+  your UI test** (issue, one line on what to test, the relaunch command if the worker tab is gone).
 - `list_issues` team `UNI`, state `Todo` (current cycle first, then the active projects' Todo).
 - For each candidate: `get_issue` to read labels, repo, `blockedBy`, parent/sub-issues.
 - Repos: `ul-langgraph` (deploys from `dev`), `ul-backend`, `ul-frontend`, `unilytics-mcp` (the
@@ -112,14 +114,15 @@ command; if the last `CHECKPOINT` says `ESCALATE: needs opus`, relaunch with `cl
 Local workers open **draft** PRs and say `runner local` in their handoff. For each such issue in
 In Review: run `/code-review <PR url>` here (Opus) against the issue's Acceptance criteria and the handoff's
 Verify evidence.
-- Clean → print `gh pr ready <n> -R <owner/repo>` for the human and list the PR in the review queue.
+- Clean → `gh pr ready <n> -R <owner/repo>`, then do `/work-on` step 10 for it here: merge gate, merge, watch
+  the deploy, smoke check, `TEST PROMPT`. The human pastes the test results back in this tab.
 - Problems → comment `REVIEW — fix list` (numbered) on the issue, move it back to In Progress and print a
   relaunch command: same runner for small fixes, an Opus runner (`claude-univ`, or `claude-ul` /
   `claude-univ-api` if Univsense is low) if the approach is wrong.
 - Append a row to the trial log in `docs/sop/model-runners.md` (date, issue, runner, outcome, notes).
 - If the review found a local mistake a guardrail could have blocked, propose the exact
   `~/.claude/hooks/runner-guard.py` change in your report for the human to approve. Never edit it unasked.
-Then the review order: merge at most one PR per repo at a time and check the deploy before the next.
+Merge at most one PR per repo at a time, and wait for its deploy before the next.
 
 ## 4. Fold in learnings (end of day, or when asked)
 
