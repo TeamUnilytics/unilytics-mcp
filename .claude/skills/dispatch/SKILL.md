@@ -11,9 +11,10 @@ Run this in its **own `dispatch` worktree** of ul-langgraph (the plan lives ther
 (`git fetch origin && git merge --ff-only origin/dev`, or `git reset --hard origin/dev` if the worktree has no
 unpushed doc edits). This session plans and dispatches; it does not implement issues. Process: `docs/sop/parallel-claude-sessions.md`; Linear write rules:
 `docs/sop/linear-workflow.md`; command list: `docs/sop/claude-commands.md`; runners: `docs/sop/model-runners.md`.
-This session always runs on runner `univ` (plain `claude` = `claude-univ`, Opus on the Univsense Max login) —
-never launch it with `claude-ul`/`claude-univ-api`/`claude-local`. It is also the session that runs the Opus review
-gate on local PRs (step 3b).
+This session always runs on Opus: `univ` by default (plain `claude` = `claude-univ`), or `claude-ul` (Opus on the
+Unilytics Max account) when the Univsense weekly limit is used up. Never launch it with `claude-local` (not Opus)
+or `claude-univ-api` (it would spend the API credit on planning). It is also the session that runs the Opus review
+gate on local PRs (step 3b), which is why it must be Opus.
 `--conserve` = the Univsense Max limit is low: recommend `ul` first, then `univ-api`, and `local` only for small
 private jobs (step 2c).
 
