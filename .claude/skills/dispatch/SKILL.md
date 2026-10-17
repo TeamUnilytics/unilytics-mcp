@@ -11,8 +11,11 @@ Run this in its **own `dispatch` worktree** of ul-langgraph (the plan lives ther
 (`git fetch origin && git merge --ff-only origin/dev`, or `git reset --hard origin/dev` if the worktree has no
 unpushed doc edits). This session plans and dispatches; it does not implement issues. Process: `docs/sop/parallel-claude-sessions.md`; Linear write rules:
 `docs/sop/linear-workflow.md`; command list: `docs/sop/claude-commands.md`; runners: `docs/sop/model-runners.md`.
-This session always runs on Opus (plain `claude`, Max login) — never launch it with `claude-api`/`claude-local`.
-`--conserve` = the Max weekly limit is low: route opus work to `api` and small private jobs to `local` (step 2c).
+This session always runs on runner `univ` (plain `claude` = `claude-univ`, Opus on the Univsense Max login) —
+never launch it with `claude-ul`/`claude-univ-api`/`claude-local`. It is also the session that runs the Opus review
+gate on local PRs (step 3b).
+`--conserve` = the Univsense Max limit is low: recommend `ul` first, then `univ-api`, and `local` only for small
+private jobs (step 2c).
 
 ## 1. Gather state (Linear MCP)
 
@@ -22,8 +25,8 @@ This session always runs on Opus (plain `claude`, Max login) — never launch it
 - Repos: `ul-langgraph` (deploys from `dev`), `ul-backend`, `ul-frontend`, `unilytics-mcp` (the
   `@unilytics/mcp-server` npm bridge) — all others deploy from `main`.
 - Runner capacity: `curl -s 127.0.0.1:8080/health` (local model up? max 2 local workers at once — count
-  In Progress issues whose latest claim/`Started` comment says `runner local`); `api` needs a non-empty
-  `~/.claude/profiles/.anthropic-api-key` (`test -s`).
+  In Progress issues whose latest claim/`Started` comment says `runner local`); `univ-api` needs a non-empty
+  `~/.claude/profiles/.anthropic-api-key` (`test -s`); `ul` needs its separate login in `~/.claude-unilytics`.
 
 ## 2. Pick the wave (default max 5 writing sessions; spikes/research/docs can be extra)
 
@@ -43,8 +46,9 @@ Classify In Progress issues by their latest comment:
 - **Stale** — no comment and no new commit on its branch for > 24 h → ask the human: resume, reassign to a
   new session (starts from the branch + last comment), or move back to Todo (post `RELEASED — stale`).
 - **Running** — recent `Started`/`Claimed by`/`CHECKPOINT` < 24 h → leave alone.
-- **Escalated** — the last `CHECKPOINT` says `ESCALATE: needs opus` → recommend relaunching on opus (plain
-  `claude`, same worktree name), and show the one-line reason from the checkpoint.
+- **Escalated** — the last `CHECKPOINT` says `ESCALATE: needs opus` → recommend relaunching on an Opus runner
+  (`claude-univ`, or `claude-ul` / `claude-univ-api` with `--conserve`; same worktree name), and show the
+  one-line reason from the checkpoint.
 - **Never launched** — the last comment is still `DISPATCHED`, with no `Started` and no worktree, after a
   few hours → print the launch command again, or ask whether to release it (`RELEASED — not launched`,
   back to Todo).
@@ -57,16 +61,17 @@ Also flag: issues labelled **Needs input** (show each `QUESTION:` so the human c
 You **recommend**; the human **decides** (step 2d).
 Read the **Current status** and **Trial log** in `docs/sop/model-runners.md` first: they override the guide below.
 
-- A `Runner: opus|api|local` line in the issue description wins.
-- **opus** (default): everything, while the Max limit lasts.
-- **api**: the same Opus model on the API credit; anything opus would do when the Max limit is low. Treat
-  it exactly like opus (normal PR, no review gate).
+- A `Runner: univ|ul|univ-api|local` line in the issue description wins.
+- **univ** (default): everything, while the Univsense Max limit lasts.
+- **ul**: Opus on the Unilytics Max login; first overflow when Univsense is low.
+- **univ-api**: Opus on the Univsense API credit ($200/month, resets monthly); second overflow.
+- univ, ul and univ-api are all Opus: normal PR, self-review, no review gate.
 - **local**: well-specified Chore/Docs/Bug/Improvement with a runnable Verify, ≲150 changed lines, ≲5 files.
   Removing hardcoded secrets is fine here (nothing leaves the Mac). Max 2 at once; server must be up.
   Never security logic, payments, data deletion, migrations, cross-repo contracts, research/design or thin
   specs.
 - Use the trial log in `model-runners.md` (what each runner got right or wrong) to sharpen recommendations.
-  `--conserve`: recommend api instead of opus, and local for what fits local.
+  `--conserve`: recommend ul instead of univ, then univ-api once ul is low too; local only for small private jobs.
 
 ### 2d. Confirm the wave with the human (always — never skip)
 
@@ -76,36 +81,40 @@ Show one table and **stop until the human answers**:
 |---|---|---|---|---|---|
 
 Under it: the local server status, how many local workers are already running, and "Reply `go`, or change
-runners / drop issues (e.g. `UNI-23 opus, drop UNI-54`)". Apply the edits, show the final table again if
+runners / drop issues (e.g. `UNI-23 ul, drop UNI-54`)". Apply the edits, show the final table again if
 anything changed, and only then claim and print commands (step 3). Nothing is claimed before `go`.
 
 ## 3. Output launch commands
 
 **Claim at dispatch time, after the human's `go`** (avoids two sessions racing for the same issue): for each chosen issue,
 `save_issue` (assignee `me`, state `In Progress`) and comment
-`DISPATCHED to <repo> session · runner <opus|api|local> · <ISO timestamp>`. Then print, grouped by repo (resumes use the same command —
+`DISPATCHED to <repo> session · runner <univ|ul|univ-api|local> · <ISO timestamp>`. Then print, grouped by repo (resumes use the same command —
 it reopens the existing worktree/branch). Never tell a worker to run git in other repos' local clones.
 A `claude -w` session can't do that, so cross-repo git-only work goes through `gh api` (see SOP rule 3b):
 
 ```
-cd ~/dev/<repo> && claude -w uni-123 "/work-on UNI-123"         # runner opus (Max login)
-cd ~/dev/<repo> && claude-api -w uni-124 "/work-on UNI-124"     # runner api (Opus on the API credit)
-cd ~/dev/<repo> && claude-local -w uni-125 "/work-on UNI-125"   # runner local (Qwen on this Mac)
+cd ~/dev/<repo> && claude-univ -w uni-123 "/work-on UNI-123"       # runner univ (Opus, Univsense Max)
+cd ~/dev/<repo> && claude-ul -w uni-124 "/work-on UNI-124"         # runner ul (Opus, Unilytics Max)
+cd ~/dev/<repo> && claude-univ-api -w uni-125 "/work-on UNI-125"   # runner univ-api (Opus, API credit)
+cd ~/dev/<repo> && claude-local -w uni-126 "/work-on UNI-126"      # runner local (Qwen on this Mac)
 ```
 
 (Or background: same prefix with `--bg "/work-on UNI-123"` and watch them in `claude agents`.)
-`claude-api` / `claude-local` are shell wrappers that add the runner's `--settings` profile (setup in
-`docs/sop/model-runners.md`). Resumes keep the issue's runner unless the last `CHECKPOINT` says
-`ESCALATE: needs opus` — then relaunch with plain `claude` (or `claude-api` if the Max limit is low).
+The four commands are shell wrappers in `~/.local/bin` that set `UL_RUNNER` (and the login or `--settings`
+profile; setup in `docs/sop/model-runners.md`). Always print the runner's own command, never plain `claude`,
+so the worker knows its runner. Resumes and fix-list relaunches keep the issue's runner and print the same
+command; if the last `CHECKPOINT` says `ESCALATE: needs opus`, relaunch with `claude-univ` (or `claude-ul` /
+`claude-univ-api` if Univsense is low).
 
-### 3b. Opus review gate (every local PR; api is opus and skips it)
+### 3b. Opus review gate (every local PR; univ, ul and univ-api are Opus and skip it)
 
 Local workers open **draft** PRs and say `runner local` in their handoff. For each such issue in
 In Review: run `/code-review <PR url>` here (Opus) against the issue's Acceptance criteria and the handoff's
 Verify evidence.
 - Clean → print `gh pr ready <n> -R <owner/repo>` for the human and list the PR in the review queue.
 - Problems → comment `REVIEW — fix list` (numbered) on the issue, move it back to In Progress and print a
-  relaunch command: same runner for small fixes, plain `claude` (opus) if the approach is wrong.
+  relaunch command: same runner for small fixes, an Opus runner (`claude-univ`, or `claude-ul` /
+  `claude-univ-api` if Univsense is low) if the approach is wrong.
 - Append a row to the trial log in `docs/sop/model-runners.md` (date, issue, runner, outcome, notes).
 - If the review found a local mistake a guardrail could have blocked, propose the exact
   `~/.claude/hooks/runner-guard.py` change in your report for the human to approve. Never edit it unasked.

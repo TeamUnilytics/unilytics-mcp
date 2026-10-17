@@ -60,11 +60,17 @@ The same rules we use to author Unilytics skills (`author_skill` in `mcp_server/
 
 ## 0. Which runner am I? (`docs/sop/model-runners.md`)
 
-Run `echo "${UL_RUNNER:-opus}"`. `opus` = Claude on the Max login (plain `claude`); `api` = the same Opus on
-the API credit (`claude-api`), treated exactly like opus; `local` = Qwen on this Mac (`claude-local`). Put
-`runner <name>` in every Linear comment you post.
-`api` or `local` → Linear comes from the `linear` MCP server (claude.ai connectors don't load). No Linear tools →
-stop and tell the human: "run `claude mcp login linear`, then relaunch".
+Run `echo "${UL_RUNNER:-univ}"` (empty means `univ`: plain `claude`). Put `runner <name>` in every Linear
+comment you post.
+- `univ` = Opus on the Univsense Max login (`claude-univ`, same as plain `claude`). The default.
+- `ul` = Opus on the Unilytics Max login (`claude-ul`, separate login in `~/.claude-unilytics`).
+- `univ-api` = Opus on the Univsense API credit (`claude-univ-api`).
+- `local` = Qwen on this Mac (`claude-local`). Draft PR, then the dispatcher's Opus review gate.
+
+univ, ul and univ-api are all Opus: normal PR, self-review, no review gate. `univ-api` or `local` → Linear
+comes from the `linear` MCP server (claude.ai connectors don't load). No Linear tools → stop and tell the
+human: "run `claude mcp login linear` (for `ul`: `CLAUDE_CONFIG_DIR=~/.claude-unilytics claude mcp login
+linear`), then relaunch".
 
 ## 1. Read the issue (Linear MCP)
 
@@ -76,9 +82,9 @@ stop and tell the human: "run `claude mcp login linear`, then relaunch".
   - Latest is `DISPATCHED …` for this repo, or a `CHECKPOINT` / `Claimed by` from an earlier session that
     the human asked you to resume → this is a resume: reuse the same branch, read the last CHECKPOINT
     **and the WORKLOG** (step 3b), continue from its "Next step".
-  - Latest CHECKPOINT says `ESCALATE: needs opus` and you are opus → this is a hand-back. Read the WORKLOG's
-    dead ends and gotchas first so you don't repeat them, review the WIP commits on the branch, then
-    continue. Start a fresh WORKLOG for your session (the old one stays as history).
+  - Latest CHECKPOINT says `ESCALATE: needs opus` and you are univ, ul or univ-api → this is a
+    hand-back. Read the WORKLOG's dead ends and gotchas first so you don't repeat them, review the WIP
+    commits on the branch, then continue. Start a fresh WORKLOG for your session (the old one stays as history).
   - Latest is a claim/checkpoint from **another live session** (< 24 h, no `RELEASED`) and nobody told you
     to take over → stop and tell the human.
 
@@ -169,7 +175,8 @@ you're repeating an action; you're unsure the approach is right; or the human ty
 2. Post `CHECKPOINT — … · runner <runner> … ESCALATE: needs opus — <one-line why>` (format in step 8).
 3. Tell the human in this terminal, exactly:
    > Handing this to Opus. Type `/exit`, then in this same tab run:
-   > `cd ~/dev/<repo> && claude -w <worktree-name> "/work-on UNI-123"`
+   > `cd ~/dev/<repo> && claude-univ -w <worktree-name> "/work-on UNI-123"`
+   > (Univsense limit low? Use `claude-ul` or `claude-univ-api` instead of `claude-univ`.)
    The Opus session reopens the same worktree and branch and starts from the CHECKPOINT and WORKLOG.
 4. Stop.
 
@@ -193,7 +200,7 @@ you're repeating an action; you're unsure the approach is right; or the human ty
   `/ship`). The dispatcher's Opus review marks it ready for the human.
 - `save_comment` handoff on the issue:
   ```
-  Handoff — PR <url> · runner <opus|api|local>
+  Handoff — PR <url> · runner <univ|ul|univ-api|local>
   Changed: <2–4 bullets>
   Verify: <command> → <result>
   Risks / deploy notes: <…>
