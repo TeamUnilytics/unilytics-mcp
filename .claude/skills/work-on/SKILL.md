@@ -234,8 +234,12 @@ The human tests only on the deployed product, never locally. So an Opus worker f
 3. **Watch the deploy:** `gh run watch <run id> -R <owner/repo> --exit-status`. If it fails: read the log, tell
    the human, post a CHECKPOINT and stop (don't merge anything else). unilytics-mcp has no deploy; publishing to
    npm is manual, so say so.
-4. **Smoke check** what you can from here (a health endpoint, one MCP tool call, the Lambda error count for ~10
-   minutes after the deploy). Put the result in the WORKLOG.
+4. **Deploy check, every change except docs-only.** Exercise the changed behaviour on the DEPLOYED version yourself:
+   call the live endpoint or MCP tool the change touches with a test account or project (never real customer
+   data, never anything that charges, emails customers or deletes), confirm the response is what the Acceptance
+   criteria expect, and check the Lambda error count for ~10 minutes after the deploy. Post the commands and
+   real responses (secrets masked) as a `DEPLOY CHECK` comment. Failed → tell the human and fix forward or ask
+   about reverting; don't move on.
 5. **Test prompt.** If the change can be seen or used by a person (app.unilytics.ai, the MCP tools from Claude,
    an email, an export), post a `TEST PROMPT` comment on the issue and print the same prompt here in ONE copyable
    block, for the human to paste into Claude in Chrome:
@@ -255,7 +259,7 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    …
    Other issues: <anything odd, with screenshots of every FAIL>
    ```
-   Backend-only or docs-only (nothing a person can see) → say so and skip the prompt.
+   Backend changes nobody can see directly still get the step-4 deploy check; docs-only changes skip both.
 6. **Wait for the results in this tab.** The human pastes Chrome's report plus their own feedback. Then:
    - Post it verbatim as a `TEST RESULT` comment.
    - All pass → move the issue to Done, final WORKLOG update, and tell the human "Done — you can close this tab."
