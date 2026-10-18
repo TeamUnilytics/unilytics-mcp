@@ -159,7 +159,9 @@ The work is done by agents, so estimate from **our measured agent times**, never
   OKs it, and add a `Changed <date>` line in the plan.
 - **What the founder sees in Linear:**
   - a project update on each active project at wind-up (`save_status_update`, health onTrack / atRisk /
-    offTrack, 3 lines: done today, next, risk);
+    offTrack). The body starts with `**Dispatch update**` and then has 3 lines: done today, next, risk. The founder
+    posts their own project updates too (new ideas, priority changes). Every run, read the updates that don't
+    start with `Dispatch update` (`get_status_updates`) as founder input, alongside this terminal;
   - milestone target dates on the Projects timeline;
   - Insights (Business plan) on a custom view (`Cmd+Shift+I`: cycle time and lead time scatter, issue count by
     status).
@@ -266,7 +268,8 @@ Local workers open **draft** PRs and say `runner local` in their handoff. For ea
 In Review: run `/code-review <PR url>` here (Opus) against the issue's Acceptance criteria and the handoff's
 Verify evidence.
 - Clean → `gh pr ready <n> -R <owner/repo>`, then do `/work-on` step 10 for it here: merge gate, merge, watch
-  the deploy, smoke check, `TEST PROMPT`. The human pastes the test results back in this tab.
+  the deploy, smoke check, then the live test in Chrome yourself (`/work-on` step 10.5). Hand a `TEST PROMPT`
+  to the human only when Chrome can't run it.
 - Problems → comment `REVIEW — fix list` (numbered) on the issue, move it back to In Progress and print a
   relaunch command: same runner for small fixes, an Opus runner (`claude-univ`, or `claude-ul` /
   `claude-univ-api` if Univsense is low) if the approach is wrong.
