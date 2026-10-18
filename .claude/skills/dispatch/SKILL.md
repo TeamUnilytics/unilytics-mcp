@@ -27,6 +27,10 @@ possible.
   (`docs/plans/pivot-consultant-skill-platform.md`) in full. Then read the plan of every Linear project that has a
   candidate issue: the `## Plan` section of the project description names its file or Linear document. New projects
   bring new plan files. If a project names none, ask the human for it before you dispatch its issues.
+- **Use the product before you rank anything.** Priorities come from using it, not from reading the backlog.
+  The founder: "I open up the product and click Context and it says coming soon. Obvious then." Run the
+  walkthrough (step 0b) every night at wind-up, or first thing in the morning if the night run didn't happen. A
+  core screen that says "coming soon", breaks, or is slow is the top candidate for the wave.
 - **North star:** the design partner uses the product every working day (GTM project). **Near-term KPI:** the P1
   goal. A new consultant signs in, connects their AI with one URL and runs a universal skill on a project in under
   2 minutes. Judge every issue by how directly it moves a real user toward that. The wave table's Why column says
@@ -65,16 +69,50 @@ possible.
   place of core work.
 
 **Wave mix (every wave):**
-- **Keep 1–2 core-product issues running at all times**, counting those already In Progress. Core means what a
-  consultant touches: the MCP gateway and onboarding, skills and the Skill Library, the Context Manager, app screens
-  and their speed. If no core issue is dispatchable (conflicts, thin spec, blocked), say why and fix that first:
-  split it, write the spec, or post the `QUESTION`.
+- **Keep 1–2 core-product issues running at all times**, counting those already In Progress. Core means the
+  reason a consultant comes back every day: the Context Manager (Context, Brand Kit, Design System, Knowledge Base),
+  the skills (Skill Library, project skills, later the Skill Lab agents), and the MCP that serves both into their
+  AI. Onboarding and speed get them in the door and count too, but they rank below the differentiator once
+  sign-in works. Rank by why the user stays, not only whether they can get in.
+- **Core work that isn't dispatchable gets fixed in the same run, never skipped** (2026-10-18: the Context
+  Manager was passed over for being too big and cross-repo). Split it by user value (contract issue first,
+  one issue per repo), write the missing spec, or post the `QUESTION`. Then show the human the slice you can
+  start now. If two core slices collide only on repo + Area, but their files don't overlap (e.g. a new folder),
+  propose a founder exception rather than waiting. Record the exception in the issue.
 - **Fill the other slots with important non-core work**, in this order:
   1. P0 security that exposes users' data or credits.
   2. Correctness of money and schedules (e.g. credit expiry).
   3. Cleanup (archive repos, move code out, prune branches).
   Don't let it crowd out core, and don't leave it out either.
 - Chores the human has explicitly parked stay out until they ask for them.
+
+### 0b. Product walkthrough + gap check (nightly at wind-up, else first thing in the morning)
+
+Load the Claude in Chrome tools (`claude-in-chrome` skill; one ToolSearch for the core set), open a new tab and
+sign in to https://app.unilytics.ai as the founder's test account. If the session isn't signed in, ask the human
+to sign in; never type a password. Read-only: don't create, delete, run, pay or change settings. Record a GIF.
+
+1. **Use everything that is built**, as a consultant would, and time each first load:
+   - sign-in;
+   - Projects → open a project → every project nav item (Overview, Context, Brand Kit, Design System,
+     Knowledge Base, Skills → a folder → a skill and its file panel, Channels, AEO);
+   - every global item (Skill Library, Agent Inbox, Personal Context, Design System, Connect your AI, the
+     user-menu settings).
+   Then from this session's own MCP connection to Unilytics, if one is loaded, call the read-only discovery
+   tools (`list_skills`, `get_skill`) on a test project.
+2. **Grade each screen:** works · broken (error, empty when data exists, console errors) · "coming soon" ·
+   slow (> 2 s) · confusing (you had to guess what to click).
+3. **Then look past what's built (avoid tunnel vision).** Compare against:
+   - the plan's IA (§2) and each active project's "Done when";
+   - the P1 KPI flow end to end (sign up → connect your AI → run a universal skill on a project);
+   - what Profound and AirOps offer for the same job (`docs/research/competitor-context-map.md`).
+   List what's missing that a consultant would expect on day one.
+4. **Write it up** in the Linear document "Product walkthrough", newest date on top: one table per screen,
+   then gaps, then the ranked top 3 to fix. Search for existing issues first. Then create issues in the
+   Standard task format, or add the finding to an existing one: bugs to the right project, gaps to the plan
+   section they belong to.
+5. Use the result as the first input to step 2. A broken or "coming soon" core screen outranks anything a
+   user can't see.
 
 ## 1. Gather state (Linear MCP)
 
@@ -188,6 +226,8 @@ Verify evidence.
 Merge at most one PR per repo at a time, and wait for its deploy before the next.
 
 ## 4. Fold in learnings (end of day: the founder says "winding up", or when asked)
+
+Run the product walkthrough (step 0b) first, so tomorrow's wave starts from what the product actually does.
 
 This is the only time the main plan (git + its Linear document) changes. Build the update from the handoffs:
 `Changed`, `Plan changes` and Follow-ups go into the plan sections they name, plus the progress markers.
