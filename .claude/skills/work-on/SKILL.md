@@ -23,6 +23,38 @@ Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
    puts it in front of the human.
 4. **Before you stop:** a `CHECKPOINT` (unfinished) or a `Handoff` (PR open), each with `runner <runner>`.
 
+## The engineering bar — every runner, every issue (founder, 2026-10-18)
+
+> "There should be no bandaid fixes ever. We need production level expert level code and review as they go."
+
+- **No band-aid fixes, ever.** Find the root cause and fix it there. These are band-aids, so don't ship them:
+  - special-casing one input or id;
+  - swallowing or downgrading an error;
+  - a retry or sleep around a bug;
+  - disabling or loosening a test, lint rule or type;
+  - a fallback that hides a failure;
+  - "TODO: fix properly later";
+  - dummy data where a backend exists;
+  - fixing the symptom in the consumer when the bug is in the producer.
+  If the proper fix is bigger than the issue, stop and say so: post a `QUESTION` with the options, or create the
+  follow-up issue and make this one depend on it. Don't patch around it. A temporary measure is allowed only when
+  the human approves it as temporary and it has its own issue to remove it.
+- **Production-level, expert-level code:**
+  - inputs validated at the boundary;
+  - errors handled and surfaced;
+  - auth and tenant scoping on every read and write;
+  - idempotent writes and migrations;
+  - no secrets in code;
+  - logs that let the next person debug it;
+  - names and structure that match the surrounding code;
+  - a test that would have caught the bug, or that pins the new behaviour.
+  Write it as the best engineer on this stack would, not just so that it passes.
+- **Review as you go, not only at the end.** After each meaningful step (a model, an endpoint, a component,
+  a migration), re-read your own diff against this bar and the Acceptance criteria before moving on. For
+  anything non-trivial, use a review subagent with fresh context. The final fresh-context review in step 6
+  still runs on top.
+- **Research before you design** (step 4.6) and **consult the council on important work** (step 6).
+
 ## Worktree safety — every runner (trial 2026-10-15, UNI-55)
 
 Parallel workers share this Mac and the human's main checkouts hold uncommitted work.
@@ -188,6 +220,18 @@ parallel, and don't plan first and read afterwards.
 
 5. **Then the code:** related code, tests and existing patterns. The issue's `Expected files:` line is for
    collision checks, not a fence.
+6. **Research how it should be done, before you design it.** Scale it to the work: minutes for a small bug,
+   real research for a feature, contract, schema or anything a user sees.
+   - **Our other repos and skills:** has ul-backend, ul-frontend, ul-langgraph or unilytics-mcp already solved
+     this (read them on GitHub, see item 3)? Reuse the pattern rather than inventing a second one. The
+     founder's own skills often hold proven methods (e.g. `doc-template-design`, `landing-page-structure-cro`).
+   - **Other products:** how Profound, AirOps and the best tools in the space solve the same user problem
+     (`docs/research/competitor-context-map.md`, their docs, or Claude in Chrome when the session has it).
+   - **Best practice and primary sources:** the official docs, specs and RFCs for what you touch (MCP spec,
+     OAuth RFCs, Mongo, FastMCP, React or Tailwind docs, AWS docs), and well-regarded open-source
+     implementations. Use WebSearch or WebFetch, and prefer primary sources over blog summaries.
+   - Write a `Research:` line under `Read:` in the WORKLOG plan: what you looked at (links), what you'll adopt,
+     and what you rejected and why. A plan without it is not ready to show.
 - If the work splits into steps another session could take, create **sub-issues** (`save_issue` with
   `parentId`, same project + milestone, Standard task format). If it is bigger than ~1 week, comment
   "Proposing convert-to-project" and stop for the user.
@@ -205,8 +249,21 @@ parallel, and don't plan first and read afterwards.
 
 ## 6. Plan → implement → verify
 
-- Plan first (plan mode for anything non-trivial), only after step 4's reading is done; the plan opens with
-  its `Read:` line. Then implement in small commits.
+- Plan first (plan mode for anything non-trivial), only after step 4's reading and research are done. The plan
+  opens with its `Read:` and `Research:` lines. Then implement in small commits, reviewing each step as you go
+  (engineering bar, top of this skill).
+- **Consult the council on important work, before the human approves the plan:**
+  `/consult-the-council --high` on the plan. Important means any of:
+  - security, auth or tenant isolation;
+  - credits, billing or payments;
+  - a data model, schema or migration;
+  - a cross-repo contract (REST shape, MCP tool signature);
+  - anything public or hard to undo;
+  - architecture choices;
+  - any Urgent or High feature.
+  Show the human the plan with a `Council:` line: each verdict, the issues raised, and what you changed or
+  rejected and why. REJECT → stop and discuss before building. For security, billing and migrations, also run it
+  on the final diff before merging. Record both runs in the WORKLOG.
 - **Interactive session (the human is in the terminal): show the plan and wait for an explicit approval
   before building** — founder, 2026-10-18: "take my approval beofre proceeding, you can show what your plan
   is and then only proceed". Corrections to the plan count as "not yet": fold them in and show it again.
@@ -287,6 +344,9 @@ The human tests only on the deployed product, never locally. So an Opus worker f
 1. **Merge gate.** Merge only if ALL of these hold. Otherwise say which one failed, post a `QUESTION:` (+ Needs
    input) if the human must act, and stop:
    - Verify is green and the fresh-context review found nothing blocking.
+   - Important work (step 6): the council ran on the plan (and on the diff for security, billing or migrations),
+     and every REVISE point is fixed or answered in the WORKLOG.
+   - No band-aid in the diff (engineering bar). If a reviewer would call something a workaround, it isn't ready.
    - The PR isn't a draft, its title has no "DO NOT MERGE", and the issue isn't parked (e.g. under UNI-73).
    - Every `blockedBy` issue is Done (merged and deployed), so multi-repo features land in dependency order.
    - No other deploy is running in this repo (`gh run list -R <owner/repo> --limit 3`: nothing in progress).
