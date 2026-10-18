@@ -140,9 +140,11 @@ left in the handoff. Sync any git design doc a worker changed into its Linear do
 - Runner learnings (what local got wrong, what it did well) go in `docs/sop/model-runners.md`.
 - Put each learning in its home: `CLAUDE.md` (rules), `docs/sop/*`, `docs/architecture/*`,
   `docs/plans/*`, or a skill file. Keep `CLAUDE.md` short — move detail to SOPs.
-- This session can't commit to other repos. If a learning is specific to another repo (e.g. ul-backend),
-  add it to the Context of that repo's next open issue, so the next worker sees it. Also list it on
-  UNI-54 (CLAUDE.md trim) so it reaches that repo's `CLAUDE.md`.
+- Learnings for another repo (e.g. ul-backend `CLAUDE.md`): this session can't run git there, so use the
+  GitHub API (SOP rule 3b): fetch the file from its deploy branch, edit it, then create blob → tree →
+  commit → ref → PR in one call sequence, after checking the remote blob sha still matches what you edited.
+  Shared files (`work-on`, `dispatch`, `update-learnings` skills, `docs/sop/linear-workflow.md`,
+  `parallel-claude-sessions.md`, `claude-commands.md`) must stay identical across the four repos.
 - Worktrees that can be deleted: run `git worktree list` here, and `ls ~/dev/<repo>/.claude/worktrees` for
   the other repos. A worktree can go once its issue is Done (PR merged); keep it while the issue is In
   Progress or In Review.
