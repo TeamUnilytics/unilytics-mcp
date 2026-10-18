@@ -124,7 +124,11 @@ Verify evidence.
   `~/.claude/hooks/runner-guard.py` change in your report for the human to approve. Never edit it unasked.
 Merge at most one PR per repo at a time, and wait for its deploy before the next.
 
-## 4. Fold in learnings (end of day, or when asked)
+## 4. Fold in learnings (end of day: the founder says "winding up", or when asked)
+
+This is the only time the plan, the design doc and their Linear documents change. Workers write plan
+changes under `Plan changes` in their handoff; fold those into the plan section they name, then sync the
+Linear documents.
 
 - Read handoff comments on issues updated since the last dispatch (`list_issues updatedAt -P1D`). Include
   In Progress issues too: a worker blocked on a `QUESTION` posts its `Handoff` while the issue stays In Progress.
