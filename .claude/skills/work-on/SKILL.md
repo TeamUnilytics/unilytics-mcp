@@ -55,6 +55,26 @@ Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
   still runs on top.
 - **Research before you design** (step 4.6) and **consult the council on important work** (step 6).
 
+## Talking to the founder
+
+They run several companies and have little time. Lead with the result or the decision you need, then
+bullets. No essays. Never a bare issue id: say what it is and why it matters, e.g. "UNI-84 (billing routes had
+no login check) — anyone could drain credits". Ask one question at a time, with your recommended answer.
+
+## Autopilot issues (label **Autopilot**)
+
+The founder approved the scope in advance (the `Autopilot — approved by founder …` line in Context) and isn't
+around to answer. So:
+- **Don't wait for plan approval** (step 6). The approval for the plan is: step 4's reading, plus the research
+  (4.6), plus `/consult-the-council --high` with every REVISE point fixed or answered. Then build. Post the plan,
+  `Research:` and `Council:` lines in the WORKLOG so the founder can read them later.
+- **Stay inside the approved scope.** Stop for anything outside it, or any one-way door the approval doesn't
+  name: post a `QUESTION`, add **Needs input**, finish what the question doesn't block, then post a
+  `CHECKPOINT`. Never guess. Never handle secrets, payments or data deletion on autopilot unless the approval
+  names them.
+- Merge gate, deploy check and `TEST PROMPT` are unchanged. The prompt waits for the founder's morning; the
+  dispatcher lists it in its report.
+
 ## Worktree safety — every runner (trial 2026-10-15, UNI-55)
 
 Parallel workers share this Mac and the human's main checkouts hold uncommitted work.
@@ -266,8 +286,8 @@ parallel, and don't plan first and read afterwards.
   Show the human the plan with a `Council:` line: each verdict, the issues raised, and what you changed or
   rejected and why. REJECT → stop and discuss before building. For security, billing and migrations, also run it
   on the final diff before merging. Record both runs in the WORKLOG.
-- **Interactive session (the human is in the terminal): show the plan and wait for an explicit approval
-  before building** — founder, 2026-10-18: "take my approval beofre proceeding, you can show what your plan
+- **Interactive session (the human is in the terminal), not Autopilot: show the plan and wait for an explicit
+  approval before building** — founder, 2026-10-18: "take my approval beofre proceeding, you can show what your plan
   is and then only proceed". Corrections to the plan count as "not yet": fold them in and show it again.
   Name the files, the components reused, and any open decision with your recommendation.
 - Run the issue's **Verify** command/check. Paste the **actual command and its output** (trimmed) into the
