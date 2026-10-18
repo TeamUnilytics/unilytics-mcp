@@ -23,6 +23,58 @@ Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
    puts it in front of the human.
 4. **Before you stop:** a `CHECKPOINT` (unfinished) or a `Handoff` (PR open), each with `runner <runner>`.
 
+## The engineering bar — every runner, every issue (founder, 2026-10-18)
+
+> "There should be no bandaid fixes ever. We need production level expert level code and review as they go."
+
+- **No band-aid fixes, ever.** Find the root cause and fix it there. These are band-aids, so don't ship them:
+  - special-casing one input or id;
+  - swallowing or downgrading an error;
+  - a retry or sleep around a bug;
+  - disabling or loosening a test, lint rule or type;
+  - a fallback that hides a failure;
+  - "TODO: fix properly later";
+  - dummy data where a backend exists;
+  - fixing the symptom in the consumer when the bug is in the producer.
+  If the proper fix is bigger than the issue, stop and say so: post a `QUESTION` with the options, or create the
+  follow-up issue and make this one depend on it. Don't patch around it. A temporary measure is allowed only when
+  the human approves it as temporary and it has its own issue to remove it.
+- **Production-level, expert-level code:**
+  - inputs validated at the boundary;
+  - errors handled and surfaced;
+  - auth and tenant scoping on every read and write;
+  - idempotent writes and migrations;
+  - no secrets in code;
+  - logs that let the next person debug it;
+  - names and structure that match the surrounding code;
+  - a test that would have caught the bug, or that pins the new behaviour.
+  Write it as the best engineer on this stack would, not just so that it passes.
+- **Review as you go, not only at the end.** After each meaningful step (a model, an endpoint, a component,
+  a migration), re-read your own diff against this bar and the Acceptance criteria before moving on. For
+  anything non-trivial, use a review subagent with fresh context. The final fresh-context review in step 6
+  still runs on top.
+- **Research before you design** (step 4.6) and **consult the council on important work** (step 6).
+
+## Talking to the founder
+
+They run several companies and have little time. Lead with the result or the decision you need, then
+bullets. No essays. Never a bare issue id: say what it is and why it matters, e.g. "UNI-84 (billing routes had
+no login check) — anyone could drain credits". Ask one question at a time, with your recommended answer.
+
+## Autopilot issues (label **Autopilot**)
+
+The founder approved the scope in advance (the `Autopilot — approved by founder …` line in Context) and isn't
+around to answer. So:
+- **Don't wait for plan approval** (step 6). The approval for the plan is: step 4's reading, plus the research
+  (4.6), plus `/consult-the-council --high` with every REVISE point fixed or answered. Then build. Post the plan,
+  `Research:` and `Council:` lines in the WORKLOG so the founder can read them later.
+- **Stay inside the approved scope.** Stop for anything outside it, or any one-way door the approval doesn't
+  name: post a `QUESTION`, add **Needs input**, finish what the question doesn't block, then post a
+  `CHECKPOINT`. Never guess. Never handle secrets, payments or data deletion on autopilot unless the approval
+  names them.
+- Merge gate, deploy check and the Chrome live test (step 10) are unchanged. A test only the founder can run
+  (Claude Desktop, a design call) waits for the morning as a `TEST PROMPT`; the dispatcher lists it in its report.
+
 ## Worktree safety — every runner (trial 2026-10-15, UNI-55)
 
 Parallel workers share this Mac and the human's main checkouts hold uncommitted work.
@@ -30,7 +82,8 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   worktree.
 - Never `git stash` (the stash is shared across worktrees) and never `git checkout` another branch here.
 - Baseline on the deploy branch: `git worktree add /tmp/<issue>-base origin/<dev|main>`, run there, then
-  `git worktree remove /tmp/<issue>-base`.
+  `git worktree remove /tmp/<issue>-base`. To compare error lists (e.g. `tsc`), strip the
+  `/tmp/<issue>-base/` path prefix and the line numbers from both before diffing, or every line differs (UNI-98).
 - Never `pkill` / `killall` by pattern (e.g. `pkill -f 'npm test'` kills other workers' tests). Stop only your
   own background task or PID.
 - Never print secret values: mask them (`sed -E 's/(=).{6,}/\1…[masked]/'`), even on the local runner.
@@ -39,10 +92,15 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   classifier. Hand that one command to the human. In a message for **this Claude prompt**, give the
   `! <command>` form; for the human's **own terminal**, give the plain command without `!` (in zsh,
   `! cd dir && cmd` negates `cd` and silently skips `cmd`; UNI-56's first index run did nothing).
+  A command handed to the human must run exactly as pasted: no placeholders to fill in. If it needs a
+  secret, ship a script that finds it locally and never prints it (founder, UNI-31: "im not swapping in
+  shit, thats for you to do"). Searching the disk for where a secret lives is blocked too, so if the
+  script can't find it, ask the human for the file path, not the value.
 - Don't re-run a slow full test suite to read a different slice of its output. Save it once
   (`--json --outputFile=…` or `> log`) and read the file.
 - The worktree sandbox refuses commands it can't prove stay in your worktree: `git` chained with other
-  commands (`&&`, `;`, pipes), a heredoc `python3 -` that edits several files, and commands built from shell
+  commands (`&&`, `;`, pipes), a heredoc `python3 -` that edits several files, a heredoc append
+  (`cat >> file <<EOF`, refused even on its own, UNI-98), and commands built from shell
   variables (`VAR="$(aws …)" cmd`, `for` loops over variables, `gh pr create --body` with backticks). Run git
   commands one per call, write absolute paths instead of variables, edit files with the Edit tool, pass PR
   text with `--body-file`, and put anything longer in a scratchpad script you run as `zsh <path>`
@@ -94,7 +152,10 @@ linear`), then relaunch".
 - Note: project, milestone, labels (Area), `blockedBy`, parent, `gitBranchName`, comments.
 - If it is a **parent issue** with open sub-issues, work on the first unblocked sub-issue instead, or
   break it down (step 4) if it has none.
-- **Resuming?** If the issue is already In Progress, read the comments from the newest backwards:
+- **Resuming?** First run `git status` and `git diff` in the worktree: a session that stopped (usage limit,
+  crash) can leave uncommitted work that was never approved or doesn't build (UNI-98). Treat it as a draft:
+  review it, put any decision it makes that isn't on Linear to the human, and show the plan again before
+  building on it. Then read the comments from the newest backwards:
   - Latest is `DISPATCHED …` for this repo, or a `CHECKPOINT` / `Claimed by` from an earlier session that
     the human asked you to resume → this is a resume: reuse the same branch, read the last CHECKPOINT
     **and the WORKLOG** (step 3b), continue from its "Next step".
@@ -108,7 +169,9 @@ linear`), then relaunch".
 
 - Any `blockedBy` issue not Done → stop, comment "Blocked by UNI-x", tell the user which issue to run.
 - Another issue **In Progress** with the same Area label in **this repo** (`list_issues state:"In Progress"`)
-  → stop and tell the user; two sessions editing the same area collide.
+  → stop and tell the user; two sessions editing the same area collide. The one exception: your issue
+  records a **founder exception** for that other issue (its Context or the `DISPATCHED` comment says so).
+  Then go on, keep strictly to the files the exception allows, and merge `origin/<deploy>` before you ship.
 - Issue lacks an Outcome / Acceptance / Verify → ask the user (or the dispatcher) to fill it; don't guess scope.
 - Issue belongs to a different repo than the current directory → tell the user which repo to start in.
 
@@ -168,7 +231,9 @@ parallel, and don't plan first and read afterwards.
    decisions; read the sections that touch the issue in full and skim the rest. For Context Manager, Brand
    Kit, Knowledge Base or Personal Context work, also read the Linear document "Context Manager design"
    (`e66939fa-8eff-4a4d-b6f6-e597dc6d486b`). The Linear copies are current; another repo's local checkout
-   may be stale.
+   may be stale. The pivot plan is ~100k characters, over the tool-result limit: the result is saved to a
+   file; list its headings (`json.loads(...)["content"]`, then the `\n## ` / `\n### ` offsets) and read the
+   sections you need by character range (UNI-98).
 2. **The issue:** its description, parent, attached documents, comments, and the handoffs of its blocking
    and related issues (Memory first).
 3. **This repo's docs:** `CLAUDE.md` (auto-loaded), `docs/architecture/overview.md`,
@@ -188,6 +253,18 @@ parallel, and don't plan first and read afterwards.
 
 5. **Then the code:** related code, tests and existing patterns. The issue's `Expected files:` line is for
    collision checks, not a fence.
+6. **Research how it should be done, before you design it.** Scale it to the work: minutes for a small bug,
+   real research for a feature, contract, schema or anything a user sees.
+   - **Our other repos and skills:** has ul-backend, ul-frontend, ul-langgraph or unilytics-mcp already solved
+     this (read them on GitHub, see item 3)? Reuse the pattern rather than inventing a second one. The
+     founder's own skills often hold proven methods (e.g. `doc-template-design`, `landing-page-structure-cro`).
+   - **Other products:** how Profound, AirOps and the best tools in the space solve the same user problem
+     (`docs/research/competitor-context-map.md`, their docs, or Claude in Chrome when the session has it).
+   - **Best practice and primary sources:** the official docs, specs and RFCs for what you touch (MCP spec,
+     OAuth RFCs, Mongo, FastMCP, React or Tailwind docs, AWS docs), and well-regarded open-source
+     implementations. Use WebSearch or WebFetch, and prefer primary sources over blog summaries.
+   - Write a `Research:` line under `Read:` in the WORKLOG plan: what you looked at (links), what you'll adopt,
+     and what you rejected and why. A plan without it is not ready to show.
 - If the work splits into steps another session could take, create **sub-issues** (`save_issue` with
   `parentId`, same project + milestone, Standard task format). If it is bigger than ~1 week, comment
   "Proposing convert-to-project" and stop for the user.
@@ -205,12 +282,29 @@ parallel, and don't plan first and read afterwards.
 
 ## 6. Plan → implement → verify
 
-- Plan first (plan mode for anything non-trivial), only after step 4's reading is done; the plan opens with
-  its `Read:` line. Then implement in small commits.
-- **Interactive session (the human is in the terminal): show the plan and wait for an explicit approval
-  before building** — founder, 2026-10-18: "take my approval beofre proceeding, you can show what your plan
+- Plan first (plan mode for anything non-trivial), only after step 4's reading and research are done. The plan
+  opens with its `Read:` and `Research:` lines. Then implement in small commits, reviewing each step as you go
+  (engineering bar, top of this skill).
+- **Consult the council on important work, before the human approves the plan:**
+  `/consult-the-council --high` on the plan. Important means any of:
+  - security, auth or tenant isolation;
+  - credits, billing or payments;
+  - a data model, schema or migration;
+  - a cross-repo contract (REST shape, MCP tool signature);
+  - anything public or hard to undo;
+  - architecture choices;
+  - any Urgent or High feature.
+  Show the human the plan with a `Council:` line: each verdict, the issues raised, and what you changed or
+  rejected and why. REJECT → stop and discuss before building. For security, billing and migrations, also run it
+  on the final diff before merging. Record both runs in the WORKLOG.
+- **Interactive session (the human is in the terminal), not Autopilot: show the plan and wait for an explicit
+  approval before building** — founder, 2026-10-18: "take my approval beofre proceeding, you can show what your plan
   is and then only proceed". Corrections to the plan count as "not yet": fold them in and show it again.
   Name the files, the components reused, and any open decision with your recommendation.
+- **A founder decision is on Linear before it's in code.** Post the human's answer verbatim (a `FOUNDER
+  DECISION` comment or the WORKLOG) before building on it. A decision you only find in code or a summary,
+  with no Linear record, is a question for the human, not a fact (UNI-98: an unrecorded "everyone gets the
+  new screens" in a stalled session's WIP; the founder then chose differently).
 - Run the issue's **Verify** command/check. Paste the **actual command and its output** (trimmed) into the
   handoff — measured, not claimed. No green Verify = not done.
 - Run a fresh-context review of the diff against the Acceptance criteria (`/code-review` or a review
@@ -245,6 +339,8 @@ you're repeating an action; you're unsure the approach is right; or the human ty
 ## 8. Stopping before the work is done (end of day, context full, interrupted)
 
 - Commit work-in-progress and push the branch (`git push -u origin <branch>`), even if tests don't pass yet.
+  Do this before a long build step when the usage limit is close: a session that dies with uncommitted work
+  leaves the next one guessing (UNI-98).
 - `save_comment`:
   ```
   CHECKPOINT — <ISO timestamp> · runner <runner> · branch <branch> @ <short sha>
@@ -287,6 +383,9 @@ The human tests only on the deployed product, never locally. So an Opus worker f
 1. **Merge gate.** Merge only if ALL of these hold. Otherwise say which one failed, post a `QUESTION:` (+ Needs
    input) if the human must act, and stop:
    - Verify is green and the fresh-context review found nothing blocking.
+   - Important work (step 6): the council ran on the plan (and on the diff for security, billing or migrations),
+     and every REVISE point is fixed or answered in the WORKLOG.
+   - No band-aid in the diff (engineering bar). If a reviewer would call something a workaround, it isn't ready.
    - The PR isn't a draft, its title has no "DO NOT MERGE", and the issue isn't parked (e.g. under UNI-73).
    - Every `blockedBy` issue is Done (merged and deployed), so multi-repo features land in dependency order.
    - No other deploy is running in this repo (`gh run list -R <owner/repo> --limit 3`: nothing in progress).
@@ -308,9 +407,27 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    cold, so run "after N min idle" checks at least that long after the **last** merge to the repo. Numbers
    measured from outside India include ~0.45 s of TCP+TLS on a fresh connection; report first-call and warm
    (connection reused) separately, and read server time from `Server-Timing` or CloudWatch.
-5. **Test prompt.** If the change can be seen or used by a person (app.unilytics.ai, the MCP tools from Claude,
-   an email, an export), post a `TEST PROMPT` comment on the issue and print the same prompt here in ONE copyable
-   block, for the human to paste into Claude in Chrome:
+5. **Live test: run it yourself in Chrome** (founder, 2026-10-18: "this is a must"). If the change can be seen or
+   used in a browser (app.unilytics.ai, a public page, an export link), you test it on the deployed product:
+   - Load the Claude in Chrome tools: one ToolSearch for `tabs_context_mcp`, `tabs_create_mcp`, `navigate`,
+     `computer`, `find`, `get_page_text`, `read_console_messages`, `browser_batch` and `gif_creator`. Open your own
+     tab. The founder's Chrome is already signed in to app.unilytics.ai; never type a password.
+   - Write the steps first, each with its expected result, exactly as in the template below. Then run them, plus
+     the edge cases: empty state, long text, a second project, a narrow window, light and dark. Check the console
+     for errors, and record a GIF of the main flow.
+   - Read-only beyond the steps: don't change settings, data or billing; don't send, delete or pay. Use a test
+     project where you can. Close your tab when done.
+   - Post `TEST RESULT · run by worker in Chrome · <sha>` with `Step N — PASS/FAIL — what you saw` and the GIF or
+     screenshot paths. Then show the founder a 2-line summary (what changed and why, PASS or FAIL).
+   - All pass → Done (step 6). Any fail → fix it on a new branch and go back to 1.
+
+   **Hand the test to the founder only when you can't run it yourself.** Say why in one line, then post a
+   `TEST PROMPT` comment and print it here in one copyable block. That applies when:
+   - the Chrome tools don't load or the extension isn't connected;
+   - the session isn't signed in;
+   - the test needs **Claude Desktop** (the Unilytics MCP is connected only there, so write the prompt for a new
+     Desktop chat and tell them to fully quit and reopen Desktop first);
+   - a step needs the founder's own judgment (a design call).
    ```
    TEST PROMPT · UNI-123 · deployed <short sha> to <where> at <time>
    You are testing a change on the LIVE product for me. Only do what the steps say; don't change settings,
@@ -328,8 +445,9 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    Other issues: <anything odd, with screenshots of every FAIL>
    ```
    Backend changes nobody can see directly still get the step-4 deploy check; docs-only changes skip both.
-6. **Wait for the results in this tab.** The human pastes Chrome's report plus their own feedback. Then:
-   - Post it verbatim as a `TEST RESULT` comment.
+6. **Close it out.** If you ran the test, your `TEST RESULT` decides. If the founder ran it, wait in this tab for
+   their report and feedback:
+   - Post the founder's report verbatim as a `TEST RESULT` comment.
    - All pass → move the issue to Done, final WORKLOG update, and tell the human "Done — you can close this tab."
    - Fails or feedback → treat the feedback as human corrections (route by kind, see the top of this skill),
      fix it on a new branch, open a PR, and go back to 1, with a new TEST PROMPT. Small unrelated follow-ups →
