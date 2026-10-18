@@ -34,12 +34,19 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
 - Never `pkill` / `killall` by pattern (e.g. `pkill -f 'npm test'` kills other workers' tests). Stop only your
   own background task or PID.
 - Never print secret values: mask them (`sed -E 's/(=).{6,}/\1…[masked]/'`), even on the local runner.
+  A prefix ("first 12 chars + …") still leaks part of the secret; print key names only (UNI-56).
+- Reading prod secrets (Mongo URI, `JWT_SECRET`) or minting a prod token is blocked by the auto-mode
+  classifier. Hand that one command to the human. In a message for **this Claude prompt**, give the
+  `! <command>` form; for the human's **own terminal**, give the plain command without `!` (in zsh,
+  `! cd dir && cmd` negates `cd` and silently skips `cmd`; UNI-56's first index run did nothing).
 - Don't re-run a slow full test suite to read a different slice of its output. Save it once
   (`--json --outputFile=…` or `> log`) and read the file.
 - The worktree sandbox refuses commands it can't prove stay in your worktree: `git` chained with other
   commands (`&&`, `;`, pipes), a heredoc `python3 -` that edits several files, and commands built from shell
-  variables. Run git commands one per call, write absolute paths instead of variables, and edit files with
-  the Edit tool (2026-10-18, UNI-27).
+  variables (`VAR="$(aws …)" cmd`, `for` loops over variables, `gh pr create --body` with backticks). Run git
+  commands one per call, write absolute paths instead of variables, edit files with the Edit tool, pass PR
+  text with `--body-file`, and put anything longer in a scratchpad script you run as `zsh <path>`
+  (2026-10-18, UNI-27, UNI-56, UNI-81).
 - A second issue in the same session gets its own worktree: `git fetch origin`, then
   `git worktree add -b <gitBranchName> .claude/worktrees/<issue> origin/<deploy>` and switch into it
   (EnterWorktree with `path`). Never reuse the previous issue's branch.
@@ -297,6 +304,10 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    criteria expect, and check the Lambda error count for ~10 minutes after the deploy. Post the commands and
    real responses (secrets masked) as a `DEPLOY CHECK` comment. Failed → tell the human and fix forward or ask
    about reverting; don't move on.
+   Timing checks (UNI-81): every merge, docs-only included, redeploys the Lambda and makes every container
+   cold, so run "after N min idle" checks at least that long after the **last** merge to the repo. Numbers
+   measured from outside India include ~0.45 s of TCP+TLS on a fresh connection; report first-call and warm
+   (connection reused) separately, and read server time from `Server-Timing` or CloudWatch.
 5. **Test prompt.** If the change can be seen or used by a person (app.unilytics.ai, the MCP tools from Claude,
    an email, an export), post a `TEST PROMPT` comment on the issue and print the same prompt here in ONE copyable
    block, for the human to paste into Claude in Chrome:
