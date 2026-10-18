@@ -72,8 +72,8 @@ around to answer. So:
   name: post a `QUESTION`, add **Needs input**, finish what the question doesn't block, then post a
   `CHECKPOINT`. Never guess. Never handle secrets, payments or data deletion on autopilot unless the approval
   names them.
-- Merge gate, deploy check and `TEST PROMPT` are unchanged. The prompt waits for the founder's morning; the
-  dispatcher lists it in its report.
+- Merge gate, deploy check and the Chrome live test (step 10) are unchanged. A test only the founder can run
+  (Claude Desktop, a design call) waits for the morning as a `TEST PROMPT`; the dispatcher lists it in its report.
 
 ## Worktree safety — every runner (trial 2026-10-15, UNI-55)
 
@@ -390,9 +390,27 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    cold, so run "after N min idle" checks at least that long after the **last** merge to the repo. Numbers
    measured from outside India include ~0.45 s of TCP+TLS on a fresh connection; report first-call and warm
    (connection reused) separately, and read server time from `Server-Timing` or CloudWatch.
-5. **Test prompt.** If the change can be seen or used by a person (app.unilytics.ai, the MCP tools from Claude,
-   an email, an export), post a `TEST PROMPT` comment on the issue and print the same prompt here in ONE copyable
-   block, for the human to paste into Claude in Chrome:
+5. **Live test: run it yourself in Chrome** (founder, 2026-10-18: "this is a must"). If the change can be seen or
+   used in a browser (app.unilytics.ai, a public page, an export link), you test it on the deployed product:
+   - Load the Claude in Chrome tools: one ToolSearch for `tabs_context_mcp`, `tabs_create_mcp`, `navigate`,
+     `computer`, `find`, `get_page_text`, `read_console_messages`, `browser_batch` and `gif_creator`. Open your own
+     tab. The founder's Chrome is already signed in to app.unilytics.ai; never type a password.
+   - Write the steps first, each with its expected result, exactly as in the template below. Then run them, plus
+     the edge cases: empty state, long text, a second project, a narrow window, light and dark. Check the console
+     for errors, and record a GIF of the main flow.
+   - Read-only beyond the steps: don't change settings, data or billing; don't send, delete or pay. Use a test
+     project where you can. Close your tab when done.
+   - Post `TEST RESULT · run by worker in Chrome · <sha>` with `Step N — PASS/FAIL — what you saw` and the GIF or
+     screenshot paths. Then show the founder a 2-line summary (what changed and why, PASS or FAIL).
+   - All pass → Done (step 6). Any fail → fix it on a new branch and go back to 1.
+
+   **Hand the test to the founder only when you can't run it yourself.** Say why in one line, then post a
+   `TEST PROMPT` comment and print it here in one copyable block. That applies when:
+   - the Chrome tools don't load or the extension isn't connected;
+   - the session isn't signed in;
+   - the test needs **Claude Desktop** (the Unilytics MCP is connected only there, so write the prompt for a new
+     Desktop chat and tell them to fully quit and reopen Desktop first);
+   - a step needs the founder's own judgment (a design call).
    ```
    TEST PROMPT · UNI-123 · deployed <short sha> to <where> at <time>
    You are testing a change on the LIVE product for me. Only do what the steps say; don't change settings,
@@ -410,8 +428,9 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    Other issues: <anything odd, with screenshots of every FAIL>
    ```
    Backend changes nobody can see directly still get the step-4 deploy check; docs-only changes skip both.
-6. **Wait for the results in this tab.** The human pastes Chrome's report plus their own feedback. Then:
-   - Post it verbatim as a `TEST RESULT` comment.
+6. **Close it out.** If you ran the test, your `TEST RESULT` decides. If the founder ran it, wait in this tab for
+   their report and feedback:
+   - Post the founder's report verbatim as a `TEST RESULT` comment.
    - All pass → move the issue to Done, final WORKLOG update, and tell the human "Done — you can close this tab."
    - Fails or feedback → treat the feedback as human corrections (route by kind, see the top of this skill),
      fix it on a new branch, open a PR, and go back to 1, with a new TEST PROMPT. Small unrelated follow-ups →
