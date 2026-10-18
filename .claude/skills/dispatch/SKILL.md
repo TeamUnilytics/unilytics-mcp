@@ -18,6 +18,16 @@ gate on local PRs (step 3b), which is why it must be Opus.
 `--conserve` = the Univsense Max limit is low: recommend `ul` first, then `univ-api`, and `local` only for small
 private jobs (step 2c).
 
+## Talking to the founder (every message, this skill and its workers)
+
+The founder runs several companies and has little time:
+- **Short.** Lead with the answer, then a table or bullets. No essays. Cut anything that isn't a decision, a
+  result or an action for them.
+- **Never a bare issue id.** Every issue mention says what it is in plain words and why it matters:
+  `UNI-107 (Brand Kit backend: stores each client's voice and rules) — so Claude writes in the client's
+  voice`. Same for projects, PRs and tools.
+- **Ask for one thing at a time,** with a recommended default they can accept with one word.
+
 ## 0. Be the product manager: read the plan, then rank by user value
 
 This session is the PM, not only a scheduler. The goal is a user who is happy with the product, as fast as
@@ -27,6 +37,10 @@ possible.
   (`docs/plans/pivot-consultant-skill-platform.md`) in full. Then read the plan of every Linear project that has a
   candidate issue: the `## Plan` section of the project description names its file or Linear document. New projects
   bring new plan files. If a project names none, ask the human for it before you dispatch its issues.
+- **Use the product before you rank anything.** Priorities come from using it, not from reading the backlog.
+  The founder: "I open up the product and click Context and it says coming soon. Obvious then." Run the
+  walkthrough (step 0b) every night at wind-up, or first thing in the morning if the night run didn't happen. A
+  core screen that says "coming soon", breaks, or is slow is the top candidate for the wave.
 - **North star:** the design partner uses the product every working day (GTM project). **Near-term KPI:** the P1
   goal. A new consultant signs in, connects their AI with one URL and runs a universal skill on a project in under
   2 minutes. Judge every issue by how directly it moves a real user toward that. The wave table's Why column says
@@ -65,16 +79,92 @@ possible.
   place of core work.
 
 **Wave mix (every wave):**
-- **Keep 1–2 core-product issues running at all times**, counting those already In Progress. Core means what a
-  consultant touches: the MCP gateway and onboarding, skills and the Skill Library, the Context Manager, app screens
-  and their speed. If no core issue is dispatchable (conflicts, thin spec, blocked), say why and fix that first:
-  split it, write the spec, or post the `QUESTION`.
+- **Keep 1–2 core-product issues running at all times**, counting those already In Progress. Core means the
+  reason a consultant comes back every day: the Context Manager (Context, Brand Kit, Design System, Knowledge Base),
+  the skills (Skill Library, project skills, later the Skill Lab agents), and the MCP that serves both into their
+  AI. Onboarding and speed get them in the door and count too, but they rank below the differentiator once
+  sign-in works. Rank by why the user stays, not only whether they can get in.
+- **Core work that isn't dispatchable gets fixed in the same run, never skipped** (2026-10-18: the Context
+  Manager was passed over for being too big and cross-repo). Split it by user value (contract issue first,
+  one issue per repo), write the missing spec, or post the `QUESTION`. Then show the human the slice you can
+  start now. If two core slices collide only on repo + Area, but their files don't overlap (e.g. a new folder),
+  propose a founder exception rather than waiting. Record the exception in the issue.
 - **Fill the other slots with important non-core work**, in this order:
   1. P0 security that exposes users' data or credits.
   2. Correctness of money and schedules (e.g. credit expiry).
   3. Cleanup (archive repos, move code out, prune branches).
   Don't let it crowd out core, and don't leave it out either.
 - Chores the human has explicitly parked stay out until they ask for them.
+
+### 0b. Product walkthrough + gap check (nightly at wind-up, else first thing in the morning)
+
+Load the Claude in Chrome tools (`claude-in-chrome` skill; one ToolSearch for the core set), open a new tab and
+sign in to https://app.unilytics.ai as the founder's test account. If the session isn't signed in, ask the human
+to sign in; never type a password. Read-only: don't create, delete, run, pay or change settings. Record a GIF.
+
+1. **Use everything that is built**, as a consultant would, and time each first load:
+   - sign-in;
+   - Projects → open a project → every project nav item (Overview, Context, Brand Kit, Design System,
+     Knowledge Base, Skills → a folder → a skill and its file panel, Channels, AEO);
+   - every global item (Skill Library, Agent Inbox, Personal Context, Design System, Connect your AI, the
+     user-menu settings).
+   Then from this session's own MCP connection to Unilytics, if one is loaded, call the read-only discovery
+   tools (`list_skills`, `get_skill`) on a test project.
+2. **Grade each screen:** works · broken (error, empty when data exists, console errors) · "coming soon" ·
+   slow (> 2 s) · confusing (you had to guess what to click).
+3. **Then look past what's built (avoid tunnel vision).** Compare against:
+   - the plan's IA (§2) and each active project's "Done when";
+   - the P1 KPI flow end to end (sign up → connect your AI → run a universal skill on a project);
+   - what Profound and AirOps offer for the same job (`docs/research/competitor-context-map.md`).
+   List what's missing that a consultant would expect on day one.
+4. **Write it up** in the Linear document "Product walkthrough", newest date on top: one table per screen,
+   then gaps, then the ranked top 3 to fix. Search for existing issues first. Then create issues in the
+   Standard task format, or add the finding to an existing one: bugs to the right project, gaps to the plan
+   section they belong to.
+5. Use the result as the first input to step 2. A broken or "coming soon" core screen outranks anything a
+   user can't see.
+
+### 0c. Autopilot queue: work that runs while the founder is away (every evening, before wind-up)
+
+Founder time is the bottleneck. Measured 2026-10-18: build time is about an hour, but issues waiting on him sat
+10–17 h. So each evening, before wind-up:
+1. **Shortlist up to 8 candidates** that a worker could finish without the founder. Each needs:
+   - a complete spec and a Verify an agent can run;
+   - no human-only step (keys, consoles, payments, a design call);
+   - no open `QUESTION`;
+   - no one-way door left undecided.
+   For each, also list the one decision that would unlock it, if any.
+2. **Ask once, in one short table:** `Issue (what, why) · what the worker will do · the limits · your call`.
+   Ask any unlocking questions in the same message. Default: approve the ones marked ✅.
+3. **On approval:** add the label **Autopilot** to each. Add a line under its Context:
+   `Autopilot — approved by founder <date>: <scope and limits as approved>`. Then claim it and print the launch
+   commands as usual. Prefer the background form (`--bg`) so they run overnight.
+4. **Report every run and every morning,** one line from `list_issues label:Autopilot`:
+   `Autopilot: N running · N merged (deploy-checked) · N waiting on you (QUESTION / TEST PROMPT) · N released`.
+   Name the waiting ones with what they are and why.
+
+### 0d. Velocity and dates, from agent data (at wind-up; quoted in every wave)
+
+The work is done by agents, so estimate from **our measured agent times**, never from human-team norms.
+- **Measure from Linear** (`list_issues state:Done`, `startedAt`, `completedAt`, `createdAt`):
+  - **build time:** `startedAt` → the PR merge or Handoff;
+  - **cycle time:** `startedAt` → `completedAt`;
+  - **lead time:** `createdAt` → `completedAt`;
+  - **founder wait:** time from a `TEST PROMPT`, `QUESTION` or plan shown until the reply;
+  - **throughput:** issues Done per day.
+  Report medians by Area, and keep build time and founder wait apart. They have different fixes.
+- **Dates:** for each active milestone, estimate the time left as open issues × median build time ÷ parallel
+  sessions, plus the expected founder wait. If that lands well before the target date, propose pulling the date
+  in. If it lands after, propose the delay and its cause. Change a date (`save_milestone`) only after the founder
+  OKs it, and add a `Changed <date>` line in the plan.
+- **What the founder sees in Linear:**
+  - a project update on each active project at wind-up (`save_status_update`, health onTrack / atRisk /
+    offTrack). The body starts with `**Dispatch update**` and then has 3 lines: done today, next, risk. The founder
+    posts their own project updates too (new ideas, priority changes). Every run, read the updates that don't
+    start with `Dispatch update` (`get_status_updates`) as founder input, alongside this terminal;
+  - milestone target dates on the Projects timeline;
+  - Insights (Business plan) on a custom view (`Cmd+Shift+I`: cycle time and lead time scatter, issue count by
+    status).
 
 ## 1. Gather state (Linear MCP)
 
@@ -178,7 +268,8 @@ Local workers open **draft** PRs and say `runner local` in their handoff. For ea
 In Review: run `/code-review <PR url>` here (Opus) against the issue's Acceptance criteria and the handoff's
 Verify evidence.
 - Clean → `gh pr ready <n> -R <owner/repo>`, then do `/work-on` step 10 for it here: merge gate, merge, watch
-  the deploy, smoke check, `TEST PROMPT`. The human pastes the test results back in this tab.
+  the deploy, smoke check, then the live test in Chrome yourself (`/work-on` step 10.5). Hand a `TEST PROMPT`
+  to the human only when Chrome can't run it.
 - Problems → comment `REVIEW — fix list` (numbered) on the issue, move it back to In Progress and print a
   relaunch command: same runner for small fixes, an Opus runner (`claude-univ`, or `claude-ul` /
   `claude-univ-api` if Univsense is low) if the approach is wrong.
@@ -188,6 +279,9 @@ Verify evidence.
 Merge at most one PR per repo at a time, and wait for its deploy before the next.
 
 ## 4. Fold in learnings (end of day: the founder says "winding up", or when asked)
+
+Run the product walkthrough (step 0b) first, so tomorrow's wave starts from what the product actually does.
+Then ask for the night's Autopilot queue (step 0c), and post the velocity numbers and project updates (step 0d).
 
 This is the only time the main plan (git + its Linear document) changes. Build the update from the handoffs:
 `Changed`, `Plan changes` and Follow-ups go into the plan sections they name, plus the progress markers.
