@@ -15,8 +15,8 @@ read these from `~/dev/ul-langgraph/docs/sop/`.
 ## Required Linear trail — every runner, no exceptions (trial 2026-10-15: both Qwen and Opus skipped parts)
 
 Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
-1. **Before reading any code:** post `Started · runner <runner> · branch <branch> · <ts>`, then post the
-   **WORKLOG** comment (step 3b) and keep its comment id.
+1. **Before reading any code:** post `Started · runner <runner> · branch <branch> · <ts>`, sync to the
+   latest deploy branch (step 3c), then post the **WORKLOG** comment (step 3b) and keep its comment id.
 2. **While working:** edit that WORKLOG (plan chosen, approach change, gotcha, human correction, Verify run).
 3. **Anything only the human can do** (rotate or revoke a key, console or dashboard changes, prod config):
    post `QUESTION:` and add the label **Needs input**, even if you mention it in the handoff, so `/dispatch`
@@ -129,12 +129,48 @@ Update it at least when: the plan is chosen, the approach changes, something fai
 the human corrects you, Verify runs, and before you stop. Write gotchas **when they happen**, not from memory
 at the end — they are the most valuable thing a session leaves behind.
 
-## 4. Load context
+### 3c. Start from the latest deploy branch
 
-- Read this repo's `CLAUDE.md` (auto-loaded) and the plan/design sections the issue cites
-  (`docs/plans/pivot-consultant-skill-platform.md`, `docs/brainstorms/pivot-context-manager-design.md`).
-- Then read whatever else you need to do the job well — related code, tests, other docs, related issues and
-  their handoffs. The issue's `Expected files:` line is for collision checks, not a fence.
+`claude -w` branches from the local checkout, which can be days behind `origin` (founder check 2026-10-17).
+Deploy branch: ul-langgraph → `dev`, every other repo → `main`.
+- `git fetch origin`.
+- **New branch** (`git log --oneline origin/<deploy>..HEAD` and `git status --porcelain` both empty) →
+  `git reset --hard origin/<deploy>`.
+- **Resuming a pushed branch** → `git merge origin/<deploy>` (not rebase: the branch is already on the remote).
+- Write the base in the WORKLOG `Progress:` line (`based on origin/<deploy> @ <short sha>`). Before `/ship`,
+  fetch again and merge `origin/<deploy>` if it moved.
+
+## 4. Load context — required reading, BEFORE any plan
+
+Finish all of this before you fill the WORKLOG `Plan:` or show the human a plan. Start `Plan:` with a
+`Read:` line listing what you read, so the human can see the plan is grounded. Don't read and plan in
+parallel, and don't plan first and read afterwards.
+
+1. **Project plan (always, every repo):** the Linear document "Pivot plan — consultant skill platform"
+   (`get_document` id `767abece-ac8b-43ba-b7eb-932a0eaf9369`). It holds the product direction, phases and
+   decisions; read the sections that touch the issue in full and skim the rest. For Context Manager, Brand
+   Kit, Knowledge Base or Personal Context work, also read the Linear document "Context Manager design"
+   (`e66939fa-8eff-4a4d-b6f6-e597dc6d486b`). The Linear copies are current; another repo's local checkout
+   may be stale.
+2. **The issue:** its description, parent, attached documents, comments, and the handoffs of its blocking
+   and related issues (Memory first).
+3. **This repo's docs:** `CLAUDE.md` (auto-loaded), `docs/architecture/overview.md`,
+   `docs/sop/developer-standards.md` (where present), every `docs/architecture/*` doc for the area you touch
+   (`ls docs/architecture`), and any doc the issue Context names. A doc in another repo: read it from
+   GitHub, e.g. `gh api "repos/TeamUnilytics/MVP-V1.0.0-/contents/<path>?ref=dev" -H "Accept: application/vnd.github.raw"`
+   (ul-langgraph `MVP-V1.0.0-`@dev, ul-backend `Unilytics.ai.server`@main, ul-frontend `Unilytics.ai.UI`@main,
+   unilytics-mcp `unilytics-mcp`@main).
+4. **Repo must-reads:**
+
+   | Repo | Read before planning |
+   |---|---|
+   | ul-frontend | `CLAUDE.md` sections "Design System — Geist", "Page Layout — AppLayout & Mode System" and "Rules for building a new page"; `docs/architecture/layout-system.md`; `docs/architecture/design-logic-v2.md`. List `src/components/ui/`, `src/components/layout/` and `src/components/global/` and **reuse what exists**: the plan names the components it reuses, and every new component needs a one-line reason. |
+   | ul-backend | `docs/architecture/database-schema.md`; for auth, credits or billing also `docs/architecture/auth-token-billing.md` and `docs/architecture/mcp-billing.md`. |
+   | ul-langgraph | `docs/architecture/mcp-server.md` for anything in `mcp_server/`, skills or `helpers/skill_store.py`. |
+   | unilytics-mcp | `README.md`, plus ul-langgraph `docs/architecture/mcp-server.md` (via `gh api`). |
+
+5. **Then the code:** related code, tests and existing patterns. The issue's `Expected files:` line is for
+   collision checks, not a fence.
 - If the work splits into steps another session could take, create **sub-issues** (`save_issue` with
   `parentId`, same project + milestone, Standard task format). If it is bigger than ~1 week, comment
   "Proposing convert-to-project" and stop for the user.
@@ -152,7 +188,8 @@ at the end — they are the most valuable thing a session leaves behind.
 
 ## 6. Plan → implement → verify
 
-- Plan first (plan mode for anything non-trivial), then implement in small commits.
+- Plan first (plan mode for anything non-trivial), only after step 4's reading is done; the plan opens with
+  its `Read:` line. Then implement in small commits.
 - Run the issue's **Verify** command/check. Paste the **actual command and its output** (trimmed) into the
   handoff — measured, not claimed. No green Verify = not done.
 - Run a fresh-context review of the diff against the Acceptance criteria (`/code-review` or a review
