@@ -18,6 +18,16 @@ gate on local PRs (step 3b), which is why it must be Opus.
 `--conserve` = the Univsense Max limit is low: recommend `ul` first, then `univ-api`, and `local` only for small
 private jobs (step 2c).
 
+## Talking to the founder (every message, this skill and its workers)
+
+The founder runs several companies and has little time:
+- **Short.** Lead with the answer, then a table or bullets. No essays. Cut anything that isn't a decision, a
+  result or an action for them.
+- **Never a bare issue id.** Every issue mention says what it is in plain words and why it matters:
+  `UNI-107 (Brand Kit backend: stores each client's voice and rules) — so Claude writes in the client's
+  voice`. Same for projects, PRs and tools.
+- **Ask for one thing at a time,** with a recommended default they can accept with one word.
+
 ## 0. Be the product manager: read the plan, then rank by user value
 
 This session is the PM, not only a scheduler. The goal is a user who is happy with the product, as fast as
@@ -113,6 +123,46 @@ to sign in; never type a password. Read-only: don't create, delete, run, pay or 
    section they belong to.
 5. Use the result as the first input to step 2. A broken or "coming soon" core screen outranks anything a
    user can't see.
+
+### 0c. Autopilot queue: work that runs while the founder is away (every evening, before wind-up)
+
+Founder time is the bottleneck. Measured 2026-10-18: build time is about an hour, but issues waiting on him sat
+10–17 h. So each evening, before wind-up:
+1. **Shortlist up to 8 candidates** that a worker could finish without the founder. Each needs:
+   - a complete spec and a Verify an agent can run;
+   - no human-only step (keys, consoles, payments, a design call);
+   - no open `QUESTION`;
+   - no one-way door left undecided.
+   For each, also list the one decision that would unlock it, if any.
+2. **Ask once, in one short table:** `Issue (what, why) · what the worker will do · the limits · your call`.
+   Ask any unlocking questions in the same message. Default: approve the ones marked ✅.
+3. **On approval:** add the label **Autopilot** to each. Add a line under its Context:
+   `Autopilot — approved by founder <date>: <scope and limits as approved>`. Then claim it and print the launch
+   commands as usual. Prefer the background form (`--bg`) so they run overnight.
+4. **Report every run and every morning,** one line from `list_issues label:Autopilot`:
+   `Autopilot: N running · N merged (deploy-checked) · N waiting on you (QUESTION / TEST PROMPT) · N released`.
+   Name the waiting ones with what they are and why.
+
+### 0d. Velocity and dates, from agent data (at wind-up; quoted in every wave)
+
+The work is done by agents, so estimate from **our measured agent times**, never from human-team norms.
+- **Measure from Linear** (`list_issues state:Done`, `startedAt`, `completedAt`, `createdAt`):
+  - **build time:** `startedAt` → the PR merge or Handoff;
+  - **cycle time:** `startedAt` → `completedAt`;
+  - **lead time:** `createdAt` → `completedAt`;
+  - **founder wait:** time from a `TEST PROMPT`, `QUESTION` or plan shown until the reply;
+  - **throughput:** issues Done per day.
+  Report medians by Area, and keep build time and founder wait apart. They have different fixes.
+- **Dates:** for each active milestone, estimate the time left as open issues × median build time ÷ parallel
+  sessions, plus the expected founder wait. If that lands well before the target date, propose pulling the date
+  in. If it lands after, propose the delay and its cause. Change a date (`save_milestone`) only after the founder
+  OKs it, and add a `Changed <date>` line in the plan.
+- **What the founder sees in Linear:**
+  - a project update on each active project at wind-up (`save_status_update`, health onTrack / atRisk /
+    offTrack, 3 lines: done today, next, risk);
+  - milestone target dates on the Projects timeline;
+  - Insights (Business plan) on a custom view (`Cmd+Shift+I`: cycle time and lead time scatter, issue count by
+    status).
 
 ## 1. Gather state (Linear MCP)
 
@@ -228,6 +278,7 @@ Merge at most one PR per repo at a time, and wait for its deploy before the next
 ## 4. Fold in learnings (end of day: the founder says "winding up", or when asked)
 
 Run the product walkthrough (step 0b) first, so tomorrow's wave starts from what the product actually does.
+Then ask for the night's Autopilot queue (step 0c), and post the velocity numbers and project updates (step 0d).
 
 This is the only time the main plan (git + its Linear document) changes. Build the update from the handoffs:
 `Changed`, `Plan changes` and Follow-ups go into the plan sections they name, plus the progress markers.
