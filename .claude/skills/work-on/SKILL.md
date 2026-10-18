@@ -140,7 +140,9 @@ linear`), then relaunch".
 
 - Any `blockedBy` issue not Done → stop, comment "Blocked by UNI-x", tell the user which issue to run.
 - Another issue **In Progress** with the same Area label in **this repo** (`list_issues state:"In Progress"`)
-  → stop and tell the user; two sessions editing the same area collide.
+  → stop and tell the user; two sessions editing the same area collide. The one exception: your issue
+  records a **founder exception** for that other issue (its Context or the `DISPATCHED` comment says so).
+  Then go on, keep strictly to the files the exception allows, and merge `origin/<deploy>` before you ship.
 - Issue lacks an Outcome / Acceptance / Verify → ask the user (or the dispatcher) to fill it; don't guess scope.
 - Issue belongs to a different repo than the current directory → tell the user which repo to start in.
 
