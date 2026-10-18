@@ -36,6 +36,15 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
 - Never print secret values: mask them (`sed -E 's/(=).{6,}/\1…[masked]/'`), even on the local runner.
 - Don't re-run a slow full test suite to read a different slice of its output. Save it once
   (`--json --outputFile=…` or `> log`) and read the file.
+- The worktree sandbox refuses commands it can't prove stay in your worktree: `git` chained with other
+  commands (`&&`, `;`, pipes), a heredoc `python3 -` that edits several files, and commands built from shell
+  variables. Run git commands one per call, write absolute paths instead of variables, and edit files with
+  the Edit tool (2026-10-18, UNI-27).
+- A second issue in the same session gets its own worktree: `git fetch origin`, then
+  `git worktree add -b <gitBranchName> .claude/worktrees/<issue> origin/<deploy>` and switch into it
+  (EnterWorktree with `path`). Never reuse the previous issue's branch.
+- Need `node_modules` for `tsc` / `vite build`? Symlink the main checkout's:
+  `ln -s ~/dev/<repo>/node_modules node_modules` (gitignored; never `npm install` into the shared folder).
 
 ## How a worker writes to its issue (the skill-authoring rules, applied to issues)
 
@@ -133,7 +142,8 @@ at the end — they are the most valuable thing a session leaves behind.
 
 `claude -w` branches from the local checkout, which can be days behind `origin` (founder check 2026-10-17).
 Deploy branch: ul-langgraph → `dev`, every other repo → `main`.
-- `git fetch origin`.
+- `git fetch origin` — also right before any `git worktree add … origin/<deploy>`: it branches from the
+  last *fetched* ref, which is stale if something merged since (UNI-27 started 1 merge behind).
 - **New branch** (`git log --oneline origin/<deploy>..HEAD` and `git status --porcelain` both empty) →
   `git reset --hard origin/<deploy>`.
 - **Resuming a pushed branch** → `git merge origin/<deploy>` (not rebase: the branch is already on the remote).
@@ -190,6 +200,10 @@ parallel, and don't plan first and read afterwards.
 
 - Plan first (plan mode for anything non-trivial), only after step 4's reading is done; the plan opens with
   its `Read:` line. Then implement in small commits.
+- **Interactive session (the human is in the terminal): show the plan and wait for an explicit approval
+  before building** — founder, 2026-10-18: "take my approval beofre proceeding, you can show what your plan
+  is and then only proceed". Corrections to the plan count as "not yet": fold them in and show it again.
+  Name the files, the components reused, and any open decision with your recommendation.
 - Run the issue's **Verify** command/check. Paste the **actual command and its output** (trimmed) into the
   handoff — measured, not claimed. No green Verify = not done.
 - Run a fresh-context review of the diff against the Acceptance criteria (`/code-review` or a review
@@ -201,8 +215,14 @@ parallel, and don't plan first and read afterwards.
 - User-facing change (MCP tool, behaviour, pricing, setup) → update `docs-public/` (once it exists;
   until then note "docs: TODO" in the handoff) and add a dated changelog entry.
 - Internal learnings (gotchas, architecture) → put them in the **handoff comment**, not in shared docs.
-  Only the dispatcher/orchestrator session edits `CLAUDE.md` and `docs/plans/*` to avoid merge conflicts
-  between parallel sessions.
+- **Dispatcher-owned docs — a worker never edits them** unless this issue's Expected files names that
+  exact file: `docs/plans/*` (the pivot plan), `docs/brainstorms/*`, the Linear documents ("Pivot plan —
+  consultant skill platform", "Context Manager design"), `CLAUDE.md`, `docs/sop/*` and the shared skills
+  (`.claude/skills/*`). That holds **even if the human asks mid-session** (founder, 2026-10-18: workers
+  updated the plan on request, and the founder wants the dispatcher to own it). Then reply: "The plan and
+  shared docs are updated by the dispatcher when you wind up. I've put this in my handoff under Plan
+  changes." Write it there, with the section and the human's exact words, and don't run
+  `/update-learnings` in a worker session.
 
 ## 7b. Hand back to Opus (local only)
 
@@ -246,6 +266,7 @@ you're repeating an action; you're unsure the approach is right; or the human ty
     Gotchas: <what — root cause — fix/rule — target file>
     Human corrections: <what — rule — target file>
     Decisions / dead ends worth keeping: <…>
+  Plan changes (for the dispatcher): <plan/design section — the change — the human's exact words, or none>
   Runner notes (local only): <where the model struggled or did well, or none>
   ```
   The dispatcher folds these into the target file's existing section (no dated addenda). Write each so it
