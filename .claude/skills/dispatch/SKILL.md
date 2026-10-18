@@ -1,6 +1,6 @@
 ---
 name: dispatch
-description: Orchestrator for parallel Claude sessions — reads the current Linear cycle, picks unblocked non-overlapping issues, checks each is ready to start cold, and prints the commands to launch one worker session per issue. Also merges worker handoff learnings into CLAUDE.md and plan docs. Use when the user says "dispatch", "what should run next", "plan today's sessions" or "/dispatch".
+description: Product manager and orchestrator for parallel Claude sessions — reads the plan, ranks Linear issues by what gets a real user value fastest, picks unblocked non-overlapping ones (always 1–2 core-product issues running), checks each is ready to start cold, and prints the commands to launch one worker session per issue. Also merges worker handoff learnings into CLAUDE.md and plan docs. Use when the user says "dispatch", "what should run next", "plan today's sessions" or "/dispatch".
 argument-hint: "[max sessions, default 5] [--conserve]"
 ---
 
@@ -17,6 +17,64 @@ or `claude-univ-api` (it would spend the API credit on planning). It is also the
 gate on local PRs (step 3b), which is why it must be Opus.
 `--conserve` = the Univsense Max limit is low: recommend `ul` first, then `univ-api`, and `local` only for small
 private jobs (step 2c).
+
+## 0. Be the product manager: read the plan, then rank by user value
+
+This session is the PM, not only a scheduler. The goal is a user who is happy with the product, as fast as
+possible.
+
+- **Read the plan first, every run.** Plans change daily, so an earlier read doesn't count. Read the master plan
+  (`docs/plans/pivot-consultant-skill-platform.md`) in full. Then read the plan of every Linear project that has a
+  candidate issue: the `## Plan` section of the project description names its file or Linear document. New projects
+  bring new plan files. If a project names none, ask the human for it before you dispatch its issues.
+- **North star:** the design partner uses the product every working day (GTM project). **Near-term KPI:** the P1
+  goal. A new consultant signs in, connects their AI with one URL and runs a universal skill on a project in under
+  2 minutes. Judge every issue by how directly it moves a real user toward that. The wave table's Why column says
+  what the user gets ("Kevin can …"), not what the code does.
+- **Ship small and early** (YC: "launch something bad quickly", ship once it has "a quantum of utility"). Prefer the
+  slice a user can try this week over the complete version. Split a big issue so its first sub-issue ships
+  something usable. Where a backend already exists, use live data, not dummy data.
+- **Grade each candidate with ICE**, the pre-PMF scale (Adora Cheung's weekly method; RICE needs usage data we don't
+  have yet).
+  - **Impact** on the KPI: high, medium or low.
+  - **Confidence** that it delivers that impact: high when a user asked for it or hit the bug; low when it rests on
+    our own guess.
+  - **Ease**: easy (one session), medium (two sessions) or hard (more, so split it).
+  Dispatch high-impact easy first, then high-impact medium, then the rest. Never dispatch low-impact hard work.
+  Scores are input, not the decision: say when judgment overrides them, and keep this one scale instead of
+  switching frameworks.
+- **Split by user value, not by layer** (Humanizing Work splitting patterns). Cut a big issue along the user's
+  journey: workflow steps, rule or data variations, one external dependency at a time (e.g. OAuth for claude.ai,
+  then ChatGPT, then Desktop), or the simple case before the hard one. Each slice must give a user something they
+  can try. Within a slice, the repo rule still applies: one issue per repo, with the contract issue blocking its
+  consumers. Splitting often exposes slices nobody needs, so drop them rather than queue them. When the unknowns are
+  too big to split, dispatch a small spike that answers the riskiest question with the cheapest probe.
+- **Turn feedback into issues by its job, not its wording.** Separate what the founder or user literally asked for
+  from the outcome they're after. Write the outcome as the issue's Outcome, the hard requirements as Acceptance
+  criteria, and how they'll judge it as Verify. Mark anything you inferred as an assumption in the issue so the
+  human can correct it.
+- **Flag the one-way doors.** In the ⚠ column, mark decisions that are hard to undo: auth model, data schema,
+  public repos, anything outward-facing. Name any assumption that would flip the ranking. Take two-way doors fast.
+- **What users hit first jumps the queue:** a failed `TEST RESULT`, founder feedback on a live screen, or a bug on
+  the first-use path (sign-in, connect your AI, first skill run).
+- **Do things that don't scale.** Prefer a manual step that unblocks a user today over building its automation
+  (invoice by hand, grant credits through the admin path, onboard the partner on a call). Defer scale, generality and
+  polish until a user needs them (provisioned concurrency, region moves, lint gates for skills nobody publishes
+  yet).
+- **Avoid fake work.** Refactors, doc trims, branch pruning and tooling are filler. They take free slots, never the
+  place of core work.
+
+**Wave mix (every wave):**
+- **Keep 1–2 core-product issues running at all times**, counting those already In Progress. Core means what a
+  consultant touches: the MCP gateway and onboarding, skills and the Skill Library, the Context Manager, app screens
+  and their speed. If no core issue is dispatchable (conflicts, thin spec, blocked), say why and fix that first:
+  split it, write the spec, or post the `QUESTION`.
+- **Fill the other slots with important non-core work**, in this order:
+  1. P0 security that exposes users' data or credits.
+  2. Correctness of money and schedules (e.g. credit expiry).
+  3. Cleanup (archive repos, move code out, prune branches).
+  Don't let it crowd out core, and don't leave it out either.
+- Chores the human has explicitly parked stay out until they ask for them.
 
 ## 1. Gather state (Linear MCP)
 
@@ -42,7 +100,8 @@ An issue is dispatchable only if:
 3. It has Outcome, Context (files/links), Acceptance criteria and Verify. If not, fix the issue text first
    (`save_issue`) — a worker must be able to start cold.
 4. It is ~a day of work. Bigger → break into sub-issues now.
-5. Prefer the earliest milestone; P0 security before anything else.
+5. Rank with step 0: P0 security that exposes users' data or credits first, then core issues by ICE
+   (the earliest milestone breaks ties), then the other non-core work. Check the wave mix before you show it.
 
 Classify In Progress issues by their latest comment:
 - **Resume** — last comment is `CHECKPOINT` (session stopped cleanly) → print a resume command.
@@ -65,6 +124,9 @@ You **recommend**; the human **decides** (step 2d).
 Read the **Current status** and **Trial log** in `docs/sop/model-runners.md` first: they override the guide below.
 
 - A `Runner: univ|ul|univ-api|local` line in the issue description wins.
+- A runner the human sets for a period ("everything on ul until univ resets tomorrow") comes next and applies to
+  every issue, resumes and relaunches included, until the date they gave. Record it under **Current status** in
+  `model-runners.md` with that end date.
 - **univ** (default): everything, while the Univsense Max limit lasts.
 - **ul**: Opus on the Unilytics Max login; first overflow when Univsense is low.
 - **univ-api**: Opus on the Univsense API credit ($200/month, resets monthly); second overflow.
@@ -80,10 +142,11 @@ Read the **Current status** and **Trial log** in `docs/sop/model-runners.md` fir
 
 Show one table and **stop until the human answers**:
 
-| Issue | Repo | Title | Recommended runner | Why | ⚠ |
-|---|---|---|---|---|---|
+| Issue | Repo | Title | Type | ICE (I/C/E) | Recommended runner | Why (what the user gets) | ⚠ |
+|---|---|---|---|---|---|---|---|
 
-Under it: the local server status, how many local workers are already running, and "Reply `go`, or change
+Type is `core`, `security` or `non-core`. Above the table, give one line on the wave mix (core issues running +
+proposed) and the plan sections the wave moves. Under it: the local server status, how many local workers are already running, and "Reply `go`, or change
 runners / drop issues (e.g. `UNI-23 ul, drop UNI-54`)". Apply the edits, show the final table again if
 anything changed, and only then claim and print commands (step 3). Nothing is claimed before `go`.
 
