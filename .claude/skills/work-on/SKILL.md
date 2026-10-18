@@ -214,15 +214,13 @@ parallel, and don't plan first and read afterwards.
 
 - User-facing change (MCP tool, behaviour, pricing, setup) → update `docs-public/` (once it exists;
   until then note "docs: TODO" in the handoff) and add a dated changelog entry.
-- Internal learnings (gotchas, architecture) → put them in the **handoff comment**, not in shared docs.
-- **Dispatcher-owned docs — a worker never edits them** unless this issue's Expected files names that
-  exact file: `docs/plans/*` (the pivot plan), `docs/brainstorms/*`, the Linear documents ("Pivot plan —
-  consultant skill platform", "Context Manager design"), `CLAUDE.md`, `docs/sop/*` and the shared skills
-  (`.claude/skills/*`). That holds **even if the human asks mid-session** (founder, 2026-10-18: workers
-  updated the plan on request, and the founder wants the dispatcher to own it). Then reply: "The plan and
-  shared docs are updated by the dispatcher when you wind up. I've put this in my handoff under Plan
-  changes." Write it there, with the section and the human's exact words, and don't run
-  `/update-learnings` in a worker session.
+- Dev docs (`CLAUDE.md`, `docs/sop/*`, `docs/architecture/*`, skills): update them in your PR when your work
+  makes them stale or teaches a gotcha (`/update-learnings` is fine), and list them in the handoff.
+- **The main plan is the dispatcher's:** `docs/plans/pivot-consultant-skill-platform.md` and the Linear document
+  "Pivot plan — consultant skill platform". Never edit either, even if the human asks mid-session
+  (founder, 2026-10-18). Reply that the dispatcher updates the plan at wind-up, and write it under
+  `Plan changes` in the handoff. Other Linear documents (e.g. "Context Manager design"): edit the git copy
+  if the issue needs it and name it in the handoff so the dispatcher syncs the Linear copy.
 
 ## 7b. Hand back to Opus (local only)
 
@@ -266,7 +264,8 @@ you're repeating an action; you're unsure the approach is right; or the human ty
     Gotchas: <what — root cause — fix/rule — target file>
     Human corrections: <what — rule — target file>
     Decisions / dead ends worth keeping: <…>
-  Plan changes (for the dispatcher): <plan/design section — the change — the human's exact words, or none>
+  Plan changes (for the dispatcher): <plan section — what was decided or changed in scope — the human's
+    exact words, or none>. The dispatcher builds the plan update from this, Changed and Follow-ups.
   Runner notes (local only): <where the model struggled or did well, or none>
   ```
   The dispatcher folds these into the target file's existing section (no dated addenda). Write each so it
