@@ -34,9 +34,27 @@ possible.
 - **Ship small and early** (YC: "launch something bad quickly", ship once it has "a quantum of utility"). Prefer the
   slice a user can try this week over the complete version. Split a big issue so its first sub-issue ships
   something usable. Where a backend already exists, use live data, not dummy data.
-- **Grade each candidate** (Adora Cheung's weekly method). Impact on the KPI: high, medium or low. Size: easy (one
-  session), medium (two sessions) or hard (more, so split it). Dispatch high-impact easy first, then high-impact
-  medium, then the rest. Never dispatch low-impact hard work.
+- **Grade each candidate with ICE**, the pre-PMF scale (Adora Cheung's weekly method; RICE needs usage data we don't
+  have yet).
+  - **Impact** on the KPI: high, medium or low.
+  - **Confidence** that it delivers that impact: high when a user asked for it or hit the bug; low when it rests on
+    our own guess.
+  - **Ease**: easy (one session), medium (two sessions) or hard (more, so split it).
+  Dispatch high-impact easy first, then high-impact medium, then the rest. Never dispatch low-impact hard work.
+  Scores are input, not the decision: say when judgment overrides them, and keep this one scale instead of
+  switching frameworks.
+- **Split by user value, not by layer** (Humanizing Work splitting patterns). Cut a big issue along the user's
+  journey: workflow steps, rule or data variations, one external dependency at a time (e.g. OAuth for claude.ai,
+  then ChatGPT, then Desktop), or the simple case before the hard one. Each slice must give a user something they
+  can try. Within a slice, the repo rule still applies: one issue per repo, with the contract issue blocking its
+  consumers. Splitting often exposes slices nobody needs, so drop them rather than queue them. When the unknowns are
+  too big to split, dispatch a small spike that answers the riskiest question with the cheapest probe.
+- **Turn feedback into issues by its job, not its wording.** Separate what the founder or user literally asked for
+  from the outcome they're after. Write the outcome as the issue's Outcome, the hard requirements as Acceptance
+  criteria, and how they'll judge it as Verify. Mark anything you inferred as an assumption in the issue so the
+  human can correct it.
+- **Flag the one-way doors.** In the ⚠ column, mark decisions that are hard to undo: auth model, data schema,
+  public repos, anything outward-facing. Name any assumption that would flip the ranking. Take two-way doors fast.
 - **What users hit first jumps the queue:** a failed `TEST RESULT`, founder feedback on a live screen, or a bug on
   the first-use path (sign-in, connect your AI, first skill run).
 - **Do things that don't scale.** Prefer a manual step that unblocks a user today over building its automation
@@ -82,7 +100,7 @@ An issue is dispatchable only if:
 3. It has Outcome, Context (files/links), Acceptance criteria and Verify. If not, fix the issue text first
    (`save_issue`) — a worker must be able to start cold.
 4. It is ~a day of work. Bigger → break into sub-issues now.
-5. Rank with step 0: P0 security that exposes users' data or credits first, then core issues by impact × size
+5. Rank with step 0: P0 security that exposes users' data or credits first, then core issues by ICE
    (the earliest milestone breaks ties), then the other non-core work. Check the wave mix before you show it.
 
 Classify In Progress issues by their latest comment:
@@ -124,7 +142,7 @@ Read the **Current status** and **Trial log** in `docs/sop/model-runners.md` fir
 
 Show one table and **stop until the human answers**:
 
-| Issue | Repo | Title | Type | Impact × size | Recommended runner | Why (what the user gets) | ⚠ |
+| Issue | Repo | Title | Type | ICE (I/C/E) | Recommended runner | Why (what the user gets) | ⚠ |
 |---|---|---|---|---|---|---|---|
 
 Type is `core`, `security` or `non-core`. Above the table, give one line on the wave mix (core issues running +
