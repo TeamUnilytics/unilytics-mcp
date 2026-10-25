@@ -20,7 +20,8 @@ Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
 2. **While working:** edit that WORKLOG (plan chosen, approach change, gotcha, human correction, Verify run).
 3. **Anything only the human can do** (rotate or revoke a key, console or dashboard changes, prod config):
    post `QUESTION:` and add the label **Needs input**, even if you mention it in the handoff, so `/dispatch`
-   puts it in front of the human.
+   puts it in front of the human. Open and prefill it first, so the human's part is one small step
+   ("Handing the founder a step", below).
 4. **Before you stop:** a `CHECKPOINT` (unfinished) or a `Handoff` (PR open), each with `runner <runner>`.
 
 ## The engineering bar — every runner, every issue (founder, 2026-10-18)
@@ -61,6 +62,42 @@ They run several companies and have little time. Lead with the result or the dec
 bullets. No essays. Never a bare issue id: say what it is and why it matters, e.g. "UNI-84 (billing routes had
 no login check) — anyone could drain credits". Ask one question at a time, with your recommended answer.
 
+**The founder switches between many worker tabs** (founder, 2026-10-24: "the way workers tell me a task is
+very hard to understand… i need at least the first message to be clear on what the task is and then telling
+me how its gonna work on it. basic."). So:
+- **First message = the task brief.** Right after reading the issue (step 1), before claiming or reading
+  anything else, print it in this shape:
+  ```
+  UNI-127 · Unilytics skill library for every user
+  What: every new user sees your scrubbed skills in their AI and the app; each goes live only after you approve it.
+  Why now: first step of the open-source skills launch; UNI-128/129/115 wait on it.
+  How I'll work:
+    1. Read the plan, the related issues and the skill store code (~15 min).
+    2. Write a plan and run the council on it (data model, so this matters), then show it to you.
+    3. Build with tests, after your OK. Fresh-context review.
+    4. Merge to dev, check the deploy, test it live, post the handoff.
+  Needs from you: plan approval in ~30 min. Nothing before that.
+  Runner ul · repo ul-langgraph · branch uni-127-…
+  ```
+- **Every later message starts with the issue id plus a 2–4 word name** (`UNI-127 (Unilytics skills): …`),
+  so a glance at any tab says which task it is. Progress lines say what was found or decided, not only
+  "reading files now".
+
+### Handing the founder a step: open it, prefill it, leave only what Claude can't do (founder, 2026-10-24)
+
+> "if ever asking me to do anything, open everything, prefill possible details and only assign the smallest of
+> step that the claude cant do to me"
+
+Never hand the founder a list of instructions to follow. Before you post the `QUESTION` or ask in the terminal:
+- **Open it in Chrome** (Claude in Chrome): the console, dashboard, form or settings page, already on the right
+  screen. If it needs a sign-in, open the sign-in page and say so.
+- **Prefill every field you can**: names, descriptions, ids you can look up (org or project ids, ARNs, URLs),
+  checkboxes, the exact value to paste. Look the ids up yourself with the CLI or API.
+- **Ask only for the step Claude may not do**: a password or sign-in, a payment, a secret value, or the final
+  Submit / Approve / Delete. Name the tab, the one button, and what happens when it's pressed.
+- If a step needs a prerequisite (a paid plan, an org), say so up front, and open that page too.
+- Commands still follow the rule under Worktree safety: one command, exactly as pasted, no placeholders.
+
 ## Autopilot issues (label **Autopilot**)
 
 The founder approved the scope in advance (the `Autopilot — approved by founder …` line in Context) and isn't
@@ -84,6 +121,9 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
 - Baseline on the deploy branch: `git worktree add /tmp/<issue>-base origin/<dev|main>`, run there, then
   `git worktree remove /tmp/<issue>-base`. To compare error lists (e.g. `tsc`), strip the
   `/tmp/<issue>-base/` path prefix and the line numbers from both before diffing, or every line differs (UNI-98).
+  Python: `python -m pytest /tmp/<issue>-base/tests/…` run from your worktree imports **your worktree's** code
+  (`-m` puts the cwd first on `sys.path`), so the "baseline" silently tests the new code. Prefix it with
+  `PYTHONSAFEPATH=1 PYTHONPATH=/tmp/<issue>-base` and confirm a test that needs the new code fails there (UNI-169).
 - Never `pkill` / `killall` by pattern (e.g. `pkill -f 'npm test'` kills other workers' tests). Stop only your
   own background task or PID.
 - Never print secret values: mask them (`sed -E 's/(=).{6,}/\1…[masked]/'`), even on the local runner.
@@ -100,14 +140,21 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   (`--json --outputFile=…` or `> log`) and read the file.
 - The worktree sandbox refuses commands it can't prove stay in your worktree: `git` chained with other
   commands (`&&`, `;`, pipes), a heredoc `python3 -` that edits several files, a heredoc append
-  (`cat >> file <<EOF`, refused even on its own, UNI-98), and commands built from shell
-  variables (`VAR="$(aws …)" cmd`, `for` loops over variables, `gh pr create --body` with backticks). Run git
+  (`cat >> file <<EOF`, refused even on its own, UNI-98), `git -C <other dir>`, and commands built from shell
+  variables (`VAR="$(aws …)" cmd`, `for` loops over variables, `gh pr create --body` with backticks). A
+  chained command whose text merely contains `git` (a `github.com` URL in a `printf` or a file you
+  write) is refused too (UNI-118). Run git
   commands one per call, write absolute paths instead of variables, edit files with the Edit tool, pass PR
   text with `--body-file`, and put anything longer in a scratchpad script you run as `zsh <path>`
   (2026-10-18, UNI-27, UNI-56, UNI-81).
+- The Write tool strips trailing whitespace, so a patch script whose anchor includes a whitespace-only line
+  never matches. Build such an anchor in code (`" " * 8`) or anchor on a line with text (UNI-94).
 - A second issue in the same session gets its own worktree: `git fetch origin`, then
   `git worktree add -b <gitBranchName> .claude/worktrees/<issue> origin/<deploy>` and switch into it
-  (EnterWorktree with `path`). Never reuse the previous issue's branch.
+  (EnterWorktree with `path`). Never reuse the previous issue's branch. The skill text you loaded still comes from
+  the first worktree, which can be older than the deploy branch. Re-read the current version with
+  `git show origin/<deploy>:.claude/skills/work-on/SKILL.md`. In UNI-94 the old copy said to hand the founder a
+  TEST PROMPT, while the current one says to run the test yourself.
 - Need `node_modules` for `tsc` / `vite build`? Symlink the main checkout's:
   `ln -s ~/dev/<repo>/node_modules node_modules` (gitignored; never `npm install` into the shared folder).
 
@@ -140,6 +187,10 @@ comment you post.
 - `ul` = Opus on the Unilytics Max login (`claude-ul`, separate login in `~/.claude-unilytics`).
 - `univ-api` = Opus on the Univsense API credit (`claude-univ-api`).
 - `local` = Qwen on this Mac (`claude-local`). Draft PR, then the dispatcher's Opus review gate.
+
+Claude in Chrome pairs with the claude.ai account the extension is signed in to, so a `ul` session only has
+Chrome when the extension is on the Unilytics account. If the issue needs a live test, check
+`list_connected_browsers` when you claim it and say in `Started` whether Chrome is connected (UNI-107).
 
 univ, ul and univ-api are all Opus: normal PR, self-review, no review gate. `univ-api` or `local` → Linear
 comes from the `linear` MCP server (claude.ai connectors don't load). No Linear tools → stop and tell the
@@ -260,6 +311,11 @@ parallel, and don't plan first and read afterwards.
      founder's own skills often hold proven methods (e.g. `doc-template-design`, `landing-page-structure-cro`).
    - **Other products:** how Profound, AirOps and the best tools in the space solve the same user problem
      (`docs/research/competitor-context-map.md`, their docs, or Claude in Chrome when the session has it).
+     For a schema or contract modelled on a competitor (a one-way door), read their real API: field names and
+     endpoints from the page scripts and network calls, not only their docs or UI (founder, UNI-107). Keep our
+     own keys and add an import/export adapter. On a Next.js app, Resource Timing caps at ~250 entries and
+     misses chunks: list `script[src]`, grep the chunks in-page with `fetch()`, and return file names only
+     (URLs trip the privacy filter).
    - **Best practice and primary sources:** the official docs, specs and RFCs for what you touch (MCP spec,
      OAuth RFCs, Mongo, FastMCP, React or Tailwind docs, AWS docs), and well-regarded open-source
      implementations. Use WebSearch or WebFetch, and prefer primary sources over blog summaries.
@@ -301,10 +357,14 @@ parallel, and don't plan first and read afterwards.
   approval before building** — founder, 2026-10-18: "take my approval beofre proceeding, you can show what your plan
   is and then only proceed". Corrections to the plan count as "not yet": fold them in and show it again.
   Name the files, the components reused, and any open decision with your recommendation.
-- **A founder decision is on Linear before it's in code.** Post the human's answer verbatim (a `FOUNDER
-  DECISION` comment or the WORKLOG) before building on it. A decision you only find in code or a summary,
-  with no Linear record, is a question for the human, not a fact (UNI-98: an unrecorded "everyone gets the
-  new screens" in a stalled session's WIP; the founder then chose differently).
+- **Saven's important comments go on Linear before they're in code.** When Saven decides or changes something
+  that matters, post it as a `Comments from Saven:` comment before building on it: their exact words, plus one
+  line on what it changes. That means scope, approach, what a screen shows or who sees it, or a rule for future
+  sessions. Routine replies don't get a comment: a plain yes or no, "approved" on a plan that's already in the
+  WORKLOG, "go ahead". At most they get one line in the WORKLOG `Progress:`. Saven, 2026-10-19: "Only the
+  important ones … dont clutter it … mostly it might just yes or no approval". A decision you only find in code
+  or a summary, with no Linear record, is a question for Saven, not a fact. In UNI-98, a stalled session's WIP
+  had an unrecorded "everyone gets the new screens", and Saven then chose differently.
 - Run the issue's **Verify** command/check. Paste the **actual command and its output** (trimmed) into the
   handoff — measured, not claimed. No green Verify = not done.
 - Run a fresh-context review of the diff against the Acceptance criteria (`/code-review` or a review
@@ -394,6 +454,9 @@ The human tests only on the deployed product, never locally. So an Opus worker f
 2. **Merge** into the repo's deploy branch (ul-langgraph → `dev`, the rest → `main`):
    `gh pr merge <n> -R <owner/repo> --merge --delete-branch`. If the safety check blocks it, ask the human
    "OK to merge PR #<n> into <branch>? It deploys to production." and merge after they say yes.
+   Right after a push, `gh pr merge` fails with "not mergeable" until the PR's checks finish: run
+   `gh pr checks <n> -R <owner/repo> --watch` first. If another PR merged meanwhile, `git merge origin/<deploy>`,
+   push, and wait for the checks again (UNI-94).
 3. **Watch the deploy:** `gh run watch <run id> -R <owner/repo> --exit-status`. If it fails: read the log, tell
    the human, post a CHECKPOINT and stop (don't merge anything else). unilytics-mcp has no deploy; publishing to
    npm is manual, so say so.
@@ -410,8 +473,21 @@ The human tests only on the deployed product, never locally. So an Opus worker f
 5. **Live test: run it yourself in Chrome** (founder, 2026-10-18: "this is a must"). If the change can be seen or
    used in a browser (app.unilytics.ai, a public page, an export link), you test it on the deployed product:
    - Load the Claude in Chrome tools: one ToolSearch for `tabs_context_mcp`, `tabs_create_mcp`, `navigate`,
-     `computer`, `find`, `get_page_text`, `read_console_messages`, `browser_batch` and `gif_creator`. Open your own
-     tab. The founder's Chrome is already signed in to app.unilytics.ai; never type a password.
+     `computer`, `find`, `get_page_text`, `read_console_messages`, `browser_batch`, `javascript_tool` and
+     `gif_creator`. Open your own tab. Count list items with `javascript_tool` on the DOM, not by eye from a
+     scrolled screenshot (UNI-94).
+   - **Sign in yourself.** Unilytics is an MVP with no users yet, so you test sign-in and the task on the live app
+     every time the task needs it; never tell the founder you can't log in (founder, 2026-10-24). The founder's
+     Chrome is usually signed in; if not, use "Continue with Google" and pick the account in Google's chooser. If
+     sign-in is blocked (the extension isn't allowed on the Auth0 domain, a preview origin isn't an Auth0
+     callback), fixing that is part of your task: allow it, or file a sub-issue and test on production instead.
+     Never type a password. Firebase PR previews are their own origin and aren't Auth0 callbacks, so frontend live
+     tests run on production after the merge (UNI-109).
+   - **Where to write test data:** the client projects in the founder's account are dummies (founder: "you can
+     use the simbex project"). The account is at its `max_projects` cap, so write into "Simbex - SEO + AEO Audit"
+     (or Cass), label everything TEST, and clean it up afterwards (UNI-139, UNI-107).
+   - Check every Acceptance item, not only the TEST PROMPT steps. An item written for a screen that has since been
+     redesigned is checked in its new form, and the TEST RESULT says how it differs (UNI-94).
    - Write the steps first, each with its expected result, exactly as in the template below. Then run them, plus
      the edge cases: empty state, long text, a second project, a narrow window, light and dark. Check the console
      for errors, and record a GIF of the main flow.
@@ -424,7 +500,6 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    **Hand the test to the founder only when you can't run it yourself.** Say why in one line, then post a
    `TEST PROMPT` comment and print it here in one copyable block. That applies when:
    - the Chrome tools don't load or the extension isn't connected;
-   - the session isn't signed in;
    - the test needs **Claude Desktop** (the Unilytics MCP is connected only there, so write the prompt for a new
      Desktop chat and tell them to fully quit and reopen Desktop first);
    - a step needs the founder's own judgment (a design call).
