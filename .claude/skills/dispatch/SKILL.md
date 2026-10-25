@@ -99,8 +99,10 @@ possible.
 ### 0b. Product walkthrough + gap check (nightly at wind-up, else first thing in the morning)
 
 Load the Claude in Chrome tools (`claude-in-chrome` skill; one ToolSearch for the core set), open a new tab and
-sign in to https://app.unilytics.ai as the founder's test account. If the session isn't signed in, ask the human
-to sign in; never type a password. Read-only: don't create, delete, run, pay or change settings. Record a GIF.
+sign in to https://app.unilytics.ai yourself (Google account chooser in the founder's Chrome; never type a
+password). Unilytics is an MVP with no users yet, so signing in is your job, not the founder's; a blocked sign-in
+is the first finding to fix (founder, 2026-10-24). Read-only: don't create, delete, run, pay or change settings.
+Record a GIF.
 
 1. **Use everything that is built**, as a consultant would, and time each first load:
    - sign-in;
@@ -126,7 +128,7 @@ to sign in; never type a password. Read-only: don't create, delete, run, pay or 
 
 ### 0c. Autopilot queue: work that runs while the founder is away (every evening, before wind-up)
 
-Founder time is the bottleneck. Measured 2026-10-18: build time is about an hour, but issues waiting on him sat
+Founder time is the bottleneck. Measured 2026-10-18: build time is about an hour, but issues waiting on them sat
 10–17 h. So each evening, before wind-up:
 1. **Shortlist up to 8 candidates** that a worker could finish without the founder. Each needs:
    - a complete spec and a Verify an agent can run;
@@ -208,6 +210,13 @@ Classify In Progress issues by their latest comment:
 Also flag: issues labelled **Needs input** (show each `QUESTION:` so the human can answer with
 `ANSWER: …` and remove the label), PRs waiting in review (the human's queue), and anything In Progress with no activity for a day.
 
+**Human-only steps** (a key, a console change, a form, a payment, a beta application): open each one in Chrome
+yourself, on the right screen, with every field you can fill already filled. Then ask the founder only for the step
+Claude may not do: sign in, pay, paste a secret, or press the final Submit. Name the tab and the button. Never
+send them a list of instructions to follow (founder, 2026-10-24: "open everything, prefill possible details and
+only assign the smallest of step that the claude cant do to me"; full rule in `/work-on` → "Handing the founder a
+step").
+
 ### 2c. Recommend a runner per issue (`docs/sop/model-runners.md` has the full rules)
 
 You **recommend**; the human **decides** (step 2d).
@@ -249,11 +258,17 @@ it reopens the existing worktree/branch). Never tell a worker to run git in othe
 A `claude -w` session can't do that, so cross-repo git-only work goes through `gh api` (see SOP rule 3b):
 
 ```
-cd ~/dev/<repo> && claude-univ -w uni-123 "/work-on UNI-123"       # runner univ (Opus, Univsense Max)
-cd ~/dev/<repo> && claude-ul -w uni-124 "/work-on UNI-124"         # runner ul (Opus, Unilytics Max)
-cd ~/dev/<repo> && claude-univ-api -w uni-125 "/work-on UNI-125"   # runner univ-api (Opus, API credit)
-cd ~/dev/<repo> && claude-local -w uni-126 "/work-on UNI-126"      # runner local (Qwen on this Mac)
+cd ~/dev/<repo> && claude-univ -w uni-123 "/work-on UNI-123"
+cd ~/dev/<repo> && claude-ul -w uni-124 "/work-on UNI-124"
+cd ~/dev/<repo> && claude-univ-api -w uni-125 "/work-on UNI-125"
+cd ~/dev/<repo> && claude-local -w uni-126 "/work-on UNI-126"
 ```
+
+Runners: univ = Opus on Univsense Max · ul = Opus on Unilytics Max · univ-api = Opus on the API credit ·
+local = Qwen on this Mac. **Never put a trailing `# comment` on a printed command.** Interactive zsh has
+no comments by default, so `#` and `(…)` get parsed as glob syntax and the paste fails with
+`zsh: number expected` (2026-10-24). Put each issue's label on its own line or in a table, outside the
+code block.
 
 (Or background: same prefix with `--bg "/work-on UNI-123"` and watch them in `claude agents`.)
 The four commands are shell wrappers in `~/.local/bin` that set `UL_RUNNER` (and the login or `--settings`

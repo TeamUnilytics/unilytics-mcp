@@ -25,6 +25,9 @@ integrity, best practice and how leading products solve it. Each returns issues,
   quota on 2026-10-18 (tied to the GCP billing issue, UNI-69).
 - **Perplexity was out of credit on 2026-10-18.** Its section shows `FAILED … out of credit`. Top up at
   console.perplexity.ai.
+- **Grok and Gemini often drop out (2026-10-24/25).** Grok times out, or returns only its intro line, on large
+  inputs; Gemini hit 429 (out of quota). Several reviews ran on OpenAI + Perplexity alone. Keep the input short
+  (the diff and the decision, not whole files), and say in the WORKLOG which members answered (UNI-127, UNI-165).
 - **A review counts with at least 2 responses.** The script exits 1 below that.
 - **Updating models:** set `COUNCIL_MODEL_<MEMBER>` (e.g. `COUNCIL_MODEL_OPENAI=gpt-6.1-sol`) to override one
   member, or edit `EFFORT` in `council.mjs`. Then run `--check`.
@@ -56,7 +59,8 @@ never inside the repo: `.claude/tmp/` isn't gitignored. If `$ARGUMENTS` names a 
 - what you want reviewed.
 
 The models see only this file, so make it stand alone. Never include secrets, customer data or client names
-that aren't needed.
+that aren't needed. Source can hold secrets too: `mcp_server/auth.py` embeds a fallback Mongo URI with a
+password until UNI-10 lands, so redact it before pasting that file (UNI-169).
 
 ### 2. Run it
 
