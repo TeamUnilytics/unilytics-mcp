@@ -114,6 +114,21 @@ Still the founder's:
 If a safety check still blocks a pre-approved change, don't work around it. Open the page on the exact control
 and ask for that one click.
 
+**Credit top-ups: open the billing page and name the account** (founder, 2026-11-01: "i wont always remember
+this"). When a model provider runs out of credit (council or production), open its billing page in Chrome and
+tell the founder which account to sign in with:
+
+| Provider | Billing page | Account |
+|---|---|---|
+| Gemini (Google AI Studio) | https://aistudio.google.com/apikey (the key's row → its project → billing) | hello@univsense.com |
+| xAI / Grok | https://console.x.ai (team "UL") | team@unilytics.ai |
+| OpenAI | https://platform.openai.com/settings/organization/billing/overview (org "Personal") | admin@univsense.com |
+| Anthropic (Claude API) | https://console.anthropic.com/settings/billing | team@unilytics.ai (founder "believes"; confirm on the page) |
+| Perplexity | https://www.perplexity.ai/account/api/billing | unknown: ask once, then add it here |
+
+The council and production share the xAI, Gemini and Perplexity keys, so a top-up there also restores
+production's calls.
+
 Never hand the founder a list of instructions to follow. Before you post the `QUESTION` or ask in the terminal:
 - **Open it in Chrome** (Claude in Chrome): the console, dashboard, form or settings page, already on the right
   screen. If it needs a sign-in, do the sign-in clicks yourself (account chooser, consent); only a password,
@@ -153,6 +168,8 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   Python: `python -m pytest /tmp/<issue>-base/tests/…` run from your worktree imports **your worktree's** code
   (`-m` puts the cwd first on `sys.path`), so the "baseline" silently tests the new code. Prefix it with
   `PYTHONSAFEPATH=1 PYTHONPATH=/tmp/<issue>-base` and confirm a test that needs the new code fails there (UNI-169).
+  The baseline has no `.env`, so `helpers/settings.py` fails at collection ("Field required"): `ln -s` your worktree's
+  `.env` into it, run the tests from inside it, and `rm` the link before `git worktree remove --force` (UNI-283).
 - Never `pkill` / `killall` by pattern (e.g. `pkill -f 'npm test'` kills other workers' tests). Stop only your
   own background task or PID.
 - Never print secret values: mask them (`sed -E 's/(=).{6,}/\1…[masked]/'`), even on the local runner.
@@ -179,8 +196,13 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   (2026-10-18, UNI-27, UNI-56, UNI-81). A Python script that imports repo code is refused when run with
   `PYTHONPATH=… python <file>` or as a heredoc: write it to the gitignored `scripts/` folder (with an empty
   `scripts/__init__.py`) and run `~/dev/<repo>/.venv/bin/python -m scripts.<name>` from the worktree (UNI-131).
+  Also refused: `{ …; } > file` groups and inline `python3 - <<EOF` edits; write the script to the scratchpad
+  and run `python3 -I <path>` (UNI-291).
 - The Write tool strips trailing whitespace, so a patch script whose anchor includes a whitespace-only line
-  never matches. Build such an anchor in code (`" " * 8`) or anchor on a line with text (UNI-94).
+  never matches. Build such an anchor in code (`" " * 8`), anchor on a line with text, or replace an index
+  range between two text anchors (UNI-94, UNI-291 `Left-Container.tsx`).
+- A staged `git rm` goes into the next commit even when you `git add` only other files. Commit a deletion on
+  its own, or right before the commit it belongs to (UNI-291).
 - A second issue in the same session gets its own worktree: `git fetch origin`, then
   `git worktree add -b <gitBranchName> .claude/worktrees/<issue> origin/<deploy>` and switch into it
   (EnterWorktree with `path`). Never reuse the previous issue's branch. The skill text you loaded still comes from
@@ -189,6 +211,16 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   TEST PROMPT, while the current one says to run the test yourself.
 - Need `node_modules` for `tsc` / `vite build`? Symlink the main checkout's:
   `ln -s ~/dev/<repo>/node_modules node_modules` (gitignored; never `npm install` into the shared folder).
+  It can be stale: ul-backend's had no `zod` or `ajv` on 2026-11-01, so every `tests/context` suite failed to load
+  (UNI-41). And a worktree under `.claude/worktrees/` with no `node_modules` of its own silently resolves the main
+  checkout's. Before running tests, check that every `package.json` dependency resolves; if one doesn't, run
+  `npx -y -p node@20 npm ci` in your worktree. That builds the worktree's own `node_modules`, which is gitignored and
+  not shared.
+  Adding a dependency: don't run `npm install --package-lock-only` (npm 11 rewrote ~457 unrelated lockfile
+  lines in UNI-291). Add the package to `package.json`, hand-add its `node_modules/<pkg>` entry (version,
+  `resolved`, `integrity` from `npm view <pkg>@<v> dist`) and the root `dependencies` line to `package-lock.json`,
+  then check with `npm ci --dry-run --ignore-scripts`. To build locally, make `node_modules` a real folder that
+  symlinks each entry of the shared one, plus the new package extracted from `npm pack`.
 
 ## How a worker writes to its issue (the skill-authoring rules, applied to issues)
 
