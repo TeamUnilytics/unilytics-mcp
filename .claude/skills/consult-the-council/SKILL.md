@@ -1,7 +1,7 @@
 ---
 name: consult-the-council
 description: "Send the current spec, plan, diff or bug to OpenAI, Grok, Gemini and Perplexity for an independent, production-bar review. Required by /work-on before building important work (security, billing, data model, contracts, one-way doors); also use when stuck."
-argument-hint: "[optional: path or keyword] [--low|--medium|--high] [--check]"
+argument-hint: "[optional: path or keyword] [--low|--medium|--high] [--force] [--check]"
 ---
 
 # Consult the Council
@@ -13,7 +13,7 @@ integrity, best practice and how leading products solve it. Each returns issues,
 
 ## The Council (model ids verified against the live model lists on 2026-10-18)
 
-| Member | Low | Medium | High (default) |
+| Member | Low | Medium (default) | High |
 |---|---|---|---|
 | **OpenAI** | `gpt-6.1-sol`, effort low | `gpt-6.1-sol`, effort medium | `gpt-6-astra`, effort high |
 | **Grok** (xAI) | `grok-4.7` | `grok-4.7` | `grok-4.7` |
@@ -21,27 +21,44 @@ integrity, best practice and how leading products solve it. Each returns issues,
 | **Perplexity** (web-grounded) | `sonar-pro` | `sonar-reasoning-pro` | `sonar-reasoning-pro` |
 
 - **Gemini Pro needs a billed Gemini project.** On a quota error the run falls back to `gemini-flash-latest` and
-  labels it `FALLBACK` in the output, so you always know which model answered. The key in use was on the free
-  quota on 2026-10-18 (tied to the GCP billing issue, UNI-69).
-- **Perplexity was out of credit on 2026-10-18.** Its section shows `FAILED … out of credit`. Top up at
-  console.perplexity.ai.
-- **A review counts with at least 2 responses.** The script exits 1 below that.
+  labels it `FALLBACK` in the output, so you always know which model answered.
+- **Out of credit** shows as `FAILED … out of credit/quota`. The council shares production's xAI, Gemini and
+  Perplexity keys, so a drained key takes production's calls down too (UNI-325). Top up at once.
+- **Grok is skipped on inputs over 10,000 characters** (`SKIPPED: input too large for Grok`), counting the input
+  file only. Our 5-minute abort closes only our side: xAI finishes the answer and bills it. The evidence, from 40
+  issues' `Council:` lines up to 2026-11-01:
+  - Every run that recorded its size timed Grok out: 9k, 12k, 18k, ~30k, 33k, 40k, 54k and 105k characters
+    (UNI-122, UNI-128, UNI-168, UNI-268, UNI-28).
+  - Runs where Grok answered never recorded a size. Most were plan rounds, which are short: plan rounds answered
+    about 19 times in 34, diff rounds about 2 in 27.
+  - So 10k is a judgement call, not a measured cut-off (one 9k run still failed). The output now prints the input
+    size and Grok's time on every run: when the WORKLOGs show a better number, change `GROK_MAX_INPUT_CHARS`.
+- **A review counts with at least 2 responses.** The script exits 1 below that. Say in the WORKLOG which members
+  answered.
 - **Updating models:** set `COUNCIL_MODEL_<MEMBER>` (e.g. `COUNCIL_MODEL_OPENAI=gpt-6.1-sol`) to override one
-  member, or edit `EFFORT` in `council.mjs`. Then run `--check`.
+  member, or edit `EFFORT` in `council.mjs`. Add the new model's price to `PRICES` (and bump `PRICES_AS_OF`), then
+  run `--check`.
 
-## When it is required (from `/work-on` step 6)
+## When it is required, and at which level (from `/work-on` step 6)
 
-Run `--high` on the plan **before the human approves it** whenever the work touches any of:
+**Key work** gets the council on the plan, **before the human approves it**. Key work is any of:
+- a key feature (core product: Context Manager, skills, MCP, onboarding or sign-in);
 - security, auth or tenant isolation;
 - credits, billing or payments;
 - a data model, schema or migration;
 - a cross-repo contract (REST shape, MCP tool signature);
-- anything public or hard to undo;
-- architecture choices;
-- any Urgent or High feature.
+- anything public, hard to undo, or an architecture choice.
 
-For security, billing and migrations, run it again on the final diff before merging. Use it any time you're
-stuck, too.
+Levels by round:
+- **First round: `--high`** on key work.
+- **Every later round: `--medium`.** That covers the re-check after REVISE fixes and the diff review. Send only
+  what changed, plus the previous round's REVISE points.
+- **`--high` again only if the previous round returned REJECT.**
+- **At most 3 rounds per issue.** A 4th needs the founder's OK in the terminal.
+- **Other work:** `--medium` once, or no council.
+
+For security, billing and migrations, one of the 3 rounds is the final diff, before merging. Use it any time
+you're stuck, too (`--medium`).
 
 ## Steps
 
@@ -56,14 +73,21 @@ never inside the repo: `.claude/tmp/` isn't gitignored. If `$ARGUMENTS` names a 
 - what you want reviewed.
 
 The models see only this file, so make it stand alone. Never include secrets, customer data or client names
-that aren't needed.
+that aren't needed. When the input summarises a longer doc, say so and say where the sources live ("every figure
+has a primary source in the doc's §8"); otherwise a member flags "unsourced precision" that is an artefact of the
+summary, not a real gap (UNI-265). Source can hold secrets too: ul-langgraph's `mcp_server/auth.py` embeds a
+fallback Mongo URI with a password until UNI-10 lands, so redact it before pasting that file (UNI-169).
+
+**Keep it under 30,000 characters.** The script refuses anything longer and tells you to trim it to the diff and
+the relevant excerpts. `--force` sends it anyway, with a warning: use it only when the excerpt truly can't be
+cut. Under 10,000 characters Grok answers too.
 
 ### 2. Run it
 
 ```bash
-node .claude/skills/consult-the-council/council.mjs <scratchpad>/council-input.md            # high (default)
-node .claude/skills/consult-the-council/council.mjs <scratchpad>/council-input.md --medium   # day-to-day
-node .claude/skills/consult-the-council/council.mjs <scratchpad>/council-input.md --models openai,grok
+node .claude/skills/consult-the-council/council.mjs <scratchpad>/council-input.md --high     # first round, key work
+node .claude/skills/consult-the-council/council.mjs <scratchpad>/council-input.md            # medium (default)
+node .claude/skills/consult-the-council/council.mjs <scratchpad>/council-input.md --models openai,gemini
 node .claude/skills/consult-the-council/council.mjs --check                                  # keys + model ids
 ```
 
@@ -81,10 +105,12 @@ Points raised by two or more members are very likely real.
 ### 4. Report
 
 Write a `Council:` line in the plan you show the human and in the WORKLOG:
-- the members that answered (with any `FALLBACK`);
+- the round and level (`r1 --high`, `r2 --medium`);
+- the members that answered (with any `FALLBACK` or `SKIPPED`);
 - each verdict;
 - the deduplicated issues;
-- what you changed or rejected, and why.
+- what you changed or rejected, and why;
+- the run's `TOTAL` from the cost table.
 
 The outcome decides what happens next:
 - All APPROVE → proceed.
@@ -109,6 +135,13 @@ PERPLEXITY_API_KEY=…
 
 ## Cost
 
-High effort is the expensive setting: `gpt-6-astra` at high effort and Gemini Pro at high thinking. That's still
-cheap next to a wrong schema or a security hole reaching production. Use `--medium` for routine reviews and
-`--low` for quick sanity checks. Check provider dashboards for actual spend.
+The council was our biggest LLM spend (2026-11-01): many `--high` rounds of 25–80k characters each.
+- **Every run ends with a cost table:** tokens in and out per member, $, and a total. xAI and Perplexity report
+  their own charge (`reported`). OpenAI and Gemini are estimated from the price table at the top of
+  `council.mjs` (`est.`), dated by `PRICES_AS_OF`. A model missing from the table shows `$?`: add it.
+- **A timed-out member shows its cost as unknown.** The provider may still bill the abandoned call.
+- **`--high` costs the most:** `gpt-6-astra` is 5× the price of `gpt-6.1-sol`. That's why it runs once per
+  issue, on the first round of key work.
+- **Changing level between rounds costs nothing extra.** Each round is an independent call.
+- **Size drives cost.** Every member reads the whole input, so trim it: the 30k cap and the Grok skip enforce this.
+- Check the provider dashboards for actual spend.
