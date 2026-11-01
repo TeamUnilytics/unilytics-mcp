@@ -131,7 +131,8 @@ Never hand the founder a list of instructions to follow. Before you post the `QU
 The founder approved the scope in advance (the `Autopilot — approved by founder …` line in Context) and isn't
 around to answer. So:
 - **Don't wait for plan approval** (step 6). The approval for the plan is: step 4's reading, plus the research
-  (4.6), plus `/consult-the-council --high` with every REVISE point fixed or answered. Then build. Post the plan,
+  (4.6), plus the council (step 6 budget: first round `--high`, re-checks `--medium`) with every REVISE point
+  fixed or answered. Then build. Post the plan,
   `Research:` and `Council:` lines in the WORKLOG so the founder can read them later.
 - **Stay inside the approved scope.** Stop for anything outside it, or any one-way door the approval doesn't
   name: post a `QUESTION`, add **Needs input**, finish what the question doesn't block, then post a
@@ -374,16 +375,23 @@ parallel, and don't plan first and read afterwards.
   (engineering bar, top of this skill).
 - **Consult the council on important work, before the human approves the plan:**
   `/consult-the-council --high` on the plan. Important means any of:
+  - a key feature (core product: Context Manager, skills, MCP, onboarding/sign-in);
   - security, auth or tenant isolation;
   - credits, billing or payments;
   - a data model, schema or migration;
   - a cross-repo contract (REST shape, MCP tool signature);
-  - anything public or hard to undo;
-  - architecture choices;
-  - any Urgent or High feature.
-  Show the human the plan with a `Council:` line: each verdict, the issues raised, and what you changed or
-  rejected and why. REJECT → stop and discuss before building. For security, billing and migrations, also run it
-  on the final diff before merging. Record both runs in the WORKLOG.
+  - anything public or hard to undo or an architecture choice.
+  **Budget (founder, 2026-11-01: the council was our biggest LLM spend):**
+  - Only the first round runs `--high`.
+  - Every later round runs `--medium`, on only what changed plus the previous REVISE points. That covers the
+    re-check after fixes and the final diff.
+  - At most 3 rounds per issue; a 4th needs the founder's OK.
+  - `--high` again only after a REJECT.
+  - Other work: `--medium` once, or no council.
+  - Send the diff and the relevant excerpts, never whole files.
+  Show the human the plan with a `Council:` line: each verdict, the issues raised, what you changed or rejected
+  and why, and the run's cost total. REJECT → stop and discuss before building. For security, billing and
+  migrations, also run it on the final diff (`--medium`) before merging. Record every run in the WORKLOG.
 - **Interactive session (the human is in the terminal), not Autopilot: show the plan and wait for an explicit
   approval before building** — founder, 2026-10-18: "take my approval beofre proceeding, you can show what your plan
   is and then only proceed". Corrections to the plan count as "not yet": fold them in and show it again.
