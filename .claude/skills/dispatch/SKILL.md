@@ -96,37 +96,93 @@ possible.
   Don't let it crowd out core, and don't leave it out either.
 - Chores the human has explicitly parked stay out until they ask for them.
 
-### 0b. Product walkthrough + gap check (nightly at wind-up, else first thing in the morning)
+### 0b. Product walkthrough + gap check (daily: nightly at wind-up, else first thing in the morning)
 
-Load the Claude in Chrome tools (`claude-in-chrome` skill; one ToolSearch for the core set), open a new tab and
-sign in to https://app.unilytics.ai as the founder's test account. If the session isn't signed in, ask the human
-to sign in; never type a password. Read-only: don't create, delete, run, pay or change settings. Record a GIF.
+**Why it's a checklist, not a look-around.** A builder who opens the product every day stops seeing it. Two
+things cause this. The *curse of knowledge*: you know how a screen is meant to work, so you fill its gaps without
+noticing. *Habituation*: what you see daily fades into the background. Together they're called operational
+blindness (German *Betriebsblindheit*). A new user hits the gaps on the first click. The dispatcher has read every
+issue, so it has the worst case of this. Willpower doesn't fix it; a checklist and fresh eyes do. A "light run"
+(screen texts only, one account, no shipped list) doesn't count as the day's walkthrough (founder, 2026-11-01).
 
-1. **Use everything that is built**, as a consultant would, and time each first load:
-   - sign-in;
-   - Projects → open a project → every project nav item (Overview, Context, Brand Kit, Design System,
-     Knowledge Base, Skills → a folder → a skill and its file panel, Channels, AEO);
-   - every global item (Skill Library, Agent Inbox, Personal Context, Design System, Connect your AI, the
-     user-menu settings).
-   Then from this session's own MCP connection to Unilytics, if one is loaded, call the read-only discovery
-   tools (`list_skills`, `get_skill`) on a test project.
-2. **Grade each screen:** works · broken (error, empty when data exists, console errors) · "coming soon" ·
-   slow (> 2 s) · confusing (you had to guess what to click).
-3. **Then look past what's built (avoid tunnel vision).** Compare against:
+Setup: load the Claude in Chrome tools (`claude-in-chrome` skill; one ToolSearch for the core set plus
+`read_console_messages`, `read_network_requests`, `gif_creator`, `javascript_tool`), open a new tab and record a
+GIF. Sign in to https://app.unilytics.ai yourself: "Continue with Google", then the account in Google's chooser,
+then any consent screen. Unilytics is an MVP with no users yet, so every sign-in click is your job, not the
+founder's (founder, 2026-10-24 and 2026-10-31); only a password, 2FA code or CAPTCHA prompt goes to them. A blocked
+sign-in is the first finding to fix. Parallel sessions share one Chrome profile: note which account is signed in
+before and after, and switch back if you changed it. Read-only: don't create, delete, run, pay or change settings.
+
+1. **Shipped since the last walkthrough: every item, tested live.** Build this list before you open the app:
+   - Merged PRs since the last entry's date, in all four repos:
+     `gh pr list -R TeamUnilytics/<repo> --state merged --search "merged:>=YYYY-MM-DD" --limit 50` for
+     `MVP-V1.0.0-`, `Unilytics.ai.server`, `Unilytics.ai.UI` and `unilytics-mcp`.
+   - Issues Done since then: `list_issues state:Done completedAt:<date>`.
+   - One row per change: what a user should now see or be able to do, and where (screen, API or MCP tool).
+     Backend and MCP changes get a row too; test them through the screen or tool that uses them.
+   Check every row on prod. A row is ✅ only when you saw it working. Mark it ❌ broken, ⚠ partly, or "not
+   testable read-only" with the reason, and get that one tested by its issue's worker or a TEST PROMPT.
+2. **Two passes, two kinds of eyes.**
+   - **New-user pass (fresh eyes).** Spawn a subagent with no project context. Give it only the persona ("an SEO
+     consultant with 8 clients who uses Claude daily and has never seen Unilytics"), the URL, the new-user test
+     account (the near-empty one used for first-use tests, e.g. team+uni24-test@unilytics.ai), and a job
+     ("get keyword research done for one client"). Don't give it the plan, the issues or the screen list. At every
+     step it answers the cognitive-walkthrough questions: would I know what to do here? Can I see the control?
+     Does its label match my goal? Do I understand what happened after I clicked? It reports every hesitation,
+     guess, dead end and word it didn't understand, timed against the P1 KPI (connect your AI and run a skill in
+     under 2 minutes).
+   - **Daily-user pass (yours):** savenjudes@gmail.com, with its real data (58 skills, real projects), on every
+     screen below plus the shipped list.
+3. **Every screen, every state, the same checklist.** Screens:
+   - Projects list, then a project's nav items: Overview, Context, Brand Kit, Design System, Knowledge Base,
+     Skills → a folder → a skill and its file panel, Channels, AEO.
+   - The global items: Skill Library, Agent Inbox, Personal Context, Design System, Connect your AI / API Keys,
+     and every user-menu item (Profile, Settings: Billing, Usage, Collaborators, API Keys; Upgrade plan,
+     Documentation, credit balance).
+   - The marketing site (unilytics.ai), with its privacy and terms pages.
+   For each screen:
+   - **Speed:** first load and reload, timed. Over 2 s is slow. Note skeletons or wrong values while it loads
+     (e.g. credits showing 0.00).
+   - **Errors:** `read_console_messages` (onlyErrors) and `read_network_requests` (any 4xx/5xx, any call over
+     1 s, duplicate calls).
+   - **States:** empty, populated, loading and error (only an error you can trigger read-only, such as a bad deep
+     link). Then deep-link to the page, reload it, and press Back.
+   - **Every control:** hover or read every button, link and menu. Open the non-destructive ones. Note dead links,
+     buttons that do nothing, and "Contact sales" or "coming soon" where a user expects the thing itself.
+   - **Copy:** jargon, internal ids, typos, and names that differ between the nav, page title, docs and MCP tool.
+   - **Looks and access:** light and dark theme, ~390 px width, keyboard focus, contrast.
+   - **Heuristics:** judge "confusing" against Nielsen's 10 usability heuristics, and name the one it breaks.
+4. **Backend and MCP pass** (the same day, for the walkthrough window and since the last entry):
+   - `/aws-status`: Lambda errors, throttles and duration for both functions, recent error logs.
+   - LangSmith `UnilyticsMCP`: errored and slow traces since the last walkthrough
+     (`langsmith trace list --since …`).
+   - From this session's own Unilytics MCP connection, if one is loaded: `tools/list` count against CLAUDE.md,
+     `find_skill` on 3 Kevin-style tasks (is the right skill top-1?), `list_skills`, `get_skill`,
+     `get_project_context` on a test project, and `get_credit_balance`. Read-only and free tools only.
+5. **Grade:** works · broken · "coming soon" · slow (> 2 s) · confusing (heuristic named) · paper cut (small,
+   but a new user would notice).
+6. **Then look past what's built (avoid tunnel vision).** Compare against:
    - the plan's IA (§2) and each active project's "Done when";
    - the P1 KPI flow end to end (sign up → connect your AI → run a universal skill on a project);
    - what Profound and AirOps offer for the same job (`docs/research/competitor-context-map.md`).
    List what's missing that a consultant would expect on day one.
-4. **Write it up** in the Linear document "Product walkthrough", newest date on top: one table per screen,
-   then gaps, then the ranked top 3 to fix. Search for existing issues first. Then create issues in the
-   Standard task format, or add the finding to an existing one: bugs to the right project, gaps to the plan
-   section they belong to.
-5. Use the result as the first input to step 2. A broken or "coming soon" core screen outranks anything a
-   user can't see.
+7. **Write it up** in the Linear document "Product walkthrough", newest date on top, in this order:
+   - the shipped table (✅/❌/⚠ per row);
+   - one table per screen (FE);
+   - backend and MCP findings;
+   - the new-user pass (where it hesitated, with times);
+   - paper cuts;
+   - gaps;
+   - the ranked top 3 to fix.
+   Every finding gets a home: search for an existing issue first, then add it there or create an issue in the
+   Standard task format. Bugs go to the right project, gaps to their plan section. Batch paper cuts into one
+   issue per repo ("Paper cuts <date>").
+8. Use the result as the first input to step 2. A broken or "coming soon" core screen, a ❌ shipped row, or a
+   new-user dead end outranks anything a user can't see.
 
 ### 0c. Autopilot queue: work that runs while the founder is away (every evening, before wind-up)
 
-Founder time is the bottleneck. Measured 2026-10-18: build time is about an hour, but issues waiting on him sat
+Founder time is the bottleneck. Measured 2026-10-18: build time is about an hour, but issues waiting on them sat
 10–17 h. So each evening, before wind-up:
 1. **Shortlist up to 8 candidates** that a worker could finish without the founder. Each needs:
    - a complete spec and a Verify an agent can run;
@@ -208,6 +264,28 @@ Classify In Progress issues by their latest comment:
 Also flag: issues labelled **Needs input** (show each `QUESTION:` so the human can answer with
 `ANSWER: …` and remove the label), PRs waiting in review (the human's queue), and anything In Progress with no activity for a day.
 
+**On the MVP, these are not human-only.** Workers do them and log the before value, the after value and how to
+undo it:
+- config changes on our own consoles;
+- low-risk deletions: test data, or config confirmed unused.
+See `/work-on` → "MVP: make the console change yourself" (founder, 2026-10-31). Don't plan these as founder steps.
+
+**Human-only steps:**
+- money;
+- deleting real users' or clients' data or production infrastructure;
+- a secret you don't hold;
+- granting access;
+- terms or a beta application;
+- a password, 2FA code or CAPTCHA.
+
+Open each one in Chrome
+yourself, on the right screen, with every field you can fill already filled. Then ask the founder only for the step
+Claude may not do: type a password, 2FA code or CAPTCHA (sign-in clicks on app.unilytics.ai are Claude's), pay,
+paste a secret, or press the final Submit. Name the tab and the button. Never
+send them a list of instructions to follow (founder, 2026-10-24: "open everything, prefill possible details and
+only assign the smallest of step that the claude cant do to me"; full rule in `/work-on` → "Handing the founder a
+step").
+
 ### 2c. Recommend a runner per issue (`docs/sop/model-runners.md` has the full rules)
 
 You **recommend**; the human **decides** (step 2d).
@@ -249,11 +327,17 @@ it reopens the existing worktree/branch). Never tell a worker to run git in othe
 A `claude -w` session can't do that, so cross-repo git-only work goes through `gh api` (see SOP rule 3b):
 
 ```
-cd ~/dev/<repo> && claude-univ -w uni-123 "/work-on UNI-123"       # runner univ (Opus, Univsense Max)
-cd ~/dev/<repo> && claude-ul -w uni-124 "/work-on UNI-124"         # runner ul (Opus, Unilytics Max)
-cd ~/dev/<repo> && claude-univ-api -w uni-125 "/work-on UNI-125"   # runner univ-api (Opus, API credit)
-cd ~/dev/<repo> && claude-local -w uni-126 "/work-on UNI-126"      # runner local (Qwen on this Mac)
+cd ~/dev/<repo> && claude-univ -w uni-123 "/work-on UNI-123"
+cd ~/dev/<repo> && claude-ul -w uni-124 "/work-on UNI-124"
+cd ~/dev/<repo> && claude-univ-api -w uni-125 "/work-on UNI-125"
+cd ~/dev/<repo> && claude-local -w uni-126 "/work-on UNI-126"
 ```
+
+Runners: univ = Opus on Univsense Max · ul = Opus on Unilytics Max · univ-api = Opus on the API credit ·
+local = Qwen on this Mac. **Never put a trailing `# comment` on a printed command.** Interactive zsh has
+no comments by default, so `#` and `(…)` get parsed as glob syntax and the paste fails with
+`zsh: number expected` (2026-10-24). Put each issue's label on its own line or in a table, outside the
+code block.
 
 (Or background: same prefix with `--bg "/work-on UNI-123"` and watch them in `claude agents`.)
 The four commands are shell wrappers in `~/.local/bin` that set `UL_RUNNER` (and the login or `--settings`
