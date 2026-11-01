@@ -110,8 +110,18 @@ Setup: load the Claude in Chrome tools (`claude-in-chrome` skill; one ToolSearch
 GIF. Sign in to https://app.unilytics.ai yourself: "Continue with Google", then the account in Google's chooser,
 then any consent screen. Unilytics is an MVP with no users yet, so every sign-in click is your job, not the
 founder's (founder, 2026-10-24 and 2026-10-31); only a password, 2FA code or CAPTCHA prompt goes to them. A blocked
-sign-in is the first finding to fix. Parallel sessions share one Chrome profile: note which account is signed in
-before and after, and switch back if you changed it. Read-only: don't create, delete, run, pay or change settings.
+sign-in is the first finding to fix. The extension must be allowed on accounts.google.com and auth.unilytics.ai,
+or the account chooser click is refused (2026-11-01). Parallel sessions share one Chrome profile: note which
+account is signed in before and after, and switch back if you changed it. Real data stays read-only: never pay,
+delete real data, change settings or send anything to people. Test data is fine: write it into the Simbex
+project, name it TEST or "walkthrough", and say in the write-up what you left behind.
+
+**The founder watches the run live (2026-11-01), so the order matters:**
+1. First, **what shipped**, one item at a time on screen, with one line each in the terminal as you go
+   ("UNI-95 Projects search: '1 of 22' ✅").
+2. Then **the new-guy audit**, which they may not watch. It uses real actions on test data: upload a file and
+   search for it, export or download a skill, open every menu and dialog, load collaborators, and press buttons to
+   find ones that do nothing or aren't needed any more (2026-11-01: the header Publish).
 
 1. **Shipped since the last walkthrough: every item, tested live.** Build this list before you open the app:
    - Merged PRs since the last entry's date, in all four repos:
