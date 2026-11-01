@@ -82,6 +82,15 @@ me how its gonna work on it. basic."). So:
 - **Every later message starts with the issue id plus a 2–4 word name** (`UNI-127 (Unilytics skills): …`),
   so a glance at any tab says which task it is. Progress lines say what was found or decided, not only
   "reading files now".
+- **Anything for the founder to look at, you open for them; never just print a path** (founder, 2026-11-01:
+  "open up previews like this … i shouldnt have to ask"). This covers screenshots, GIFs, rendered pages, PDFs
+  and preview or deploy URLs.
+  - A local file: run `open <absolute path>` in the same turn you mention it. It opens in Preview, or the
+    browser for `.html`.
+  - A URL (a Vercel preview, the live app page you changed, a PR): open it in a new Chrome tab (Claude in
+    Chrome), or run `open <url>`.
+  - Then say in one line what's open and what to look at ("Opened light desktop + dark mobile in Preview:
+    check the header spacing").
 
 ### Handing the founder a step: open it, prefill it, leave only what Claude can't do (founder, 2026-10-24)
 
@@ -444,8 +453,19 @@ parallel, and don't plan first and read afterwards.
 
 ## 7. Docs in the same PR (definition of done)
 
-- User-facing change (MCP tool, behaviour, pricing, setup) → update `docs-public/` (once it exists;
-  until then note "docs: TODO" in the handoff) and add a dated changelog entry.
+- **User docs ship with the feature** (founder, 2026-11-01). A change a user can see (a screen, an MCP tool,
+  setup, pricing, limits) updates its page in **`docs/user/<feature>.md` in your own repo, in the same PR**.
+  Create the folder and page if they don't exist yet. No GitBook or other docs tool: unilytics.ai builds
+  unilytics.ai/docs (and its `.md` twins and `llms.txt`) from these files (UNI-316).
+  - One page per feature a user recognises (`connect-your-ai.md`, `context.md`, `skills.md`,
+    `knowledge-base.md`, `mcp-tools.md` …), not per issue. Frontmatter: `title`, `description` (one line),
+    `status: live` and `updated: <date>`.
+  - Written for a consultant, not a developer: what it does, how to use it (numbered steps), limits, and what
+    it costs in credits. Use real UI labels. No internal ids, issue numbers or file paths.
+  - **Live features only.** Behind a flag or not deployed → no page yet; write "docs: when live" in the handoff.
+  - The same page serves people and AIs. Plain Markdown, no HTML, and every heading answers a question a user
+    would ask.
+  - Add a dated line to `docs/user/CHANGELOG.md`: `YYYY-MM-DD: <what changed for the user>`.
 - Dev docs (`CLAUDE.md`, `docs/sop/*`, `docs/architecture/*`, skills): update them in your PR when your work
   makes them stale or teaches a gotcha (`/update-learnings` is fine), and list them in the handoff.
 - **The main plan is the dispatcher's:** `docs/plans/pivot-consultant-skill-platform.md` and the Linear document
