@@ -114,6 +114,21 @@ Still the founder's:
 If a safety check still blocks a pre-approved change, don't work around it. Open the page on the exact control
 and ask for that one click.
 
+**Credit top-ups: open the billing page and name the account** (founder, 2026-11-01: "i wont always remember
+this"). When a model provider runs out of credit (council or production), open its billing page in Chrome and
+tell the founder which account to sign in with:
+
+| Provider | Billing page | Account |
+|---|---|---|
+| Gemini (Google AI Studio) | https://aistudio.google.com/apikey (the key's row → its project → billing) | hello@univsense.com |
+| xAI / Grok | https://console.x.ai (team "UL") | team@unilytics.ai |
+| OpenAI | https://platform.openai.com/settings/organization/billing/overview (org "Personal") | admin@univsense.com |
+| Anthropic (Claude API) | https://console.anthropic.com/settings/billing | team@unilytics.ai (founder "believes"; confirm on the page) |
+| Perplexity | https://www.perplexity.ai/account/api/billing | unknown: ask once, then add it here |
+
+The council and production share the xAI, Gemini and Perplexity keys, so a top-up there also restores
+production's calls.
+
 Never hand the founder a list of instructions to follow. Before you post the `QUESTION` or ask in the terminal:
 - **Open it in Chrome** (Claude in Chrome): the console, dashboard, form or settings page, already on the right
   screen. If it needs a sign-in, do the sign-in clicks yourself (account chooser, consent); only a password,
