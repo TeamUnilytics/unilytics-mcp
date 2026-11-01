@@ -82,6 +82,15 @@ me how its gonna work on it. basic."). So:
 - **Every later message starts with the issue id plus a 2–4 word name** (`UNI-127 (Unilytics skills): …`),
   so a glance at any tab says which task it is. Progress lines say what was found or decided, not only
   "reading files now".
+- **Anything for the founder to look at, you open for them; never just print a path** (founder, 2026-11-01:
+  "open up previews like this … i shouldnt have to ask"). This covers screenshots, GIFs, rendered pages, PDFs
+  and preview or deploy URLs.
+  - A local file: run `open <absolute path>` in the same turn you mention it. It opens in Preview, or the
+    browser for `.html`.
+  - A URL (a Vercel preview, the live app page you changed, a PR): open it in a new Chrome tab (Claude in
+    Chrome), or run `open <url>`.
+  - Then say in one line what's open and what to look at ("Opened light desktop + dark mobile in Preview:
+    check the header spacing").
 
 ### Handing the founder a step: open it, prefill it, leave only what Claude can't do (founder, 2026-10-24)
 

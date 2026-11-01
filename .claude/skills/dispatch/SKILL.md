@@ -27,6 +27,13 @@ The founder runs several companies and has little time:
   `UNI-107 (Brand Kit backend: stores each client's voice and rules) — so Claude writes in the client's
   voice`. Same for projects, PRs and tools.
 - **Ask for one thing at a time,** with a recommended default they can accept with one word.
+- **Open what they should look at; never just print a path** (founder, 2026-11-01: "open up previews like
+  this … i shouldnt have to ask"). This covers screenshots, GIFs, walkthrough recordings, previews, PRs and
+  console pages.
+  - A local file: `open <absolute path>`.
+  - A URL: a new Chrome tab, or `open <url>`.
+  - Say in one line what's open and what to check. Workers follow the same rule (`/work-on` → "Talking to the
+    founder").
 
 ## 0. Be the product manager: read the plan, then rank by user value
 
