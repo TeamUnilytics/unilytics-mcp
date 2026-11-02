@@ -9,8 +9,8 @@ argument-hint: "[max sessions, default 5] [--conserve]"
 Run this in its **own `dispatch` worktree** of ul-langgraph (the plan lives there), in plan mode:
 `cd ~/dev/ul-langgraph && claude -w dispatch "/dispatch"`. Start by updating it to the latest deploy branch
 (`git fetch origin && git merge --ff-only origin/dev`, or `git reset --hard origin/dev` if the worktree has no
-unpushed doc edits). This session plans and dispatches; it does not implement issues. Process: `docs/sop/parallel-claude-sessions.md`; Linear write rules:
-`docs/sop/linear-workflow.md`; command list: `docs/sop/claude-commands.md`; runners: `docs/sop/model-runners.md`.
+unpushed doc edits). This session plans and dispatches; it does not implement issues. Process: `docs/handbook/parallel-claude-sessions.md`; Linear write rules:
+`docs/handbook/linear-workflow.md`; command list: `docs/handbook/claude-commands.md`; runners: `docs/handbook/model-runners.md`.
 This session always runs on Opus: `univ` by default (plain `claude` = `claude-univ`), or `claude-ul` (Opus on the
 Unilytics Max account) when the Univsense weekly limit is used up. Never launch it with `claude-local` (not Opus)
 or `claude-univ-api` (it would spend the API credit on planning). It is also the session that runs the Opus review
@@ -59,12 +59,13 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
 - **Accounts:** **univ** by default. ul only when the founder says so. univ-api (the API credit) as overflow for
   the top 1–2 issues when both plans are over their caps. **Model: always Opus 5.5.**
 - **Autopilot by default:** every spec-complete issue gets the Autopilot block (council replaces plan approval).
-  One-way doors are built in the reversible form and listed for the morning page.
-- **07:00 local:** run step 0b (walkthrough, shipped items first) and publish the morning page:
+  One-way doors are built in the reversible form and listed in the Daily review.
+- **07:00 local:** run step 0b (walkthrough, shipped items first) and post that day's **Daily review** entry
+  (step 5: ≤ 10 lines, `doc-lint daily`):
   - what shipped, each tested live with a clip;
   - what's next;
-  - the decisions, each as a one-word question.
-  This is the founder's daily touchpoint.
+  - the decisions, each as a one-word question, with the issue labelled Needs input so it shows in *Needs me*.
+  This is the founder's daily touchpoint; Pulse delivers it with the project and initiative updates.
 
 ## 0. Be the product manager: read the plan, then rank by user value
 
@@ -73,8 +74,9 @@ possible.
 
 - **Read the plan first, every run.** Plans change daily, so an earlier read doesn't count. Read the master plan
   (`docs/plans/pivot-consultant-skill-platform.md`) in full. Then read the plan of every Linear project that has a
-  candidate issue: the `## Plan` section of the project description names its file or Linear document. New projects
-  bring new plan files. If a project names none, ask the human for it before you dispatch its issues.
+  candidate issue: its brief (the project description: Outcome · Scope · Done when · **Links**) names the plan §,
+  spec file or Linear document, and its initiative's description names the goal. New projects bring new briefs.
+  If a project's Links name nothing to read, write the brief (step 5) before you dispatch its issues.
 - **Use the product before you rank anything.** Priorities come from using it, not from reading the backlog.
   The founder: "I open up the product and click Context and it says coming soon. Obvious then." Run the
   walkthrough (step 0b) every night at wind-up, or first thing in the morning if the night run didn't happen. A
@@ -214,7 +216,9 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
    - the P1 KPI flow end to end (sign up → connect your AI → run a universal skill on a project);
    - what Profound and AirOps offer for the same job (`docs/research/competitor-context-map.md`).
    List what's missing that a consultant would expect on day one.
-7. **Write it up** in the Linear document "Product walkthrough", newest date on top, in this order:
+7. **Write it up** in the Linear document "Product walkthrough" (a document of the initiative *Design partner live*; it
+   is for agents and has no cap), newest date on top, then put the founder's ≤ 10-line summary in *Daily review*
+   (step 5) with a link to it. The full write-up, in this order:
    - the shipped table (✅/❌/⚠ per row);
    - one table per screen (FE);
    - backend and MCP findings;
@@ -257,16 +261,18 @@ The work is done by agents, so estimate from **our measured agent times**, never
   - **founder wait:** time from a `TEST PROMPT`, `QUESTION` or plan shown until the reply;
   - **throughput:** issues Done per day.
   Report medians by Area, and keep build time and founder wait apart. They have different fixes.
-- **Dates:** for each active milestone, estimate the time left as open issues × median build time ÷ parallel
+- **Dates:** for each active project, estimate the time left as open issues × median build time ÷ parallel
   sessions, plus the expected founder wait. If that lands well before the target date, propose pulling the date
-  in. If it lands after, propose the delay and its cause. Change a date (`save_milestone`) only after the founder
-  OKs it, and add a `Changed <date>` line in the plan.
+  in. If it lands after, propose the delay and its cause. Change a date (`save_project` / `save_initiative`) only
+  after the founder OKs it, then follow **Plan sync** (step 5) the same day.
 - **What the founder sees in Linear:**
   - a project update on each active project at wind-up (`save_status_update`, health onTrack / atRisk /
-    offTrack). The body starts with `**Dispatch update**` and then has 3 lines: done today, next, risk. The founder
-    posts their own project updates too (new ideas, priority changes). Every run, read the updates that don't
-    start with `Dispatch update` (`get_status_updates`) as founder input, alongside this terminal;
-  - milestone target dates on the Projects timeline;
+    offTrack): exactly 3 lines, `Done: …` / `Next: …` / `Risk: …`, checked with `doc-lint update` before posting
+    (step 5). The founder posts their own updates too (new ideas, priority changes). Every run, read the updates
+    you didn't post (`get_status_updates`) as founder input, alongside this terminal;
+  - an initiative update on each initiative every Friday (same 3 lines + health), which is what the Initiatives
+    page and Pulse show;
+  - project target dates on the Projects timeline;
   - Insights (Business plan) on a custom view (`Cmd+Shift+I`: cycle time and lead time scatter, issue count by
     status).
 
@@ -334,15 +340,15 @@ send them a list of instructions to follow (founder, 2026-10-24: "open everythin
 only assign the smallest of step that the claude cant do to me"; full rule in `/work-on` → "Handing the founder a
 step").
 
-### 2c. Recommend a runner per issue (`docs/sop/model-runners.md` has the full rules)
+### 2c. Recommend a runner per issue (`docs/handbook/model-runners.md` has the full rules)
 
 You **recommend**; the human **decides** (step 2d).
-Read the **Current status** and **Trial log** in `docs/sop/model-runners.md` first: they override the guide below.
+Read the **Current status** and **Trial log** in `docs/handbook/model-runners.md` first: they override the guide below.
 
 - A `Runner: univ|ul|univ-api|local` line in the issue description wins.
 - A runner the human sets for a period ("everything on ul until univ resets tomorrow") comes next and applies to
   every issue, resumes and relaunches included, until the date they gave. Record it under **Current status** in
-  `model-runners.md` with that end date.
+  `docs/handbook/model-runners.md` with that end date.
 - **univ** (default): everything, while the Univsense Max limit lasts.
 - **ul**: Opus on the Unilytics Max login; first overflow when Univsense is low.
 - **univ-api**: Opus on the Univsense API credit ($200/month, resets monthly); second overflow.
@@ -351,7 +357,7 @@ Read the **Current status** and **Trial log** in `docs/sop/model-runners.md` fir
   Removing hardcoded secrets is fine here (nothing leaves the Mac). Max 2 at once; server must be up.
   Never security logic, payments, data deletion, migrations, cross-repo contracts, research/design or thin
   specs.
-- Use the trial log in `model-runners.md` (what each runner got right or wrong) to sharpen recommendations.
+- Use the trial log in `docs/handbook/model-runners.md` (what each runner got right or wrong) to sharpen recommendations.
   `--conserve`: recommend ul instead of univ, then univ-api once ul is low too; local only for small private jobs.
 
 ### 2d. Confirm the wave with the human (always — never skip)
@@ -389,7 +395,7 @@ code block.
 
 (Or background: same prefix with `--bg "/work-on UNI-123"` and watch them in `claude agents`.)
 The four commands are shell wrappers in `~/.local/bin` that set `UL_RUNNER` (and the login or `--settings`
-profile; setup in `docs/sop/model-runners.md`). Always print the runner's own command, never plain `claude`,
+profile; setup in `docs/handbook/model-runners.md`). Always print the runner's own command, never plain `claude`,
 so the worker knows its runner. Resumes and fix-list relaunches keep the issue's runner and print the same
 command; if the last `CHECKPOINT` says `ESCALATE: needs opus`, relaunch with `claude-univ` (or `claude-ul` /
 `claude-univ-api` if Univsense is low).
@@ -405,7 +411,7 @@ Verify evidence.
 - Problems → comment `REVIEW — fix list` (numbered) on the issue, move it back to In Progress and print a
   relaunch command: same runner for small fixes, an Opus runner (`claude-univ`, or `claude-ul` /
   `claude-univ-api` if Univsense is low) if the approach is wrong.
-- Append a row to the trial log in `docs/sop/model-runners.md` (date, issue, runner, outcome, notes).
+- Append a row to the trial log in `docs/handbook/model-runners.md` (date, issue, runner, outcome, notes).
 - If the review found a local mistake a guardrail could have blocked, propose the exact
   `~/.claude/hooks/runner-guard.py` change in your report for the human to approve. Never edit it unasked.
 Merge at most one PR per repo at a time, and wait for its deploy before the next.
@@ -426,14 +432,16 @@ left in the handoff. Sync any git design doc a worker changed into its Linear do
   target file (CLAUDE.md rule, SOP step, skill step, architecture doc). Don't append dated "learnings"
   blocks, and remove an old note when a newer one supersedes it. Human corrections become concrete rules or
   steps, worded as the human confirmed them.
-- Runner learnings (what local got wrong, what it did well) go in `docs/sop/model-runners.md`.
-- Put each learning in its home: `CLAUDE.md` (rules), `docs/sop/*`, `docs/architecture/*`,
+- Runner learnings (what local got wrong, what it did well) go in `docs/handbook/model-runners.md`.
+- Put each learning in its home: `CLAUDE.md` (rules), `docs/handbook/*`, `docs/sop/*`, `docs/architecture/*`,
   `docs/plans/*`, or a skill file. Keep `CLAUDE.md` short — move detail to SOPs.
 - Learnings for another repo (e.g. ul-backend `CLAUDE.md`): this session can't run git there, so use the
   GitHub API (SOP rule 3b): fetch the file from its deploy branch, edit it, then create blob → tree →
   commit → ref → PR in one call sequence, after checking the remote blob sha still matches what you edited.
-  Shared files (`work-on`, `dispatch`, `update-learnings` skills, `docs/sop/linear-workflow.md`,
-  `parallel-claude-sessions.md`, `claude-commands.md`) must stay identical across the four repos.
+  SOPs have one copy, `docs/handbook/` in ul-langgraph (CI publishes it to Linear); edit them here by PR, never in
+  another repo or in Linear. The shared skills (`dispatch`, `work-on`) must be the same blob in all 6 repos:
+  after merging a change to either, run `tools/dispatch/sync-shared --source-sha <merged dev sha>` (one PR per repo;
+  it refuses a repo whose copy diverged on purpose), and `tools/dispatch/sync-shared --check` in the Friday audit.
 - Worktrees that can be deleted: run `git worktree list` here, and `ls ~/dev/<repo>/.claude/worktrees` for
   the other repos. A worktree can go once its issue is Done (PR merged); keep it while the issue is In
   Progress or In Review.
@@ -451,3 +459,52 @@ left in the handoff. Sync any git design doc a worker changed into its Linear do
     status (not started / in progress / completed <date>) and its open issues.
   - Then sync the Linear team document "Pivot plan — consultant skill platform" to match.
 - Commit these doc changes on a `docs/` branch and open one PR.
+
+## 5. Plan sync, Diary and founder-facing caps (UNI-409, founder-approved 2026-11-02)
+
+The company plan must never drift from what is being built. Linear is organised as goals (initiatives), deliverables
+(projects) and tasks (issues): `docs/handbook/linear-workflow.md` "How Linear is organised". The pivot plan keeps
+its structure; it is never split or rewritten (founder, 2026-11-02).
+
+**Plan sync: the same day, in this order, whenever a goal, scope, date or order changes** (a founder answer, a
+correction, a slipped date, a project added or dropped):
+1. The pivot plan's affected § (`docs/plans/pivot-consultant-skill-platform.md`): rewrite it to say what we do now
+   and add one line under its heading: `Changed YYYY-MM-DD: <what> · <why> · <who>` (the founder's words quoted
+   when it was their call). Update the **Progress at a glance** row. Sync the Linear copy.
+2. The initiative's description (Goal · Done when · Projects · Follows the plan) and, if a deliverable changed,
+   the project's brief (Outcome · Scope · Done when · Links) and target date. Run `doc-lint initiative` /
+   `doc-lint brief` on the new text first.
+3. One line in the next project or initiative update (`Next:` or `Risk:`).
+Commit the git side on a `docs/` branch PR the same day.
+
+**Friday audit (weekly):** compare Linear with the plan and fix the side that is wrong:
+- every active project sits under an initiative, has a brief, an area label and a target date;
+- every initiative's projects and dates match the plan's §§ and Build order;
+- no open issue sits in a Completed or archived project; a backlog issue with no project still has its Area label;
+- the Documents tab holds only the team documents listed in `linear-workflow.md`;
+- `tools/dispatch/sync-shared --check` is clean;
+- post the initiative updates (3 lines + health).
+List what you changed in the Diary.
+
+**Diary:** one dated entry in the Linear team document *Diary · Dispatcher · YYYY-MM* (create next month's on the
+1st) at each wave, decision and incident: what happened, why, and the founder's words verbatim when they decided.
+Newest first. It is the record for agents and for later; it has no cap.
+
+**Daily review** (the founder's one daily touchpoint; it replaces a separate morning message): each morning, after
+the walkthrough (step 0b; run at night when it ran at wind-up), one entry at the top of the team document *Daily
+review*: `## YYYY-MM-DD`, then at most 10 lines: what shipped (seen working), what broke, what needs the founder
+(link the *Needs me* view), with links to the walkthrough GIF and clips. Pulse picks it up.
+
+**Founder-facing caps:** only what the founder reads is capped. These are updates (3 lines: Done · Next · Risk), the
+daily review (≤ 10 lines a day), and briefs and initiative descriptions (≤ 1 page, TL;DR first). Agent comments
+(WORKLOG, Handoff, CHECKPOINT) are never capped. Run `doc-lint <update|daily|brief|initiative> <file>`
+(`tools/dispatch/doc-lint`, linked into `~/.local/bin`) on the text before publishing it. Fix what it reports;
+never publish around it. It checks shape and length, not truth.
+
+**Needs input:** each loop tick, add the label to any open founder ask (`QUESTION:` or a `TEST PROMPT` for the
+founder) that lacks it. List labelled issues that look answered as "probably resolved?" in the status line. Never
+remove the label yourself (`linear-workflow.md` "The Needs input label").
+
+**Maintenance lock:** while `~/.ul-dispatch/maintenance.lock` exists and hasn't expired, launch nothing
+(`ul-launch` refuses with exit 4) and make no bulk Linear writes; report the lock's reason in the status line.
+

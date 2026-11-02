@@ -8,9 +8,10 @@ argument-hint: <UNI-123>
 
 One session = one issue = one worktree = one branch = one PR. Linear is the shared state between
 parallel sessions: claim before you start, hand off before you stop. **Before writing anything to Linear,
-follow the rules in `docs/sop/linear-workflow.md`** (search before create, comment formats, relations).
-Process reference: `docs/sop/parallel-claude-sessions.md`. In repos without `docs/sop/` (unilytics-mcp),
-read these from `~/dev/ul-langgraph/docs/sop/`.
+follow the rules in `docs/handbook/linear-workflow.md`** (search before create, comment formats, relations).
+Process reference: `docs/handbook/parallel-claude-sessions.md`. The handbook lives only in ul-langgraph: in the
+other repos read these from `~/dev/ul-langgraph/docs/handbook/`, or with
+`gh api "repos/TeamUnilytics/MVP-V1.0.0-/contents/docs/handbook/<file>?ref=dev" -H "Accept: application/vnd.github.raw"`.
 
 ## Required Linear trail — every runner, no exceptions (trial 2026-10-15: both Qwen and Opus skipped parts)
 
@@ -206,7 +207,10 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   A command handed to the human must run exactly as pasted: no placeholders to fill in. If it needs a
   secret, ship a script that finds it locally and never prints it (founder, UNI-31: "im not swapping in
   shit, thats for you to do"). Searching the disk for where a secret lives is blocked too, so if the
-  script can't find it, ask the human for the file path, not the value.
+  script can't find it, ask the human for the file path, not the value. A value only the human holds (an
+  Auth0 client secret) goes in through a **hidden prompt** (`getpass`) into a 0600 file, and that command runs
+  only in the human's own Terminal.app: the Claude `!` prompt has no TTY, so `getpass` dies with a termios
+  error (UNI-28). Give the plain form for Terminal.app, and the `!` form only for the follow-up that reads the file.
 - Don't re-run a slow full test suite to read a different slice of its output. Save it once
   (`--json --outputFile=…` or `> log`) and read the file.
 - The worktree sandbox refuses commands it can't prove stay in your worktree: `git` chained with other
@@ -268,7 +272,7 @@ The same rules we use to author Unilytics skills (`author_skill` in `mcp_server/
   canonical section of the target doc, not into an appended "learnings" block.
 - **Don't condense other people's words.** Copy questions, answers and error text verbatim.
 
-## 0. Which runner am I? (`docs/sop/model-runners.md`)
+## 0. Which runner am I? (`docs/handbook/model-runners.md`)
 
 Run `echo "${UL_RUNNER:-univ}"` (empty means `univ`: plain `claude`). Put `runner <name>` in every Linear
 comment you post.
@@ -377,7 +381,7 @@ parallel, and don't plan first and read afterwards.
 2. **The issue:** its description, parent, attached documents, comments, and the handoffs of its blocking
    and related issues (Memory first).
 3. **This repo's docs:** `CLAUDE.md` (auto-loaded), `docs/architecture/overview.md`,
-   `docs/sop/developer-standards.md` (where present), every `docs/architecture/*` doc for the area you touch
+   `docs/handbook/developer-standards.md` (the shared core and this repo's section), every `docs/architecture/*` doc for the area you touch
    (`ls docs/architecture`), and any doc the issue Context names. A doc in another repo: read it from
    GitHub, e.g. `gh api "repos/TeamUnilytics/MVP-V1.0.0-/contents/<path>?ref=dev" -H "Accept: application/vnd.github.raw"`
    (ul-langgraph `MVP-V1.0.0-`@dev, ul-backend `Unilytics.ai.server`@main, ul-frontend `Unilytics.ai.UI`@main,
@@ -411,14 +415,14 @@ parallel, and don't plan first and read afterwards.
    - Write a `Research:` line under `Read:` in the WORKLOG plan: what you looked at (links), what you'll adopt,
      and what you rejected and why. A plan without it is not ready to show.
 - If the work splits into steps another session could take, create **sub-issues** (`save_issue` with
-  `parentId`, same project + milestone, Standard task format). If it is bigger than ~1 week, comment
+  `parentId`, same project, Standard task format). If it is bigger than ~1 week, comment
   "Proposing convert-to-project" and stop for the user.
 - **Cross-repo work:** one issue per repo. The issue that defines the contract (API/schema/MCP tool)
   blocks the consumers — create those relations (`blockedBy`) instead of editing another repo.
 
 ## 5. If you have a doubt
 
-1. Look it up first: issue Context links → plan section → design doc → `docs/sop/*` → comments on related
+1. Look it up first: issue Context links → plan section → design doc → `docs/handbook/*` and this repo's `docs/sop/*` → comments on related
    and blocking issues.
 2. Still unsure and it changes the outcome → comment `QUESTION: <one clear question>` (+ options you
    considered, what it blocks), add the label **Needs input**, and ask the human in this terminal.
@@ -482,7 +486,7 @@ parallel, and don't plan first and read afterwards.
   - The same page serves people and AIs. Plain Markdown, no HTML, and every heading answers a question a user
     would ask.
   - Add a dated line to `docs/user/CHANGELOG.md`: `YYYY-MM-DD: <what changed for the user>`.
-- Dev docs (`CLAUDE.md`, `docs/sop/*`, `docs/architecture/*`, skills): update them in your PR when your work
+- Dev docs (`CLAUDE.md`, `docs/handbook/*` (ul-langgraph), the repo's `docs/sop/*`, `docs/architecture/*`, skills): update them in your PR when your work
   makes them stale or teaches a gotcha (`/update-learnings` is fine), and list them in the handoff.
 - **The main plan is the dispatcher's:** `docs/plans/pivot-consultant-skill-platform.md` and the Linear document
   "Pivot plan — consultant skill platform". Never edit either, even if the human asks mid-session
@@ -638,7 +642,8 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    - All pass → Done (step 6). Any fail → fix it on a new branch and go back to 1.
 
    **Hand the test to the founder only when you can't run it yourself.** Say why in one line, then post a
-   `TEST PROMPT` comment and print it here in one copyable block. That applies when:
+   `TEST PROMPT` comment, add the label **Needs input** (it puts the issue in the founder's *Needs me* view; remove
+   it when you post their `TEST RESULT`), and print the prompt here in one copyable block. That applies when:
    - the Chrome tools don't load or the extension isn't connected;
    - the test needs **Claude Desktop** (the Unilytics MCP is connected only there, so write the prompt for a new
      Desktop chat and tell them to fully quit and reopen Desktop first);
