@@ -92,6 +92,22 @@ me how its gonna work on it. basic."). So:
   - Then say in one line what's open and what to look at ("Opened light desktop + dark mobile in Preview:
     check the header spacing").
 
+### Ping the dispatcher, and run Autopilot under `/goal` (UNI-405, 2026-11-02)
+
+The dispatcher (the session named `dispatch`, usually on univ) launches and watches you. Linear stays the record;
+a ping is the doorbell.
+- **When:** `SendMessage` to `dispatch`, one line each time (`UNI-123 · <event> · <link>`), at:
+  - Started;
+  - plan passed the council;
+  - `QUESTION` posted;
+  - PR merged + deploy checked (Handoff posted);
+  - `CHECKPOINT` / stopping.
+  If `dispatch` isn't listed by `ListAgents`, skip the ping; Linear is enough.
+- **Autopilot issues:** after the claim, run the rest under
+  `/goal the issue's Verify passed and the Handoff comment is posted, or stop after 40 turns`.
+  After a usage-limit stop you're relaunched in the same worktree: re-read the WORKLOG and carry on. Don't start
+  over.
+
 ### Handing the founder a step: open it, prefill it, leave only what Claude can't do (founder, 2026-10-24)
 
 > "if ever asking me to do anything, open everything, prefill possible details and only assign the smallest of
