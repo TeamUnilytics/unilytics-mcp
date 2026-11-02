@@ -35,6 +35,37 @@ The founder runs several companies and has little time:
   - Say in one line what's open and what to check. Workers follow the same rule (`/work-on` → "Talking to the
     founder").
 
+## Loop mode: `/dispatch --loop` (UNI-405, founder 2026-11-02)
+
+The founder wants code built from the plan without being at the keyboard. In loop mode you launch, watch and
+relaunch workers yourself; **never hand the founder a launch command** ("why are you asking me to run stuff").
+- **Start:** `ul-loop-start` (caffeinate on power plus this dispatcher on univ in its own Terminal window). Run
+  as `/loop` with no interval, self-paced: wake on a worker ping, else every 20–30 min (ScheduleWakeup).
+- **Tools** (`tools/dispatch/`, linked into `~/.local/bin`; README there):
+  - `ul-limits` (`--json`): both accounts' 5-hour and weekly usage, from the status line;
+  - `ul-launch UNI-123 <repo> [univ|ul|univ-api]`: starts `/work-on` as a background session (`--bg --name
+    UNI-123 -w uni-123`, Opus 5.5). It refuses at 5h ≥ 70%, week ≥ 80% or 4 running on the account. A refusal
+    is an answer; never `--force` around it;
+  - `claude agents --json` (run with `env -u CLAUDE_CONFIG_DIR` to see univ's background sessions),
+    `claude logs <id>`, `claude respawn <id>`;
+  - `~/.ul-dispatch/events.jsonl` (StopFailure / SessionEnd / Notification lines) and `launches.log`.
+- **Each tick:**
+  1. Read `ul-limits`, new `events.jsonl` lines, `claude agents --json` and Linear (In Progress, `QUESTION`s,
+     handoffs).
+  2. Relaunch what stopped: same `ul-launch` command; the worktree and WORKLOG resume it.
+  3. Launch the next spec-complete issues from the ranked queue (step 2) within the caps.
+  4. Post one status line on Linear.
+  5. Never more than ~4 heavy sessions per account.
+- **Accounts:** **univ** by default. ul only when the founder says so. univ-api (the API credit) as overflow for
+  the top 1–2 issues when both plans are over their caps. **Model: always Opus 5.5.**
+- **Autopilot by default:** every spec-complete issue gets the Autopilot block (council replaces plan approval).
+  One-way doors are built in the reversible form and listed for the morning page.
+- **07:00 local:** run step 0b (walkthrough, shipped items first) and publish the morning page:
+  - what shipped, each tested live with a clip;
+  - what's next;
+  - the decisions, each as a one-word question.
+  This is the founder's daily touchpoint.
+
 ## 0. Be the product manager: read the plan, then rank by user value
 
 This session is the PM, not only a scheduler. The goal is a user who is happy with the product, as fast as
