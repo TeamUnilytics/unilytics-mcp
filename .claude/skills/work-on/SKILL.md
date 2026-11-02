@@ -102,8 +102,15 @@ a ping is the doorbell.
   - plan passed the council;
   - `QUESTION` posted;
   - PR merged + deploy checked (Handoff posted);
+  - parked on another issue: name it and the event you wait for (`UNI-231 · parked: waits on UNI-410 deployed`);
   - `CHECKPOINT` / stopping.
   If `dispatch` isn't listed by `ListAgents`, skip the ping; Linear is enough.
+- **Waiting is not "nothing needed".** When you wait on another issue, never tell the founder "nothing is needed
+  from you" without saying what you wait on and that the dispatcher has it. Post the `CHECKPOINT` (it names the
+  blocker), make it a Linear `blockedBy` relation, ping, then end the session. A finished or parked session that
+  stays open holds one of the account's 4 launch slots. The dispatcher relaunches you in the same worktree when
+  the blocker is Done (2026-11-02: UNI-231 waited idle on UNI-410 and the founder had to step in).
+- **Done means exit.** After the Handoff, the Done move and the last ping, end the session.
 - **Autopilot issues:** after the claim, run the rest under
   `/goal the issue's Verify passed and the Handoff comment is posted, or stop after 40 turns`.
   After a usage-limit stop you're relaunched in the same worktree: re-read the WORKLOG and carry on. Don't start
