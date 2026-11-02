@@ -40,7 +40,12 @@ The founder runs several companies and has little time:
 The founder wants code built from the plan without being at the keyboard. In loop mode you launch, watch and
 relaunch workers yourself; **never hand the founder a launch command** ("why are you asking me to run stuff").
 - **Start:** `ul-loop-start` (caffeinate on power plus this dispatcher on univ in its own Terminal window). Run
-  as `/loop` with no interval, self-paced: wake on a worker ping, else every 20–30 min (ScheduleWakeup).
+  as `/loop` with no interval, self-paced. Three wake signals, because workers don't always ping (2026-11-02:
+  UNI-216 merged and UNI-231 parked without a ping, so UNI-410 waited until the founder noticed):
+  - a worker ping;
+  - **`Monitor` on `ul-watch`** (one line per worker-session state change: started, blocked, done), re-armed at
+    every 30-min expiry;
+  - a ScheduleWakeup heartbeat every 20–30 min.
 - **Tools** (`tools/dispatch/`, linked into `~/.local/bin`; README there):
   - `ul-limits` (`--json`): both accounts' 5-hour and weekly usage, from the status line;
   - `ul-launch UNI-123 <repo> [univ|ul|univ-api]`: starts `/work-on` as a background session (`--bg --name
@@ -48,14 +53,24 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
     is an answer; never `--force` around it;
   - `claude agents --json` (run with `env -u CLAUDE_CONFIG_DIR` to see univ's background sessions),
     `claude logs <id>`, `claude respawn <id>`;
+  - `ul-watch`: the state-change stream for `Monitor`;
   - `~/.ul-dispatch/events.jsonl` (StopFailure / SessionEnd / Notification lines) and `launches.log`.
 - **Each tick:**
   1. Read `ul-limits`, new `events.jsonl` lines, `claude agents --json` and Linear (In Progress, `QUESTION`s,
-     handoffs).
-  2. Relaunch what stopped: same `ul-launch` command; the worktree and WORKLOG resume it.
-  3. Launch the next spec-complete issues from the ranked queue (step 2) within the caps.
-  4. Post one status line on Linear.
-  5. Never more than ~4 heavy sessions per account.
+     handoffs). For every session that is `blocked` or `done`, read the end of `claude logs <id>`. The founder
+     sometimes answers in a worker's tab ("shipped already"), and a worker sometimes waits there on a question it
+     never posted.
+  2. **Free the slots.** A session whose issue is Done → `claude rm <id>` (it refuses if anything is unpushed).
+     A session parked on another issue (its `CHECKPOINT` names the blocker) → `claude stop <id>`, keeping the
+     worktree. Two sessions under one name → stop the older one (`claude stop`, never `rm`: they share the
+     worktree). A finished session still counts toward `ul-launch`'s cap until it's removed.
+  3. **Done unblocks first.** For each issue that moved to Done, launch what it unblocked before anything else
+     in the queue. Record every "run X after Y" as a Linear `blockedBy` relation, not only a comment, so
+     `list_issues` shows it.
+  4. Relaunch what stopped: the same `ul-launch` command; the worktree and WORKLOG resume it.
+  5. Launch the next spec-complete issues from the ranked queue (step 2) within the caps.
+  6. Post one status line on Linear.
+  7. Never more than ~4 heavy sessions per account.
 - **Accounts:** **univ** by default. ul only when the founder says so. univ-api (the API credit) as overflow for
   the top 1–2 issues when both plans are over their caps. **Model: always Opus 5.5.**
 - **Autopilot by default:** every spec-complete issue gets the Autopilot block (council replaces plan approval).
