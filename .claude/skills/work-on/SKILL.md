@@ -245,13 +245,18 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   the first worktree, which can be older than the deploy branch. Re-read the current version with
   `git show origin/<deploy>:.claude/skills/work-on/SKILL.md`. In UNI-94 the old copy said to hand the founder a
   TEST PROMPT, while the current one says to run the test yourself.
-- Need `node_modules` for `tsc` / `vite build`? Symlink the main checkout's:
-  `ln -s ~/dev/<repo>/node_modules node_modules` (gitignored; never `npm install` into the shared folder).
-  It can be stale: ul-backend's had no `zod` or `ajv` on 2026-11-01, so every `tests/context` suite failed to load
-  (UNI-41). And a worktree under `.claude/worktrees/` with no `node_modules` of its own silently resolves the main
-  checkout's. Before running tests, check that every `package.json` dependency resolves; if one doesn't, run
-  `npx -y -p node@20 npm ci` in your worktree. That builds the worktree's own `node_modules`, which is gitignored and
-  not shared.
+- Need `node_modules`? **Decide once, before anything else exists in the worktree.** Install the worktree's own:
+  `npx -y -p node@20 npm ci` (or `pnpm install --frozen-lockfile` where the repo uses pnpm). It is gitignored and
+  not shared, and it is the default for frontend and site repos (Turbopack won't build through a symlinked one).
+  Only for a quick `tsc` in ul-backend may you symlink the main checkout's instead
+  (`ln -s ~/dev/<repo>/node_modules node_modules`, never `npm install` into the shared folder).
+  **Never rm, unlink, move or replace a `node_modules` symlink afterwards.** The path resolves outside your working
+  directories, so Claude Code asks "Do you want to proceed?", and a background session can never answer: UNI-447
+  froze twice for ~1.5 h and UNI-374 once (2026-11-03). If you're stuck with a symlink that's missing a package,
+  stop there: open the PR and let CI run the tests.
+  A shared install can be stale: ul-backend's had no `zod` or `ajv` on 2026-11-01, so every `tests/context` suite
+  failed to load (UNI-41). A worktree under `.claude/worktrees/` with no `node_modules` of its own silently resolves
+  the main checkout's, so check that every `package.json` dependency resolves before trusting a test run.
   Adding a dependency: don't run `npm install --package-lock-only` (npm 11 rewrote ~457 unrelated lockfile
   lines in UNI-291). Add the package to `package.json`, hand-add its `node_modules/<pkg>` entry (version,
   `resolved`, `integrity` from `npm view <pkg>@<v> dist`) and the root `dependencies` line to `package-lock.json`,
@@ -433,6 +438,16 @@ parallel, and don't plan first and read afterwards.
    and blocking issues.
 2. Still unsure and it changes the outcome → comment `QUESTION: <one clear question>` (+ options you
    considered, what it blocks), add the label **Needs input**, and ask the human in this terminal.
+   **Every founder ask (QUESTION, TEST PROMPT, a command to paste) also goes at the very top of the issue
+   description**, in this block, replacing any older one. It is what the founder reads in the *Needs me* view
+   (founder, 2026-11-03: "i open one task and its a vomit of text. what exactly is my action"):
+   ```
+   ## 👉 Your action
+   **<the decision or step, one line, plain words>**
+   Default: `<one word>` · Reply: comment `ANSWER: <word>` (or: paste `! <command>` in the dispatcher)
+   Why: <one line: what it unblocks>
+   ```
+   When it is answered, delete the block. The detail stays in the comment.
 3. Continue with whatever the question doesn't block; otherwise stop and say so. Never guess on scope,
    data deletion, pricing or anything that deploys a breaking change.
 
@@ -645,7 +660,7 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      - **happy path:** one scenario per Acceptance item;
      - **round trip:** what the user creates comes back where they'd read it (upload → it's listed and search finds
        it; save → the MCP tool returns it; export → the file downloads and opens);
-     - **edge cases:** empty state, long text, a second project, a narrow window, light and dark;
+     - **edge cases:** empty state, long text, a second project, light and dark (desktop only: no phone-width tests, founder 2026-11-03);
      - **errors:** wrong input, or a failure you can trigger safely; the message must say what to do;
      - **permissions**, when the task touches access: another user or a viewer can't see or change it;
      - **regression:** the screen or tool right next to your change still works.
