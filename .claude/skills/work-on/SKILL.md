@@ -433,6 +433,16 @@ parallel, and don't plan first and read afterwards.
    and blocking issues.
 2. Still unsure and it changes the outcome → comment `QUESTION: <one clear question>` (+ options you
    considered, what it blocks), add the label **Needs input**, and ask the human in this terminal.
+   **Every founder ask (QUESTION, TEST PROMPT, a command to paste) also goes at the very top of the issue
+   description**, in this block, replacing any older one. It is what the founder reads in the *Needs me* view
+   (founder, 2026-11-03: "i open one task and its a vomit of text. what exactly is my action"):
+   ```
+   ## 👉 Your action
+   **<the decision or step, one line, plain words>**
+   Default: `<one word>` · Reply: comment `ANSWER: <word>` (or: paste `! <command>` in the dispatcher)
+   Why: <one line: what it unblocks>
+   ```
+   When it is answered, delete the block. The detail stays in the comment.
 3. Continue with whatever the question doesn't block; otherwise stop and say so. Never guess on scope,
    data deletion, pricing or anything that deploys a breaking change.
 
@@ -645,7 +655,7 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      - **happy path:** one scenario per Acceptance item;
      - **round trip:** what the user creates comes back where they'd read it (upload → it's listed and search finds
        it; save → the MCP tool returns it; export → the file downloads and opens);
-     - **edge cases:** empty state, long text, a second project, a narrow window, light and dark;
+     - **edge cases:** empty state, long text, a second project, light and dark (desktop only: no phone-width tests, founder 2026-11-03);
      - **errors:** wrong input, or a failure you can trigger safely; the message must say what to do;
      - **permissions**, when the task touches access: another user or a viewer can't see or change it;
      - **regression:** the screen or tool right next to your change still works.
