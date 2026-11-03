@@ -215,7 +215,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
    - **Every control:** hover or read every button, link and menu. Open the non-destructive ones. Note dead links,
      buttons that do nothing, and "Contact sales" or "coming soon" where a user expects the thing itself.
    - **Copy:** jargon, internal ids, typos, and names that differ between the nav, page title, docs and MCP tool.
-   - **Looks and access:** light and dark theme, ~390 px width, keyboard focus, contrast.
+   - **Looks and access:** light and dark theme, keyboard focus, contrast. Desktop only: no phone-width checks (founder, 2026-11-03: "this is a desktop app").
    - **Heuristics:** judge "confusing" against Nielsen's 10 usability heuristics, and name the one it breaks.
 4. **Backend and MCP pass** (the same day, for the walkthrough window and since the last entry):
    - `/aws-status`: Lambda errors, throttles and duration for both functions, recent error logs.
@@ -517,7 +517,8 @@ daily review (≤ 10 lines a day), and briefs and initiative descriptions (≤ 1
 never publish around it. It checks shape and length, not truth.
 
 **Needs input:** each loop tick, add the label to any open founder ask (`QUESTION:` or a `TEST PROMPT` for the
-founder) that lacks it. List labelled issues that look answered as "probably resolved?" in the status line. Never
+founder) that lacks it, and the `## 👉 Your action` block at the top of the description (`/work-on` step 5) when it
+is missing. List labelled issues that look answered as "probably resolved?" in the status line. Never
 remove the label yourself (`linear-workflow.md` "The Needs input label").
 
 **Maintenance lock:** while `~/.ul-dispatch/maintenance.lock` exists and hasn't expired, launch nothing
