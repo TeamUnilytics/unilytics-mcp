@@ -605,9 +605,22 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      `computer`, `find`, `get_page_text`, `read_console_messages`, `browser_batch`, `javascript_tool` and
      `gif_creator`. Open your own tab. Count list items with `javascript_tool` on the DOM, not by eye from a
      scrolled screenshot (UNI-94).
+   - **If Claude in Chrome says "This site is blocked by your site permissions"** on app.unilytics.ai or
+     auth.unilytics.ai (the case since 2026-11-02 ~21:00Z on the univsense account; nothing in the extension's
+     settings unblocks it), use the **chrome-devtools** MCP on the same Chrome instead. It's in both accounts' user
+     config, and the founder has remote debugging on (`chrome://inspect/#remote-debugging`). Always the
+     **univsense.com** profile (Chrome's `Default`), founder 2026-11-03:
+     - **Open the tab:** `ul-open <url>` opens the URL in that profile. Never use the MCP's `new_page`: it can land in
+       another profile window.
+     - **Attach to it:** `list_pages`, then `select_page` on that tab, then `take_snapshot` / `click` / `fill`.
+     - Chrome may ask the founder to Allow the first connection; a 403 means retry after they click it.
+     - `chrome://` URLs can't be opened through it.
    - **Sign in yourself, every click.** Unilytics is an MVP with no users yet, so you test sign-in and the task on
      the live app every time the task needs it; never tell the founder you can't log in (founder, 2026-10-24). The
-     test account is **savenjudes@gmail.com** (a test Google account). You make every click of a sign-in or
+     main test account is **savenjudes@gmail.com** (a test Google account with the founder's skills and dummy
+     projects). Also free for testing (founder, 2026-11-03): admin@univsense.com, team@unilytics.ai,
+     hello@univsense.com and the Google accounts savenjudesajen, savensajen and savenjude007. Use one of them as the
+     second user, viewer or new user a test needs, and name the account in the TEST RESULT. You make every click of a sign-in or
      sign-up flow yourself: "Continue with Google", the account in Google's chooser, Continue / Allow on a consent
      screen, and any sign-up or onboarding step after it. Never ask the founder to click an account, a consent
      screen or any other step of these flows; testing them on production is your job (founder, 2026-10-31:
