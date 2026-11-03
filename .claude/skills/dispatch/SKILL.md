@@ -224,8 +224,28 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
    - From this session's own Unilytics MCP connection, if one is loaded: `tools/list` count against CLAUDE.md,
      `find_skill` on 3 Kevin-style tasks (is the right skill top-1?), `list_skills`, `get_skill`,
      `get_project_context` on a test project, and `get_credit_balance`. Read-only and free tools only.
-5. **Grade:** works · broken · "coming soon" · slow (> 2 s) · confusing (heuristic named) · paper cut (small,
-   but a new user would notice).
+4b. **The PM bar** (founder, 2026-11-03: "I hate these kind of imperfections … you're supposed to be catching these
+   during the review not just look at what we built … think from a product manager standpoint of a company like
+   airbnb"). Every walkthrough also does these, with evidence:
+   - **Regressions first.** Compare every screen with the last walkthrough's screenshots. Anything that worked
+     before and doesn't now is the top fix of the day, e.g. project logos gone after UNI-476.
+   - **Interaction states, zoomed.** For the shell (parent nav in home and project mode, switcher, top bar, user
+     menu) and each core screen, check rest, hover, active, active + hover, focus, open and disabled, in light and
+     dark. Use zoomed crops. An overlap, a misalignment, a jitter or a clipped label is a bug, not polish.
+   - **Output quality of the smart features.** Run each one on real data and grade the result:
+     - Skill Lab proposals: is each proposal right, useful, and would a consultant approve it?
+     - find_skill: top-1 on real tasks.
+     - AI drafts for Brand Kit and Context: accurate, sourced, in the client's voice?
+     - AEO answers.
+     File quality issues with examples, not "it loads".
+   - **What would make it great.** For each feature you touched, give one line on the next improvement, any new
+     idea the result suggests, and what breaks at 10× and 100× (users, skills, KB size, runs). File the good ones in
+     Backlog with an ICE score.
+   - **Never ship a slice that removes something users see** (a logo, a button, data) without the founder's OK,
+     even when the acceptance allows a fallback. A privacy or cleanup fix keeps the feature, done the safe way.
+     UNI-476 replaced logos with initials, and the founder saw it as a regression.
+5. **Grade:** works · broken · regression · "coming soon" · slow (> 2 s) · confusing (heuristic named) · imperfect
+   (state or pixel bug) · weak output (quality rubric failed) · paper cut (small, but a new user would notice).
 6. **Then look past what's built (avoid tunnel vision).** Compare against:
    - the plan's IA (§2) and each active project's "Done when";
    - the P1 KPI flow end to end (sign up → connect your AI → run a universal skill on a project);
