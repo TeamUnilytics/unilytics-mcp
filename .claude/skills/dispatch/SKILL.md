@@ -161,6 +161,11 @@ possible.
   human can correct it.
 - **Flag the one-way doors.** In the ⚠ column, mark decisions that are hard to undo: auth model, data schema,
   public repos, anything outward-facing. Name any assumption that would flip the ranking. Take two-way doors fast.
+  A big architecture or pivot decision (project model, positioning, a source of truth) is never built without the
+  founder's sign-off: research it, post options + a recommendation with Needs input, and wait (founder,
+  2026-11-04).
+- **Label founder asks.** Every issue the founder raised gets the label **From founder** with their words quoted
+  (`linear-workflow.md` "The From founder label"), so a month-end "what did I raise" is one query.
 - **What users hit first jumps the queue:** a failed `TEST RESULT`, founder feedback on a live screen, or a bug on
   the first-use path (sign-in, connect your AI, first skill run).
 - **Do things that don't scale.** Prefer a manual step that unblocks a user today over building its automation
@@ -367,6 +372,10 @@ An issue is dispatchable only if:
 1. Every `blockedBy` issue is Done.
 2. No running issue shares its **repo + Area** label **and** no running issue lists overlapping files /
    directories (each issue's Context has an `Expected files:` line — add it if missing).
+2a. It isn't already shipped. A sub-issue or follow-up may have been delivered by its parent's PR, so check
+   the deploy branch first (`gh api "repos/<owner>/<repo>/commits?sha=<branch>&path=<expected file>"` or
+   `git log -S"<route or symbol>" origin/<branch>`). 2026-11-04: UNI-462 had already shipped in UNI-182, and a
+   worker found that out only after launch.
 2b. It fits **one session's context window with a runnable Verify check** (that is the size unit, not
    "a day"). Bigger → sub-issues.
 3. It has Outcome, Context (files/links), Acceptance criteria and Verify. If not, fix the issue text first
