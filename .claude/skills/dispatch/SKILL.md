@@ -96,6 +96,13 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
      in the queue. Record every "run X after Y" as a Linear `blockedBy` relation, not only a comment, so
      `list_issues` shows it.
   4. Relaunch what stopped: the same `ul-launch` command; the worktree and WORKLOG resume it.
+     **A worker blocked in a dialog** (a plan approval or a question in its own tab) can't read `SendMessage`
+     until the dialog closes (2026-11-04: UNI-528 and UNI-545 sat blocked). Label every issue **Autopilot before
+     `ul-launch`**, so it never asks for plan approval. If one is blocked anyway, `claude stop` it and relaunch
+     with the answer in `--prompt`. When the answer must be the founder's own words in that tab (production
+     writes, granting access), open a real Terminal window for them:
+     `osascript -e 'tell application "Terminal" to do script "env -u CLAUDE_CONFIG_DIR claude attach <id>"'`.
+     Never hand them `! claude attach`: inside a Claude session it detaches at once.
   5. Launch the next spec-complete issues from the ranked queue (step 2) within the caps.
   6. Post one status line on Linear, and update `~/.ul-dispatch/state.md`.
   7. Never more than ~4 heavy sessions per account, unless the founder asked for more in parallel.
