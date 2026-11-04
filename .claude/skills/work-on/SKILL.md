@@ -55,7 +55,8 @@ Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
   a migration), re-read your own diff against this bar and the Acceptance criteria before moving on. For
   anything non-trivial, use a review subagent with fresh context. The final fresh-context review in step 6
   still runs on top.
-- **Research before you design** (step 4.6) and **consult the council on important work** (step 6).
+- **Research before you design** (step 4.6: GitHub implementations, leading companies, dated sources), **write
+  the architecture before code** (step 4.7), and **consult the council on important work** (step 6).
 
 ## Talking to the founder
 
@@ -179,9 +180,9 @@ Never hand the founder a list of instructions to follow. Before you post the `QU
 The founder approved the scope in advance (the `Autopilot — approved by founder …` line in Context) and isn't
 around to answer. So:
 - **Don't wait for plan approval** (step 6). The approval for the plan is: step 4's reading, plus the research
-  (4.6), plus the council (step 6 budget: first round `--high`, re-checks `--medium`) with every REVISE point
-  fixed or answered. Then build. Post the plan,
-  `Research:` and `Council:` lines in the WORKLOG so the founder can read them later.
+  (4.6), plus the `Architecture:` block (4.7), plus the council (step 6 budget: first round `--high`, re-checks
+  `--medium`) with every REVISE point fixed or answered. Then build. Post the plan, `Research:`,
+  `Architecture:` and `Council:` lines in the WORKLOG so the founder can read them later.
 - **Stay inside the approved scope.** Stop for anything outside it, or any one-way door the approval doesn't
   name: post a `QUESTION`, add **Needs input**, finish what the question doesn't block, then post a
   `CHECKPOINT`. Never guess. Never handle secrets, payments or data deletion on autopilot unless the approval
@@ -424,8 +425,30 @@ parallel, and don't plan first and read afterwards.
    - **Best practice and primary sources:** the official docs, specs and RFCs for what you touch (MCP spec,
      OAuth RFCs, Mongo, FastMCP, React or Tailwind docs, AWS docs), and well-regarded open-source
      implementations. Use WebSearch or WebFetch, and prefer primary sources over blog summaries.
-   - Write a `Research:` line under `Read:` in the WORKLOG plan: what you looked at (links), what you'll adopt,
-     and what you rejected and why. A plan without it is not ready to show.
+   - **Latest, and how the best teams actually build it** (founder, 2026-11-04: "workers go through github and
+     other companies or products and best and latest practices before"):
+     - **GitHub:** find at least 2 real, well-maintained implementations of the same thing (`gh search repos` /
+       `gh search code`, or the projects the docs point to). Read how they structure it, not only their README.
+     - **Leading companies:** read the engineering write-ups and live products of the teams that do it best
+       (Anthropic, GitHub, Vercel, Linear, Stripe, Temporal and the like). A UI modelled on a product gets
+       measured live, per the audit-until-perfect rule.
+     - **Dated:** every source in `Research:` carries its date. Prefer the last 12 months, and say when the best
+       source is older and why it still holds.
+   - Write a `Research:` line under `Read:` in the WORKLOG plan: what you looked at (links, dates), what you'll
+     adopt, and what you rejected and why. A plan without it is not ready to show.
+7. **Architecture before code** (founder, 2026-11-04, after an always-on agents talk: architecture is the most
+   important thing, because "the decisions you make there will really compound"). For anything beyond a small
+   bug, the WORKLOG plan has an `Architecture:` block **before any code**:
+   - **components and boundaries:** which repo, module and service owns what; what stays thin and what's heavy;
+   - **data flow and contracts:** the request path end to end, schemas and APIs, and who is the one writer;
+   - **state and failure:** what's durable, retries and idempotency, what happens on a crash or a partial
+     write, and how it resumes;
+   - **scale and cost:** what breaks at 10× and 100× (users, skills, runs, tokens), and the cheapest path that
+     holds;
+   - **one-way doors:** what's hard to undo, and the reversible form you chose;
+   - **alternatives:** two other designs you considered, and why this one wins.
+   The council's first round reviews the `Architecture:` block, not just the code. The fresh-context review
+   checks that the code matches it. A worker reads the code it ships; nothing merges that no one has read.
 - If the work splits into steps another session could take, create **sub-issues** (`save_issue` with
   `parentId`, same project, Standard task format). If it is bigger than ~1 week, comment
   "Proposing convert-to-project" and stop for the user.

@@ -34,6 +34,17 @@ The founder runs several companies and has little time:
   - A URL: a new Chrome tab, or `open <url>`.
   - Say in one line what's open and what to check. Workers follow the same rule (`/work-on` → "Talking to the
     founder").
+- **Quiet by default** (founder, 2026-11-04, after an always-on agents talk: "knows when to be quiet"). Worker
+  pings go into `~/.ul-dispatch/state.md` and Linear, not the terminal. Give the founder one short update every
+  ~30 min. Interrupt right away only for:
+  - a founder step that blocks work now;
+  - something shipped and seen working;
+  - an incident (prod broken, data at risk).
+- **Don't ask for obvious or small things** (founder, 2026-11-04: "don't be asking me to do stuff or wait on me
+  for silly stuff"). Decide reversible calls yourself, record them on the issue, and tell the founder in the
+  update. Ask only for:
+  - money, secrets, granting access, terms, a password, 2FA or CAPTCHA;
+  - a real product or privacy trade-off that is the founder's taste (e.g. a server-side Google favicon fallback).
 
 ## Loop mode: `/dispatch --loop` (UNI-405, founder 2026-11-02)
 
@@ -45,12 +56,28 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   - a worker ping;
   - **`Monitor` on `ul-watch`** (one line per worker-session state change: started, blocked, done), re-armed at
     every 30-min expiry;
+  - **`Monitor` on `ul-gh-watch`** (GitHub events: a PR merged, CI failed on an open PR, a deploy run failed),
+    re-armed like `ul-watch`. Merges and failures wake you instead of waiting for a ping;
   - a ScheduleWakeup heartbeat every 20–30 min.
+- **State file:** `~/.ul-dispatch/state.md` holds the running workers, the ranked queue, the founder's open asks
+  and live config facts. Update it every tick, and re-read it first after any compaction. Your context can be
+  summarised away; this file can't (workers have the same thing in WORKLOG/CHECKPOINT).
+- **Lean main context:** send big reads to a sub-agent and keep only the conclusion: issue dumps, worker logs, CI
+  output. `save_issue` echoes the whole description, so prefer comments and relations. You are the orchestrator,
+  and every token you hold costs you later.
+- **Auto-review allowlist** (founder-approved 2026-11-04): `~/.claude/settings.json` permission rules and
+  `autoMode.allow` cover the known ops scripts:
+  - `mcp_server/ops/{proposal_collections,lab_collections}.py apply --update-validators`;
+  - `test_proposals`, `proposals_deploy_check`, `skill_indexes`, `skill_references_backfill`, `approvals_lane`;
+  - `mcp_server.ops.lab_founder_lane`, `skill_lab.cli`, and `ul-launch --force`.
+  Run these yourself instead of handing the founder a paste. Workers do too. Anything new and risky still goes
+  to the founder as one paste. Never edit the permission settings yourself; the founder applies changes.
 - **Tools** (`tools/dispatch/`, linked into `~/.local/bin`; README there):
   - `ul-limits` (`--json`): both accounts' 5-hour and weekly usage, from the status line;
   - `ul-launch UNI-123 <repo> [univ|ul|univ-api]`: starts `/work-on` as a background session (`--bg --name
     UNI-123 -w uni-123`, Opus 5.5). It refuses at 5h ≥ 70%, week ≥ 80% or 4 running on the account. A refusal
-    is an answer; never `--force` around it;
+    is an answer; use `--force` only to go past the 4-session cap when the founder has asked for work to run in
+    parallel (2026-11-04: "run parallely"), never past the usage limits;
   - `claude agents --json` (run with `env -u CLAUDE_CONFIG_DIR` to see univ's background sessions),
     `claude logs <id>`, `claude respawn <id>`;
   - `ul-watch`: the state-change stream for `Monitor`;
@@ -69,8 +96,10 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
      `list_issues` shows it.
   4. Relaunch what stopped: the same `ul-launch` command; the worktree and WORKLOG resume it.
   5. Launch the next spec-complete issues from the ranked queue (step 2) within the caps.
-  6. Post one status line on Linear.
-  7. Never more than ~4 heavy sessions per account.
+  6. Post one status line on Linear, and update `~/.ul-dispatch/state.md`.
+  7. Never more than ~4 heavy sessions per account, unless the founder asked for more in parallel.
+  8. Count the founder's corrections of the dispatcher that day (scorecard). A repeat correction becomes a rule
+     in this skill, the same day.
 - **Accounts:** **univ** by default. ul only when the founder says so. univ-api (the API credit) as overflow for
   the top 1–2 issues when both plans are over their caps. **Model: always Opus 5.5.**
 - **Autopilot by default:** every spec-complete issue gets the Autopilot block (council replaces plan approval).
@@ -224,8 +253,28 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
    - From this session's own Unilytics MCP connection, if one is loaded: `tools/list` count against CLAUDE.md,
      `find_skill` on 3 Kevin-style tasks (is the right skill top-1?), `list_skills`, `get_skill`,
      `get_project_context` on a test project, and `get_credit_balance`. Read-only and free tools only.
-5. **Grade:** works · broken · "coming soon" · slow (> 2 s) · confusing (heuristic named) · paper cut (small,
-   but a new user would notice).
+4b. **The PM bar** (founder, 2026-11-03: "I hate these kind of imperfections … you're supposed to be catching these
+   during the review not just look at what we built … think from a product manager standpoint of a company like
+   airbnb"). Every walkthrough also does these, with evidence:
+   - **Regressions first.** Compare every screen with the last walkthrough's screenshots. Anything that worked
+     before and doesn't now is the top fix of the day, e.g. project logos gone after UNI-476.
+   - **Interaction states, zoomed.** For the shell (parent nav in home and project mode, switcher, top bar, user
+     menu) and each core screen, check rest, hover, active, active + hover, focus, open and disabled, in light and
+     dark. Use zoomed crops. An overlap, a misalignment, a jitter or a clipped label is a bug, not polish.
+   - **Output quality of the smart features.** Run each one on real data and grade the result:
+     - Skill Lab proposals: is each proposal right, useful, and would a consultant approve it?
+     - find_skill: top-1 on real tasks.
+     - AI drafts for Brand Kit and Context: accurate, sourced, in the client's voice?
+     - AEO answers.
+     File quality issues with examples, not "it loads".
+   - **What would make it great.** For each feature you touched, give one line on the next improvement, any new
+     idea the result suggests, and what breaks at 10× and 100× (users, skills, KB size, runs). File the good ones in
+     Backlog with an ICE score.
+   - **Never ship a slice that removes something users see** (a logo, a button, data) without the founder's OK,
+     even when the acceptance allows a fallback. A privacy or cleanup fix keeps the feature, done the safe way.
+     UNI-476 replaced logos with initials, and the founder saw it as a regression.
+5. **Grade:** works · broken · regression · "coming soon" · slow (> 2 s) · confusing (heuristic named) · imperfect
+   (state or pixel bug) · weak output (quality rubric failed) · paper cut (small, but a new user would notice).
 6. **Then look past what's built (avoid tunnel vision).** Compare against:
    - the plan's IA (§2) and each active project's "Done when";
    - the P1 KPI flow end to end (sign up → connect your AI → run a universal skill on a project);
