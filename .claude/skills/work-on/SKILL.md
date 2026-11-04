@@ -607,6 +607,11 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    - No other deploy is running in this repo (`gh run list -R <owner/repo> --limit 3`: nothing in progress).
    - Nothing the deploy needs is missing: an env var or secret, a migration, a manual step. Never merge first
      and fix production after.
+   - **Mongo validators** (ul-langgraph `proposal_collections.py` / `lab_collections.py` / `outbox_ops.py apply`):
+     apply them only from a branch merged with the latest origin/dev, then run `lab_deploy_check.py run`.
+     `collMod` replaces the whole validator: an apply from a stale branch removed another session's fields and
+     500'd every proposal create (UNI-527). The scripts refuse a stale branch or a narrowing (exit 2). Don't work
+     around it: merge `origin/dev`; a real contract is a reviewed `NARROWINGS` entry applied from dev itself.
 2. **Merge** into the repo's deploy branch (ul-langgraph → `dev`, the rest → `main`):
    `gh pr merge <n> -R <owner/repo> --merge --delete-branch`. If the safety check blocks it, ask the human
    "OK to merge PR #<n> into <branch>? It deploys to production." and merge after they say yes.
