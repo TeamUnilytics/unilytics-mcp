@@ -67,7 +67,8 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   and every token you hold costs you later.
 - **Auto-review allowlist** (founder-approved 2026-11-04): `~/.claude/settings.json` permission rules and
   `autoMode.allow` cover the known ops scripts:
-  - `mcp_server/ops/{proposal_collections,lab_collections}.py apply --update-validators`;
+  - `mcp_server/ops/{proposal_collections,lab_collections}.py apply --update-validators` (only from a branch
+    merged with the latest origin/dev; the scripts refuse otherwise, exit 2: UNI-527);
   - `test_proposals`, `proposals_deploy_check`, `skill_indexes`, `skill_references_backfill`, `approvals_lane`;
   - `mcp_server.ops.lab_founder_lane`, `skill_lab.cli`, and `ul-launch --force`.
   Run these yourself instead of handing the founder a paste. Workers do too. Anything new and risky still goes
