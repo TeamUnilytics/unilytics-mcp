@@ -338,6 +338,11 @@ The work is done by agents, so estimate from **our measured agent times**, never
   - **founder wait:** time from a `TEST PROMPT`, `QUESTION` or plan shown until the reply;
   - **throughput:** issues Done per day.
   Report medians by Area, and keep build time and founder wait apart. They have different fixes.
+- **Council spend** (UNI-673): `node ~/dev/ul-langgraph/.claude/skills/consult-the-council/council.mjs --spend`
+  gives the day's council total by member and by issue, against `COUNCIL_DAILY_CAP_USD`. It also lists unfinished
+  runs (killed ones count at their reservation), refused runs and each forced run with its reason. Quote the total
+  at wind-up and check every forced reason. Name any member still on a shared key (xAI and Perplexity: the Lambda's own), because each of those still
+  drains production's credit.
 - **Dates:** for each active project, estimate the time left as open issues × median build time ÷ parallel
   sessions, plus the expected founder wait. If that lands well before the target date, propose pulling the date
   in. If it lands after, propose the delay and its cause. Change a date (`save_project` / `save_initiative`) only
@@ -520,8 +525,8 @@ left in the handoff. Sync any git design doc a worker changed into its Linear do
   GitHub API (SOP rule 3b): fetch the file from its deploy branch, edit it, then create blob → tree →
   commit → ref → PR in one call sequence, after checking the remote blob sha still matches what you edited.
   SOPs have one copy, `docs/handbook/` in ul-langgraph (CI publishes it to Linear); edit them here by PR, never in
-  another repo or in Linear. The shared skills (`dispatch`, `work-on`) must be the same blob in all 6 repos:
-  after merging a change to either, run `tools/dispatch/sync-shared --source-sha <merged dev sha>` (one PR per repo;
+  another repo or in Linear. The shared skills (`dispatch`, `work-on`, `consult-the-council` with its
+  `council.mjs`) must be the same blob in all 6 repos: after merging a change to any of them, run `tools/dispatch/sync-shared --source-sha <merged dev sha>` (one PR per repo;
   it refuses a repo whose copy diverged on purpose), and `tools/dispatch/sync-shared --check` in the Friday audit.
 - Worktrees that can be deleted: run `git worktree list` here, and `ls ~/dev/<repo>/.claude/worktrees` for
   the other repos. A worktree can go once its issue is Done (PR merged); keep it while the issue is In
