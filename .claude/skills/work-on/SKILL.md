@@ -160,8 +160,9 @@ tell the founder which account to sign in with:
 | Anthropic (Claude API) | https://console.anthropic.com/settings/billing | team@unilytics.ai (founder "believes"; confirm on the page) |
 | Perplexity | https://www.perplexity.ai/account/api/billing | unknown: ask once, then add it here |
 
-The council and production share the xAI, Gemini and Perplexity keys, so a top-up there also restores
-production's calls.
+Until the council has keys of its own (`COUNCIL_<MEMBER>_API_KEY`), it shares production's xAI and Perplexity
+keys, so a top-up there also restores production's calls. Gemini runs in the council only on its own key
+(UNI-673), so a Gemini top-up is production's alone.
 
 Never hand the founder a list of instructions to follow. Before you post the `QUESTION` or ask in the terminal:
 - **Open it in Chrome** (Claude in Chrome): the console, dashboard, form or settings page, already on the right
@@ -495,6 +496,9 @@ parallel, and don't plan first and read afterwards.
   - `--high` again only after a REJECT.
   - Other work: `--medium` once, or no council.
   - Send the diff and the relevant excerpts, never whole files.
+  - Every run is logged with its cost, and a daily cap ($10 by default) refuses runs once reached (UNI-673). Refused
+    → write `Council: skipped, daily cap` in the WORKLOG and do the fresh-context review. `--force --reason` only
+    for security, billing or a migration that can't wait.
   Show the human the plan with a `Council:` line: each verdict, the issues raised, what you changed or rejected
   and why, and the run's cost total. REJECT → stop and discuss before building. For security, billing and
   migrations, also run it on the final diff (`--medium`) before merging. Record every run in the WORKLOG.
@@ -612,6 +616,19 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      `collMod` replaces the whole validator: an apply from a stale branch removed another session's fields and
      500'd every proposal create (UNI-527). The scripts refuse a stale branch or a narrowing (exit 2). Don't work
      around it: merge `origin/dev`; a real contract is a reviewed `NARROWINGS` entry applied from dev itself.
+   - **ul-langgraph `skill-lab-gate` is green** (UNI-173). GitHub Free can't make it required, so this rule is what
+     enforces it. Red means the PR changes a Skill Lab agent's inputs without a gate record for exactly this change:
+     run `skill_lab/.venv/bin/python -m skill_lab.evals.eval_agent run --agent <name> --experiment <name>` and commit
+     `skill_lab/gates/<name>.json` (paid, capped; skill-lab.md "The eval gate"). Merge origin/dev into the PR first:
+     the check doesn't re-run when dev moves, and re-running an old run keeps its old merge commit.
+     **Missing blocks like red** (UNI-669: the first version never ran, and four PRs merged without it). Pending,
+     cancelled and skipped block too. With no `skill-lab-gate` row in `gh pr checks <n>`:
+     - just pushed → `--watch`;
+     - conflicts → merge origin/dev and push (a conflicted PR runs no `pull_request` workflow);
+     - base isn't dev → retarget;
+     - `[skip ci]` in the head commit → push without it.
+     Still nothing (Actions error, minutes used up) → `QUESTION` + Needs input; don't merge. Details: skill-lab.md
+     "The check".
 2. **Merge** into the repo's deploy branch (ul-langgraph → `dev`, the rest → `main`):
    `gh pr merge <n> -R <owner/repo> --merge --delete-branch`. If the safety check blocks it, ask the human
    "OK to merge PR #<n> into <branch>? It deploys to production." and merge after they say yes.
