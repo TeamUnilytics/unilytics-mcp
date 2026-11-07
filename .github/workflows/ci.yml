@@ -3,6 +3,8 @@ name: CI
 
 on:
   pull_request:
+  # release.yml runs this too: a merge doesn't have to pass CI here, but a release does.
+  workflow_call:
 
 permissions:
   contents: read

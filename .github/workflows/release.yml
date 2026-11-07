@@ -7,13 +7,14 @@ on:
   push:
     branches: [main]
     paths: [package.json]
-  # Finishes a release whose run failed. A published version is never rebuilt.
+  # Finishes a run that failed: publishes if it hadn't, and records the release in Linear if it had.
+  # A published version is never rebuilt.
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# Queued, never cancelled: a run stopped halfway would leave a draft behind.
+# Runs one at a time and never interrupts one: a run stopped halfway would leave a draft behind.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -27,6 +28,7 @@ jobs:
     outputs:
       tag: ${{ steps.decide.outputs.tag }}
       publish: ${{ steps.decide.outputs.publish }}
+      record: ${{ steps.decide.outputs.record }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Decide whether this commit is a new version
@@ -42,12 +44,14 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           # This endpoint returns published releases only, so a draft left by a failed run doesn't count.
           if gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --silent 2>/dev/null; then
-            echo "$tag is already published: nothing to do."
+            echo "$tag is already published: nothing to build."
             echo "publish=false" >> "$GITHUB_OUTPUT"
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then echo "record=true" >> "$GITHUB_OUTPUT"; fi
             exit 0
           fi
           # `gh release create --target` doesn't move an existing tag, so a stray one would mislabel this build.
-          existing=$(git ls-remote --tags origin "refs/tags/$tag" | cut -f1)
+          # The ^{} line, listed last, is the commit an annotated tag points at.
+          existing=$(git ls-remote --tags origin "refs/tags/$tag" "refs/tags/$tag^{}" | tail -n 1 | cut -f1)
           if [ -n "$existing" ] && [ "$existing" != "$GITHUB_SHA" ]; then
             echo "::error::tag $tag already points at $existing, not $GITHUB_SHA"; exit 1
           fi
@@ -74,9 +78,15 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # Every OS Claude Desktop runs on, since installed copies can't be patched later.
+  test:
+    needs: build
+    if: needs.build.outputs.publish == 'true'
+    uses: ./.github/workflows/ci.yml
+
   # Write access, and it runs nothing from the repo or from npm.
   publish:
-    needs: build
+    needs: [build, test]
     if: needs.build.outputs.publish == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -103,13 +113,21 @@ jobs:
       # With an asset, gh creates a draft, uploads, then publishes, so "latest" never points at a release without it.
       - name: Publish
         run: gh release create "$TAG" unilytics.mcpb --target "$GITHUB_SHA" --title "$TAG" --generate-notes
-      - name: The stable URL serves exactly this file
+      - name: The download URLs serve exactly this file
         run: |
-          curl -fsSL -o served.mcpb "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/unilytics.mcpb"
-          cmp served.mcpb unilytics.mcpb
+          base="https://github.com/$GITHUB_REPOSITORY/releases"
+          curl -fsSL -o versioned.mcpb "$base/download/$TAG/unilytics.mcpb"
+          cmp versioned.mcpb unilytics.mcpb
+          # A fix to an older version doesn't become "latest", and shouldn't.
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)" = "$TAG" ]; then
+            curl -fsSL -o latest.mcpb "$base/latest/download/unilytics.mcpb"
+            cmp latest.mcpb unilytics.mcpb
+          fi
 
   linear:
     needs: [build, publish]
+    # !cancelled() because publish is skipped on a run that only records.
+    if: ${{ !cancelled() && (needs.publish.result == 'success' || needs.build.outputs.record == 'true') }}
     uses: ./.github/workflows/linear-release.yml
     with:
       tag: ${{ needs.build.outputs.tag }}

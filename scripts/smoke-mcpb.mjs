@@ -43,7 +43,9 @@ assert.equal(apiKey.required, true, "Desktop must ask for the key before enablin
 assert.equal(manifest.compatibility.runtimes, undefined, "must stay runnable with no Node on PATH");
 
 assert.ok(existsSync(join(dir, "icon.png")));
-assert.ok(existsSync(join(dir, "THIRD_PARTY_LICENSES.txt")));
+const licences = readFileSync(join(dir, "THIRD_PARTY_LICENSES.txt"), "utf8");
+assert.match(licences, /^@modelcontextprotocol\/sdk@\d/m, "every bundled package's licence must ship");
+assert.match(licences, /^zod@\d/m, "every bundled package's licence must ship");
 assert.ok(!existsSync(join(dir, "node_modules")), "everything must be in server/index.cjs");
 
 const value = "ulk_test_resolved_by_desktop_code";

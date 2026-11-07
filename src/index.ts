@@ -12,7 +12,7 @@
  *   UNILYTICS_MCP_URL  developers only: another endpoint (https, or http on localhost)
  */
 
-import { runBridge } from "./bridge.js";
+import { NO_KEY_MESSAGE, runBridge, runWithoutKey, UNUSABLE_KEY_MESSAGE } from "./bridge.js";
 
 /**
  * The permanent public host (founder-approved, UNI-252), never a raw function URL: an installed .mcpb can't be
@@ -25,24 +25,6 @@ const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 function fail(message: string): never {
   console.error(`Error: ${message}`);
   process.exit(1);
-}
-
-function readApiKey(): string {
-  const arg = process.argv.find((a) => a.startsWith("--api-key="));
-  // Trimmed because a key is usually pasted, and a paste can carry a stray space or line break.
-  const key = (arg ? arg.slice("--api-key=".length) : process.env.UNILYTICS_API_KEY ?? "").trim();
-  if (!key) {
-    fail(
-      "API key required.\n" +
-        "Set UNILYTICS_API_KEY or pass --api-key=ulk_live_xxx\n" +
-        "Get your key at: https://app.unilytics.ai/settings/api-keys"
-    );
-  }
-  // Format is the server's call. This only stops what can't travel in a header; the key is never echoed.
-  if (/[^\x21-\x7e]/.test(key)) {
-    fail("the API key contains a space or an unusual character. Copy it again from Settings → API Keys.");
-  }
-  return key;
 }
 
 function readServerUrl(): URL {
@@ -60,7 +42,24 @@ function readServerUrl(): URL {
   return url;
 }
 
-runBridge({ apiKey: readApiKey(), serverUrl: readServerUrl() }).catch((err: unknown) => {
+function start(): Promise<void> {
+  const serverUrl = readServerUrl();
+
+  const arg = process.argv.find((a) => a.startsWith("--api-key="));
+  // Trimmed because a key is usually pasted, and a paste can carry a stray space or line break.
+  const apiKey = (arg ? arg.slice("--api-key=".length) : (process.env.UNILYTICS_API_KEY ?? "")).trim();
+
+  // Format is the server's call. This only stops what can't travel in a header. The key is never echoed.
+  const problem = !apiKey ? NO_KEY_MESSAGE : /[^\x21-\x7e]/.test(apiKey) ? UNUSABLE_KEY_MESSAGE : null;
+  if (!problem) return runBridge({ apiKey, serverUrl });
+
+  // A person at a terminal reads stderr, and nothing would ever arrive on stdin to answer.
+  if (process.stdin.isTTY) fail(problem);
+  console.error(`Error: ${problem}`);
+  return runWithoutKey(problem);
+}
+
+start().catch((err: unknown) => {
   console.error(`Failed to start the Unilytics MCP bridge: ${err instanceof Error ? err.name : "unknown error"}`);
   process.exit(1);
 });

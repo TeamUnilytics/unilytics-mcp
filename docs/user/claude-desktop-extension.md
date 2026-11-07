@@ -45,6 +45,14 @@ Claude can connect and list the Unilytics tools before it checks your key, so yo
 3. Paste the new key and save.
 4. Start a new chat.
 
+## Unilytics won't connect, or Claude says the key is missing or incomplete. What do I do?
+
+The key was probably pasted with a space or a line break in it, or left blank. Follow the same steps as above: create a new key, paste it under **Settings → Extensions → Unilytics → Configure**, save, and start a new chat.
+
+## Claude says Unilytics refused the request or is receiving too many requests. What do I do?
+
+The request did not run, so it didn't use credits. If Claude says there are too many requests, wait a minute and try again. If Claude says the request was refused and it keeps happening, a network proxy or company firewall may be blocking Unilytics. Try another network, or create a new key.
+
 ## Claude says the connection to Unilytics failed. Should I run it again?
 
 Check your internet connection first. If the message was about a tool call, the tool may have finished before the connection dropped, and it may have used credits. Check for the result in Unilytics before you run it again.

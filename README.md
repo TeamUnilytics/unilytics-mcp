@@ -50,17 +50,17 @@ About 90 tools, served by Unilytics, so they stay current without updating anyth
 
 A thin stdio-to-HTTP bridge. Your MCP client talks to it over stdin/stdout, and it forwards each message to `https://mcp.unilytics.ai/mcp` with your key. Everything runs server-side; the bridge stores nothing.
 
-If the connection fails, your AI gets an error saying what to do. A failed tool call is never retried automatically, because the first attempt may have finished and used credits.
+If a request fails, your AI gets an error saying what to do. A failed tool call is never retried automatically, because the first attempt may have finished and used credits.
 
 ## Versions and updates
 
 The version in `package.json` is the only version number: the manifest is stamped from it at build time, and `src/version.ts` is pinned to it by a test.
 
-- **Releasing.** Merging a new `version` to `main` publishes `unilytics.mcpb` as GitHub release `v<version>` (`.github/workflows/release.yml`), after the tests pass on the packed file. Published releases are immutable. npm is a separate, manual `npm publish` from the same commit.
+- **Releasing.** Merging a new `version` to `main` publishes `unilytics.mcpb` as GitHub release `v<version>` (`.github/workflows/release.yml`), after the tests pass on the packed file on Linux, macOS and Windows. Published releases are immutable (a repository setting). If a run fails, re-run it from the Actions tab (Release → Run workflow). npm is a separate, manual `npm publish` from the same commit.
 - **Download URLs.** `releases/latest/download/unilytics.mcpb` always serves the newest release. Every version keeps its own URL (`releases/download/v1.1.0/unilytics.mcpb`) for rollback.
 - **Verify a download.** `gh attestation verify unilytics.mcpb --repo TeamUnilytics/unilytics-mcp`
 - **No auto-update.** Claude Desktop doesn't update extensions installed from a file. New and changed tools arrive from the server with no reinstall. A bridge release is for a bug or security fix in the bridge itself, and users get it by double-clicking the new file, which replaces the old version.
-- **Keep old bridges working.** Installed copies stay in use indefinitely, so the server must keep speaking standard MCP over Streamable HTTP at `https://mcp.unilytics.ai/mcp`, and tool changes reach them as ordinary `tools/list` changes. The `User-Agent` (`unilytics-mcp-bridge/<version>`) shows which versions are still in use. Before retiring a version or shipping a security fix, tell users through the app and the changelog.
+- **Keep old bridges working.** Installed copies stay in use indefinitely, so the server must keep speaking MCP over Streamable HTTP at `https://mcp.unilytics.ai/mcp`, **answering each POST with a JSON response, not an SSE stream**, and tool changes reach them as ordinary `tools/list` changes. The bridge can only report a failed reply when the POST itself fails. If a stream dropped, a request would wait until the client's own timeout. The `User-Agent` (`unilytics-mcp-bridge/<version>`) shows which versions are still in use. Before retiring a version or shipping a security fix, tell users through the app and the changelog.
 - **Never rename.** `name` and `author.name` in `mcpb/manifest.json` form the extension's id. Changing either makes Claude Desktop treat an update as a different extension, with a second copy and a lost key. The default URL can't change either: the bridge refuses cross-origin redirects, because the key travels with every request.
 
 ## Development

@@ -24,8 +24,9 @@ afterEach(async () => {
   await server.close();
 });
 
-const ERROR_API_KEY_REJECTED = -32010;
+const ERROR_API_KEY = -32010;
 const ERROR_TRANSPORT_FAILED = -32011;
+const ERROR_REQUEST_REFUSED = -32012;
 
 test("forwards a request and sends the key and version", async () => {
   const bridge = bridgeFor();
@@ -70,21 +71,41 @@ test("passes a server tool error through unchanged", async () => {
   assert.deepEqual((await bridge.reply(1)).result, toolError);
 });
 
-for (const status of [401, 403]) {
-  test(`HTTP ${status} says how to replace the key and the bridge stays up`, async () => {
-    server.respond = (req, body, res) => res.writeHead(status).end("nope");
-    const bridge = bridgeFor();
-    bridge.send(request(1, "tools/call", { name: "list_projects" }));
-    const { error } = await bridge.reply(1);
-    assert.equal(error.code, ERROR_API_KEY_REJECTED);
-    assert.match(error.message, /app\.unilytics\.ai\/settings\/api-keys/);
-    assert.match(error.message, /Settings → Extensions → Unilytics → Configure/);
+test("HTTP 401 says how to replace the key and the bridge stays up", async () => {
+  server.respond = (req, body, res) => res.writeHead(401).end("nope");
+  const bridge = bridgeFor();
+  bridge.send(request(1, "tools/call", { name: "list_projects" }));
+  const { error } = await bridge.reply(1);
+  assert.equal(error.code, ERROR_API_KEY);
+  assert.match(error.message, /app\.unilytics\.ai\/settings\/api-keys/);
+  assert.match(error.message, /Settings → Extensions → Unilytics → Configure/);
 
-    server.respond = null;
-    bridge.send(request(2, "tools/list"));
-    assert.deepEqual((await bridge.reply(2)).result, { echoed: "tools/list" });
-  });
-}
+  server.respond = null;
+  bridge.send(request(2, "tools/list"));
+  assert.deepEqual((await bridge.reply(2)).result, { echoed: "tools/list" });
+});
+
+test("HTTP 403 says it did not run and doesn't blame the key outright", async () => {
+  server.respond = (req, body, res) => res.writeHead(403).end("blocked by proxy");
+  const bridge = bridgeFor();
+  bridge.send(request(1, "tools/call", { name: "list_projects" }));
+  const { error } = await bridge.reply(1);
+  assert.equal(error.code, ERROR_REQUEST_REFUSED);
+  assert.match(error.message, /HTTP 403/);
+  assert.match(error.message, /did not run/);
+  assert.match(error.message, /proxy or firewall/);
+  assert.doesNotMatch(error.message, /didn't accept/);
+});
+
+test("HTTP 429 says wait, not that the connection failed", async () => {
+  server.respond = (req, body, res) => res.writeHead(429).end();
+  const bridge = bridgeFor();
+  bridge.send(request(1, "tools/call", { name: "x" }));
+  const { error } = await bridge.reply(1);
+  assert.equal(error.code, ERROR_REQUEST_REFUSED);
+  assert.match(error.message, /did not run/);
+  assert.match(error.message, /Wait a minute/);
+});
 
 test("a failed tool call warns that it may have run, and never says to just retry", async () => {
   server.respond = (req, body, res) => res.writeHead(504).end("gateway timeout");
@@ -204,24 +225,32 @@ test("--api-key= works and keeps an = inside the key", async () => {
   assert.equal(server.requests[0].headers.authorization, "Bearer ulk_test_a=b");
 });
 
-for (const [name, key] of [
-  ["missing", null],
-  ["blank", "   "],
+for (const [name, key, expected] of [
+  ["missing", null, /No Unilytics API key is set/],
+  ["blank", "   ", /No Unilytics API key is set/],
+  ["line-broken", "ulk_test_first\nsecond_half", /copied incompletely/],
 ]) {
-  test(`a ${name} key exits 1 and says where to get one`, async () => {
+  test(`a ${name} key is explained in the chat, not only in a log file`, async () => {
     const bridge = bridgeFor({ key });
+    bridge.send(request(1, "initialize"));
+    bridge.send({ jsonrpc: "2.0", method: "notifications/initialized" });
+    bridge.send(request(2, "tools/call", { name: "list_projects" }));
+
+    for (const id of [1, 2]) {
+      const { error } = await bridge.reply(id);
+      assert.equal(error.code, ERROR_API_KEY);
+      assert.match(error.message, expected);
+      assert.match(error.message, /app\.unilytics\.ai\/settings\/api-keys/);
+    }
+    assert.equal(bridge.messages.length, 2, "a notification gets no reply");
+    assert.equal(server.requests.length, 0, "nothing is sent to the server");
+    assert.match(bridge.stderr, expected);
+    assert.ok(!(bridge.stdout + bridge.stderr).includes("second_half"), "the key is never echoed");
+
+    bridge.child.stdin.end();
     assert.equal(await bridge.exited, 1);
-    assert.match(bridge.stderr, /app\.unilytics\.ai\/settings\/api-keys/);
-    assert.equal(bridge.stdout, "");
   });
 }
-
-test("a key with a line break inside exits 1 without echoing it", async () => {
-  const bridge = bridgeFor({ key: "ulk_test_first\nsecond_half" });
-  assert.equal(await bridge.exited, 1);
-  assert.match(bridge.stderr, /Copy it again/);
-  assert.ok(!bridge.stderr.includes("second_half"));
-});
 
 for (const url of ["http://mcp.example.com/mcp", "ftp://127.0.0.1/mcp", "not a url"]) {
   test(`refuses UNILYTICS_MCP_URL=${url}`, async () => {
@@ -237,6 +266,21 @@ test("exits 0 when the client closes stdin", async () => {
   await bridge.reply(1);
   bridge.child.stdin.end();
   assert.equal(await bridge.exited, 0);
+});
+
+test("a reply still on its way when the client closes stdin is delivered before exit", async () => {
+  server.respond = (req, body, res) => {
+    setTimeout(() => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ jsonrpc: "2.0", id: body.id, result: { late: true } }));
+    }, 150);
+  };
+  const bridge = bridgeFor();
+  bridge.send(request(1, "tools/call", { name: "x" }));
+  while (!server.requests.length) await new Promise((resolve) => setTimeout(resolve, 10));
+  bridge.child.stdin.end();
+  assert.equal(await bridge.exited, 0);
+  assert.deepEqual(bridge.messages.find((m) => m.id === 1)?.result, { late: true });
 });
 
 test("exits 0 on SIGTERM with a request in flight", { skip: process.platform === "win32" }, async () => {

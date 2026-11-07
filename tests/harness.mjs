@@ -61,7 +61,8 @@ export function startBridge({ url, key = TEST_KEY, args = [], env = {} }) {
     stderr: "",
     messages: [],
     send: (message) => child.stdin.write(`${JSON.stringify(message)}\n`),
-    exited: new Promise((resolve) => child.on("exit", (code) => resolve(code))),
+    // "close", not "exit": it fires after stdout and stderr have been read to the end.
+    exited: new Promise((resolve) => child.on("close", (code) => resolve(code))),
     /** Resolves with the reply to a request id, or rejects after 10 s. */
     reply: async (id) => {
       const deadline = Date.now() + 10_000;

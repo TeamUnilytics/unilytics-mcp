@@ -36,6 +36,7 @@ rmSync(join(root, "dist-mcpb"), { recursive: true, force: true });
 mkdirSync(join(staging, "server"), { recursive: true });
 
 const { metafile } = await build({
+  absWorkingDir: root,
   entryPoints: [join(root, "src", "index.ts")],
   outfile: join(staging, "server", "index.cjs"),
   bundle: true,
@@ -47,19 +48,23 @@ const { metafile } = await build({
   logLevel: "warning",
 });
 
-// Package names from the files that actually ended up in the output.
-const bundled = new Set();
-for (const input of Object.keys(metafile.outputs[Object.keys(metafile.outputs)[0]].inputs)) {
-  const match = input.match(/node_modules\/((?:@[^/]+\/)?[^/]+)\/(?!.*node_modules\/)/);
-  if (match) bundled.add(match[1]);
+// Package name → folder, from the files that actually ended up in the output. The folder comes from that file's path
+// (the greedy match takes the innermost node_modules), so a nested copy's licence is the one that ships.
+const bundled = new Map();
+for (const input of Object.keys(Object.values(metafile.outputs)[0].inputs)) {
+  const match = input.match(/^(.*node_modules\/((?:@[^/]+\/)?[^/]+))\//);
+  if (match) bundled.set(`${match[2]}\0${match[1]}`, { name: match[2], dir: join(root, match[1]) });
 }
-const unexpected = [...bundled].filter((name) => !ALLOWED_PACKAGES.has(name));
+if (bundled.size === 0) {
+  throw new Error("Found no packages in the bundle's metafile: the path matching above must be wrong.");
+}
+const unexpected = [...bundled.values()].map(({ name }) => name).filter((name) => !ALLOWED_PACKAGES.has(name));
 if (unexpected.length > 0) {
   throw new Error(`Packages not reviewed for the bundle: ${unexpected.join(", ")}. Review them, then allow them here.`);
 }
 
-const notices = [...bundled].sort().map((name) => {
-  const dir = join(root, "node_modules", ...name.split("/"));
+const packages = [...bundled.values()].sort((a, b) => a.name.localeCompare(b.name));
+const notices = packages.map(({ name, dir }) => {
   const { version, license } = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
   const file = readdirSync(dir).find((entry) => /^licen[cs]e/i.test(entry));
   if (!file) throw new Error(`${name} has no licence file to ship.`);
@@ -80,4 +85,4 @@ if (!(await packExtension({ extensionPath: staging, outputPath: output, silent: 
 }
 
 const size = (statSync(output).size / 1024).toFixed(0);
-console.log(`Built ${output} (v${pkg.version}, ${size} KB). Bundled: ${[...bundled].sort().join(", ")}`);
+console.log(`Built ${output} (v${pkg.version}, ${size} KB). Bundled: ${packages.map(({ name }) => name).join(", ")}`);
