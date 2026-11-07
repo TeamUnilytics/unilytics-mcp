@@ -60,7 +60,7 @@ The version in `package.json` is the only version number: the manifest is stampe
 - **Download URLs.** `releases/latest/download/unilytics.mcpb` always serves the newest release. Every version keeps its own URL (`releases/download/v1.1.0/unilytics.mcpb`) for rollback.
 - **Verify a download.** `gh attestation verify unilytics.mcpb --repo TeamUnilytics/unilytics-mcp`
 - **No auto-update.** Claude Desktop doesn't update extensions installed from a file. New and changed tools arrive from the server with no reinstall. A bridge release is for a bug or security fix in the bridge itself, and users get it by double-clicking the new file, which replaces the old version.
-- **Keep old bridges working.** Installed copies stay in use indefinitely, so the server must keep speaking MCP over Streamable HTTP at `https://mcp.unilytics.ai/mcp`, **answering each POST with a JSON response, not an SSE stream**, and tool changes reach them as ordinary `tools/list` changes. The bridge can only report a failed reply when the POST itself fails. If a stream dropped, a request would wait until the client's own timeout. The `User-Agent` (`unilytics-mcp-bridge/<version>`) shows which versions are still in use. Before retiring a version or shipping a security fix, tell users through the app and the changelog.
+- **Keep old bridges working.** Installed copies stay in use indefinitely, so the server must keep speaking MCP over Streamable HTTP at `https://mcp.unilytics.ai/mcp`, **answering each POST with a JSON response, not an SSE stream**, and tool changes reach them as ordinary `tools/list` changes. The bridge can only report a failed reply when the POST itself fails. If a stream dropped, a request would wait until the client's own timeout. `npm run test:live` checks this against the live endpoint. The `User-Agent` (`unilytics-mcp-bridge/<version>`) shows which versions are still in use. Before retiring a version or shipping a security fix, tell users through the app and the changelog.
 - **Never rename.** `name` and `author.name` in `mcpb/manifest.json` form the extension's id. Changing either makes Claude Desktop treat an update as a different extension, with a second copy and a lost key. The default URL can't change either: the bridge refuses cross-origin redirects, because the key travels with every request.
 
 ## Development
@@ -70,6 +70,7 @@ npm ci
 npm test                # bridge tests
 npm run build:mcpb      # dist-mcpb/unilytics.mcpb
 npm run test:mcpb       # unpacks it outside the repo and runs the same tests on it
+npm run test:live       # the live endpoint still answers with JSON (no key needed, uses a made-up one)
 ```
 
 Only the packages allowed in `scripts/build-mcpb.mjs` may enter the bundle. The build stops if a dependency update brings in another one.

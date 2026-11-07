@@ -40,18 +40,23 @@ export const UNUSABLE_KEY_MESSAGE =
 /**
  * The user-facing answer to a request the bridge could not deliver or read a reply for.
  *
- * Never retried. Only a refusal is known not to have run: after anything else the server may have run the tool and
- * charged for it with the response lost on the way back, so only the caller can decide whether to run it again.
+ * Never retried, and a failed tool call is never called safe to repeat. Any HTTP error can come from something in
+ * between (a CDN, a proxy) after the server ran the tool and charged for it, so only the caller can decide.
  */
 function failureFor(request: JSONRPCRequest, err: unknown): { code: number; message: string } {
   const status = err instanceof StreamableHTTPError ? err.code : undefined;
+  const checkFirst =
+    request.method === "tools/call"
+      ? " This tool call may or may not have finished and may have used credits, so check for its result in " +
+        "Unilytics before running it again."
+      : "";
   if (status === 401) {
     return { code: ERROR_API_KEY, message: `Unilytics didn't accept the API key. ${REPLACE_KEY}` };
   }
   if (status === 429) {
     return {
       code: ERROR_REQUEST_REFUSED,
-      message: "Unilytics is receiving too many requests, and this one did not run. Wait a minute and try again.",
+      message: `Unilytics is receiving too many requests. Wait a minute.${checkFirst}`,
     };
   }
   if (status !== undefined && status >= 400 && status < 500) {
@@ -59,17 +64,16 @@ function failureFor(request: JSONRPCRequest, err: unknown): { code: number; mess
     return {
       code: ERROR_REQUEST_REFUSED,
       message:
-        `Unilytics refused this request (HTTP ${status}), and it did not run. If this keeps happening, check for a ` +
+        `Unilytics refused this request (HTTP ${status}).${checkFirst} If this keeps happening, check for a ` +
         `network proxy or firewall, or create a new API key at ${API_KEYS_URL}.`,
     };
   }
-  if (request.method === "tools/call") {
+  if (checkFirst) {
     return {
       code: ERROR_TRANSPORT_FAILED,
       message:
-        "The connection to Unilytics failed before a result came back, so this tool call may or may not have " +
-        "finished and may have used credits. Check for its result in Unilytics before running it again. If this " +
-        "keeps happening, check your internet connection.",
+        `The connection to Unilytics failed before a result came back.${checkFirst} If this keeps happening, ` +
+        "check your internet connection.",
     };
   }
   return {
@@ -94,12 +98,35 @@ function logFailure(context: string, err: unknown): void {
   console.error(parts.join(" "));
 }
 
-/** Lets the last reply reach a pipe before exiting: stdout pipes are asynchronous on Windows. */
-function flushStdout(): Promise<void> {
-  return new Promise((resolve) => {
-    if (process.stdout.destroyed) resolve();
-    else process.stdout.write("", () => resolve());
-  });
+/** A method name is client text, so only the ones we expect go in the log. */
+const LOGGED_METHODS = new Set([
+  "initialize",
+  "ping",
+  "tools/list",
+  "tools/call",
+  "prompts/list",
+  "prompts/get",
+  "resources/list",
+  "resources/read",
+  "notifications/initialized",
+  "notifications/cancelled",
+]);
+
+function methodForLog(message: JSONRPCMessage): string {
+  if (!("method" in message)) return "response";
+  return LOGGED_METHODS.has(message.method) ? message.method : "other method";
+}
+
+/** Above the origin's 120 s limit: a reply can't still be on its way after this. */
+const DRAIN_LIMIT_MS = 130_000;
+const FLUSH_LIMIT_MS = 2_000;
+
+/** Exits once the last reply has reached the pipe (stdout pipes are asynchronous on Windows), or after a short limit. */
+function exitAfterFlush(code: number): void {
+  const exit = () => process.exit(code);
+  setTimeout(exit, FLUSH_LIMIT_MS).unref();
+  if (process.stdout.destroyed) exit();
+  else process.stdout.write("", exit);
 }
 
 export async function runBridge(options: { apiKey: string; serverUrl: URL }): Promise<void> {
@@ -118,8 +145,7 @@ export async function runBridge(options: { apiKey: string; serverUrl: URL }): Pr
     if (shuttingDown) return;
     shuttingDown = true;
     await Promise.allSettled([http.close(), stdio.close()]);
-    await flushStdout();
-    process.exit(0);
+    exitAfterFlush(0);
   };
 
   const writeToClient = async (message: JSONRPCMessage): Promise<void> => {
@@ -140,8 +166,7 @@ export async function runBridge(options: { apiKey: string; serverUrl: URL }): Pr
       await http.send(message);
     } catch (err) {
       if (shuttingDown) return;
-      const method = "method" in message ? message.method : "response";
-      logFailure(`${method} failed`, err);
+      logFailure(`${methodForLog(message)} failed`, err);
       // Notifications and responses take no reply: JSON-RPC forbids answering them.
       if (isJSONRPCRequest(message)) {
         await writeToClient({ jsonrpc: "2.0", id: message.id, error: failureFor(message, err) });
@@ -163,10 +188,10 @@ export async function runBridge(options: { apiKey: string; serverUrl: URL }): Pr
   process.stdout.on("error", () => void shutdown());
   // StdioServerTransport doesn't watch for end of input, and open keep-alive sockets would hold the process up.
   // A client can close its input right after its last request, so replies still on their way are delivered first.
-  // The origin's 120 s timeout bounds that wait.
   process.stdin.on("end", () => {
     inputEnded = true;
     if (inFlight === 0) void shutdown();
+    else setTimeout(() => void shutdown(), DRAIN_LIMIT_MS).unref();
   });
   process.on("SIGINT", () => void shutdown());
   process.on("SIGTERM", () => void shutdown());
@@ -179,16 +204,12 @@ export async function runBridge(options: { apiKey: string; serverUrl: URL }): Pr
 /**
  * Answers every request with the same explanation when the key can't be used at all.
  *
- * Exiting instead would show the user only "server disconnected": stderr goes to a log file, so stdout is the one
- * route to the chat. Claude Desktop's required-field check lets a whitespace-only value through, so this is reachable.
+ * stderr goes to a log file, so a reply on stdout is the only way to reach the client: its answer to `initialize` is
+ * what the client can show as the connection error. Claude Desktop's required-field check lets a whitespace-only value
+ * through, so this is reachable.
  */
 export async function runWithoutKey(message: string): Promise<void> {
   const stdio = new StdioServerTransport();
-  const finish = async (): Promise<void> => {
-    await flushStdout();
-    process.exit(1);
-  };
-
   stdio.onmessage = (incoming) => {
     if (!isJSONRPCRequest(incoming)) return;
     stdio
@@ -198,6 +219,6 @@ export async function runWithoutKey(message: string): Promise<void> {
   stdio.onerror = (err) => logFailure("client sent an unreadable message", err);
 
   process.stdout.on("error", () => process.exit(1));
-  process.stdin.on("end", () => void finish());
+  process.stdin.on("end", () => exitAfterFlush(1));
   await stdio.start();
 }

@@ -26,5 +26,8 @@ jobs:
       - run: npm test
       - run: npm run build:mcpb
       - run: npm run test:mcpb
+      - name: The live endpoint still keeps the contract installed bridges rely on
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run test:live
       - name: No known vulnerabilities in what ships
         run: npm audit --omit=dev --audit-level=high

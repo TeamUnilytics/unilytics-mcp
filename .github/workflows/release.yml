@@ -7,7 +7,7 @@ on:
   push:
     branches: [main]
     paths: [package.json]
-  # Finishes a run that failed: publishes if it hadn't, and records the release in Linear if it had.
+  # Finishes a run that failed: publishes if it hadn't, then checks the published file and records it in Linear.
   # A published version is never rebuilt.
   workflow_dispatch:
 
@@ -113,21 +113,36 @@ jobs:
       # With an asset, gh creates a draft, uploads, then publishes, so "latest" never points at a release without it.
       - name: Publish
         run: gh release create "$TAG" unilytics.mcpb --target "$GITHUB_SHA" --title "$TAG" --generate-notes
-      - name: The download URLs serve exactly this file
-        run: |
-          base="https://github.com/$GITHUB_REPOSITORY/releases"
-          curl -fsSL -o versioned.mcpb "$base/download/$TAG/unilytics.mcpb"
-          cmp versioned.mcpb unilytics.mcpb
-          # A fix to an older version doesn't become "latest", and shouldn't.
-          if [ "$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)" = "$TAG" ]; then
-            curl -fsSL -o latest.mcpb "$base/latest/download/unilytics.mcpb"
-            cmp latest.mcpb unilytics.mcpb
-          fi
 
-  linear:
+  # A separate job so that re-running after a failure checks a release that's already out.
+  verify:
     needs: [build, publish]
     # !cancelled() because publish is skipped on a run that only records.
     if: ${{ !cancelled() && (needs.publish.result == 'success' || needs.build.outputs.record == 'true') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      attestations: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.build.outputs.tag }}
+    steps:
+      - name: The download URLs serve the file this repo's workflow built
+        run: |
+          base="https://github.com/$GITHUB_REPOSITORY/releases"
+          curl -fsSL -o versioned.mcpb "$base/download/$TAG/unilytics.mcpb"
+          gh attestation verify versioned.mcpb --repo "$GITHUB_REPOSITORY"
+          # A fix to an older version doesn't become "latest", and shouldn't.
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name)" = "$TAG" ]; then
+            curl -fsSL -o latest.mcpb "$base/latest/download/unilytics.mcpb"
+            cmp latest.mcpb versioned.mcpb
+          fi
+
+  linear:
+    needs: [build, verify]
+    if: ${{ !cancelled() && needs.verify.result == 'success' }}
     uses: ./.github/workflows/linear-release.yml
     with:
       tag: ${{ needs.build.outputs.tag }}

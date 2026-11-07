@@ -85,26 +85,26 @@ test("HTTP 401 says how to replace the key and the bridge stays up", async () =>
   assert.deepEqual((await bridge.reply(2)).result, { echoed: "tools/list" });
 });
 
-test("HTTP 403 says it did not run and doesn't blame the key outright", async () => {
+test("HTTP 403 doesn't blame the key outright or call the tool call safe to repeat", async () => {
   server.respond = (req, body, res) => res.writeHead(403).end("blocked by proxy");
   const bridge = bridgeFor();
   bridge.send(request(1, "tools/call", { name: "list_projects" }));
   const { error } = await bridge.reply(1);
   assert.equal(error.code, ERROR_REQUEST_REFUSED);
   assert.match(error.message, /HTTP 403/);
-  assert.match(error.message, /did not run/);
+  assert.match(error.message, /may or may not have finished/);
   assert.match(error.message, /proxy or firewall/);
   assert.doesNotMatch(error.message, /didn't accept/);
 });
 
-test("HTTP 429 says wait, not that the connection failed", async () => {
+test("HTTP 429 says wait, and to check before running a tool call again", async () => {
   server.respond = (req, body, res) => res.writeHead(429).end();
   const bridge = bridgeFor();
   bridge.send(request(1, "tools/call", { name: "x" }));
   const { error } = await bridge.reply(1);
   assert.equal(error.code, ERROR_REQUEST_REFUSED);
-  assert.match(error.message, /did not run/);
   assert.match(error.message, /Wait a minute/);
+  assert.match(error.message, /may or may not have finished/);
 });
 
 test("a failed tool call warns that it may have run, and never says to just retry", async () => {
@@ -169,6 +169,15 @@ test("a failed notification gets no reply and doesn't stop the bridge", async ()
   assert.deepEqual((await bridge.reply(2)).result, { echoed: "tools/list" });
 });
 
+test("a method name from the client doesn't reach the log unless it's one we expect", async () => {
+  server.respond = (req, body, res) => res.writeHead(500).end();
+  const bridge = bridgeFor();
+  bridge.send(request(1, "custom/secret-looking\nvalue"));
+  await bridge.reply(1);
+  assert.match(bridge.stderr, /other method failed/);
+  assert.ok(!bridge.stderr.includes("secret-looking"), bridge.stderr);
+});
+
 test("a failed response gets no reply", async () => {
   server.respond = (req, body, res) => res.writeHead(500).end();
   const bridge = bridgeFor();
@@ -230,7 +239,7 @@ for (const [name, key, expected] of [
   ["blank", "   ", /No Unilytics API key is set/],
   ["line-broken", "ulk_test_first\nsecond_half", /copied incompletely/],
 ]) {
-  test(`a ${name} key is explained in the chat, not only in a log file`, async () => {
+  test(`a ${name} key is explained to the client, not only in a log file`, async () => {
     const bridge = bridgeFor({ key });
     bridge.send(request(1, "initialize"));
     bridge.send({ jsonrpc: "2.0", method: "notifications/initialized" });

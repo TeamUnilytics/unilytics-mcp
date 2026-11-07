@@ -51,7 +51,9 @@ The key was probably pasted with a space or a line break in it, or left blank. F
 
 ## Claude says Unilytics refused the request or is receiving too many requests. What do I do?
 
-The request did not run, so it didn't use credits. If Claude says there are too many requests, wait a minute and try again. If Claude says the request was refused and it keeps happening, a network proxy or company firewall may be blocking Unilytics. Try another network, or create a new key.
+If Claude says there are too many requests, wait a minute. If Claude says the request was refused and it keeps happening, a network proxy or company firewall may be blocking Unilytics, so try another network or create a new key.
+
+If it was a tool call, check for its result in Unilytics before you run it again: it may have finished and used credits.
 
 ## Claude says the connection to Unilytics failed. Should I run it again?
 

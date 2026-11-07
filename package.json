@@ -14,7 +14,8 @@
     "prepare": "npm run build",
     "test": "npm run build && node --test tests/bridge.test.mjs",
     "build:mcpb": "node scripts/build-mcpb.mjs",
-    "test:mcpb": "node scripts/smoke-mcpb.mjs"
+    "test:mcpb": "node scripts/smoke-mcpb.mjs",
+    "test:live": "node scripts/check-live-contract.mjs"
   },
   "engines": {
     "node": ">=18"
