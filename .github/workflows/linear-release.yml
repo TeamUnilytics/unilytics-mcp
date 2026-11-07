@@ -1,11 +1,14 @@
-# UNI-409: record an npm release of @unilytics/mcp-server in the Linear pipeline "unilytics-mcp".
-# There is no deploy here: publishing to npm is manual. So a GitHub release (tag vX.Y.Z) is recorded only after npm
-# shows that exact version AND its gitHead equals the tagged commit, i.e. the package really is this commit.
+# UNI-409: record a release of unilytics-mcp in the Linear pipeline "unilytics-mcp".
+# Called by release.yml once the GitHub release is published. That release is what users download, built by CI from this
+# commit and attested (UNI-337), so it no longer waits for the separate, manual npm publish.
 name: Linear release
 
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,18 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ inputs.tag }}
           fetch-depth: 0
-      - name: The published npm package is this commit
-        env:
-          TAG: ${{ github.event.release.tag_name }}
-        run: |
-          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then echo "::error::tag $TAG is not vX.Y.Z"; exit 1; fi
-          version="${TAG#v}"
-          head=$(npm view "@unilytics/mcp-server@$version" gitHead)
-          commit=$(git rev-parse HEAD)
-          if [ "$head" != "$commit" ]; then echo "::error::npm @unilytics/mcp-server@$version gitHead=$head, tag commit=$commit"; exit 1; fi
       - uses: linear/linear-release-action@dd4fc407f860b9460d2cf0b3fb1edd8985cf443f # v0.18.2
         with:
           access_key: ${{ secrets.LINEAR_ACCESS_KEY }}
-          version: ${{ github.event.release.tag_name }}
+          version: ${{ inputs.tag }}

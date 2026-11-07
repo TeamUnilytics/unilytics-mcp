@@ -1,0 +1,56 @@
+{
+  "manifest_version": "0.3",
+  "name": "unilytics",
+  "display_name": "Unilytics",
+  "version": "0.0.0",
+  "description": "Your saved SEO, content and AEO playbooks, client context and research tools, in Claude.",
+  "long_description": "Unilytics holds your saved skills (your own step-by-step playbooks for SEO, content, AEO/GEO and client work), each client's Brand Kit, Context and Knowledge Base, and the research tools those skills use. This extension connects Claude to your Unilytics account. All tools run on Unilytics' servers; some use credits from your account.",
+  "author": {
+    "name": "Unilytics",
+    "url": "https://unilytics.ai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TeamUnilytics/unilytics-mcp"
+  },
+  "homepage": "https://unilytics.ai",
+  "support": "https://github.com/TeamUnilytics/unilytics-mcp/issues",
+  "icon": "icon.png",
+  "license": "MIT",
+  "keywords": ["seo", "aeo", "content", "marketing", "skills", "unilytics"],
+  "privacy_policies": ["https://unilytics.ai/privacy-policy/"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.cjs",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.cjs"],
+      "env": {
+        "UNILYTICS_API_KEY": "${user_config.api_key}"
+      }
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "Unilytics API key",
+      "description": "Starts with ulk_live_. Create one in the Unilytics app: Settings → API Keys (https://app.unilytics.ai/settings/api-keys).",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "tools": [
+    { "name": "find_skill", "description": "Find the best of your saved skills for a task" },
+    { "name": "get_skill", "description": "Read a skill's playbook and files" },
+    { "name": "list_projects", "description": "List your clients' projects" },
+    { "name": "get_project_context", "description": "Read a client's Brand Kit and Context" },
+    { "name": "kb_search", "description": "Search a client's Knowledge Base" },
+    { "name": "keyword_research", "description": "Search volume, CPC and competition for keywords" },
+    { "name": "serp_results", "description": "Current Google results for a keyword" },
+    { "name": "site_crawl", "description": "Crawl a website for pages and technical issues" }
+  ],
+  "tools_generated": true,
+  "compatibility": {
+    "platforms": ["darwin", "win32"]
+  }
+}
