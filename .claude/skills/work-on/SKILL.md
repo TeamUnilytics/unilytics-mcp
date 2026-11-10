@@ -57,6 +57,16 @@ Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
   still runs on top.
 - **Research before you design** (step 4.6: GitHub implementations, leading companies, dated sources), **write
   the architecture before code** (step 4.7), and **consult the council on important work** (step 6).
+- **Check it isn't already fixed** before planning: read the recent history of the lines the issue names
+  (`git log -L` on them, or `git log -S"<symbol>"` on the deploy branch). 2026-11-08: UNI-844's bug had been fixed
+  by UNI-388 twenty minutes after it was filed, and the worker found out only after building.
+- **Never remove something users see** (a chart, a button, a logo, data) without the founder's OK, even when a new
+  view replaces it: keep the old one and add the new one beside it. 2026-11-08: UNI-863 swapped the drawer's bar
+  chart for a table, and a follow-up PR had to put the chart back.
+- **Never print a secret into the session.** Read a Lambda's or service's config only with a `--query` that names
+  non-secret fields (`aws lambda get-function-configuration --query '{State:State,Sha:CodeSha256}'`). For an env
+  value, compare hashes or use the ops scripts that never print one. 2026-11-08: UNI-887 printed a Lambda's env
+  secrets into its transcript (UNI-897).
 
 ## Talking to the founder
 
@@ -182,7 +192,10 @@ The founder approved the scope in advance (the `Autopilot — approved by founde
 around to answer. So:
 - **Don't wait for plan approval** (step 6). The approval for the plan is: step 4's reading, plus the research
   (4.6), plus the `Architecture:` block (4.7), plus the council (step 6 budget: first round `--high`, re-checks
-  `--medium`) with every REVISE point fixed or answered. Then build. Post the plan, `Research:`,
+  `--medium`) with every REVISE point fixed or answered. Then build. **Small low-risk fixes skip the council**
+  (founder, 2026-11-06 "refocus"): copy, docs, test-only and display-only changes, and any change outside the
+  "Important" list in step 6. Write `Council: skipped (low-risk: <why>)` in the WORKLOG instead; the fresh-context
+  review still runs. Post the plan, `Research:`,
   `Architecture:` and `Council:` lines in the WORKLOG so the founder can read them later.
 - **Stay inside the approved scope.** Stop for anything outside it, or any one-way door the approval doesn't
   name: post a `QUESTION`, add **Needs input**, finish what the question doesn't block, then post a
@@ -238,7 +251,9 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   and run `python3 -I <path>` (UNI-291).
 - The Write tool strips trailing whitespace, so a patch script whose anchor includes a whitespace-only line
   never matches. Build such an anchor in code (`" " * 8`), anchor on a line with text, or replace an index
-  range between two text anchors (UNI-94, UNI-291 `Left-Container.tsx`).
+  range between two text anchors (UNI-94, UNI-291 `Left-Container.tsx`). The Edit tool does the same to the end of
+  `new_string`: an edit that stops mid-line after a space (`actor = `) leaves `actor =f"…"`. End every Edit
+  `old_string` and `new_string` at a line end (UNI-735).
 - A staged `git rm` goes into the next commit even when you `git add` only other files. Commit a deletion on
   its own, or right before the commit it belongs to (UNI-291).
 - A second issue in the same session gets its own worktree: `git fetch origin`, then
