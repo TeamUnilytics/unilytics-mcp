@@ -146,12 +146,13 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   the top 1–2 issues when both plans are over their caps. **Model: always Opus 5.5.**
 - **Autopilot by default:** every spec-complete issue gets the Autopilot block (council replaces plan approval).
   One-way doors are built in the reversible form and listed in the Daily review.
-- **07:00 local:** run step 0b (walkthrough, shipped items first) and post that day's **Daily review** entry
-  (step 5: ≤ 10 lines, `doc-lint daily`):
-  - what shipped, each tested live with a clip;
-  - what's next;
-  - the decisions, each as a one-word question, with the issue labelled Needs input so it shows in *Needs me*.
-  This is the founder's daily touchpoint; Pulse delivers it with the project and initiative updates.
+- **Pulse runs by itself (UNI-993):** the LaunchAgent `ai.unilytics.ul-pulse` posts the **Daily review** entry from
+  07:00 local and the project updates from 20:30 (`ul-pulse`, `tools/dispatch/README.md` "Pulse"). Don't post
+  either by hand. Every tick: if `ul-watch` prints `pulse-alarm:`, or state.md opens with a PULSE ALARM block, read
+  `ul-pulse status`, fix the cause (sign-in, usage limit, a draft the checks refused), then `ul-pulse daily` or
+  `ul-pulse updates`. After the morning walkthrough (step 0b), you may add what shipped (seen working, with a clip)
+  and what broke to that day's entry: edit its lines in place, never add a second `## YYYY-MM-DD` heading, and
+  run `doc-lint daily` on the result. This is the founder's daily touchpoint.
 
 ## 0. Be the product manager: read the plan, then rank by user value
 
@@ -177,10 +178,14 @@ possible.
 - **Grade each candidate with ICE**, the pre-PMF scale (Adora Cheung's weekly method; RICE needs usage data we don't
   have yet).
   - **Impact** on the KPI: high, medium or low.
-  - **Confidence** that it delivers that impact: high when a user asked for it or hit the bug; low when it rests on
-    our own guess.
+  - **Confidence** that it delivers that impact comes from the issue's **Evidence** label (UNI-995; founder:
+    "roadmaps should be set by users"): Sold 5 · User hit it 4 · User asked 3 · Founder idea 1 · Hygiene 0
+    (`docs/handbook/linear-workflow.md` "Labels"). High = Sold or User hit it, medium = User asked, low = Founder idea.
+    Hygiene: grade Confidence on the facts (a failing test, a log). Evidence dated in the issue's Context more than
+    30 days ago, with no user reconfirming it, lowers Confidence one grade; leave the label as it is.
   - **Ease**: easy (one session), medium (two sessions) or hard (more, so split it).
-  Dispatch high-impact easy first, then high-impact medium, then the rest. Never dispatch low-impact hard work.
+  Order: step 2 item 5 (incidents, then Evidence tier). Within one Evidence tier, dispatch high-impact easy first,
+  then high-impact medium, then the rest. Never dispatch low-impact hard work.
   Scores are input, not the decision: say when judgment overrides them, and keep this one scale instead of
   switching frameworks.
 - **Split by user value, not by layer** (Humanizing Work splitting patterns). Cut a big issue along the user's
@@ -200,8 +205,9 @@ possible.
   2026-11-04).
 - **Label founder asks.** Every issue the founder raised gets the label **From founder** with their words quoted
   (`linear-workflow.md` "The From founder label"), so a month-end "what did I raise" is one query.
-- **What users hit first jumps the queue:** a failed `TEST RESULT`, founder feedback on a live screen, or a bug on
-  the first-use path (sign-in, connect your AI, first skill run).
+- **What users hit first jumps the queue** (an incident, step 2 item 5): a failed `TEST RESULT`, a live screen the
+  founder found broken or regressed, or a bug on the first-use path (sign-in, connect your AI, first skill run).
+  A founder's wish for something new is a Founder idea, not an incident.
 - **Do things that don't scale.** Prefer a manual step that unblocks a user today over building its automation
   (invoice by hand, grant credits through the admin path, onboard the partner on a call). Defer scale, generality and
   polish until a user needs them (provisioned concurrency, region moves, lint gates for skills nobody publishes
@@ -227,7 +233,8 @@ possible.
   one issue per repo), write the missing spec, or post the `QUESTION`. Then show the human the slice you can
   start now. If two core slices collide only on repo + Area, but their files don't overlap (e.g. a new folder),
   propose a founder exception rather than waiting. Record the exception in the issue.
-- **Fill the other slots with important non-core work**, in this order:
+- **Fill the other slots with important non-core work** (all Hygiene: at most ~1 slot in 5 unless it's an
+  incident, step 2 item 5), in this order:
   1. P0 security that exposes users' data or credits.
   2. Correctness of money and schedules (e.g. credit expiry).
   3. Cleanup (archive repos, move code out, prune branches).
@@ -323,7 +330,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
      File quality issues with examples, not "it loads".
    - **What would make it great.** For each feature you touched, give one line on the next improvement, any new
      idea the result suggests, and what breaks at 10× and 100× (users, skills, KB size, runs). File the good ones in
-     Backlog with an ICE score.
+     Backlog with an ICE score and an Evidence label.
    - **Never ship a slice that removes something users see** (a logo, a button, data) without the founder's OK,
      even when the acceptance allows a fallback. A privacy or cleanup fix keeps the feature, done the safe way.
      UNI-476 replaced logos with initials, and the founder saw it as a regression.
@@ -393,10 +400,11 @@ The work is done by agents, so estimate from **our measured agent times**, never
   in. If it lands after, propose the delay and its cause. Change a date (`save_project` / `save_initiative`) only
   after the founder OKs it, then follow **Plan sync** (step 5) the same day.
 - **What the founder sees in Linear:**
-  - a project update on each active project at wind-up (`save_status_update`, health onTrack / atRisk /
-    offTrack): exactly 3 lines, `Done: …` / `Next: …` / `Risk: …`, checked with `doc-lint update` before posting
-    (step 5). The founder posts their own updates too (new ideas, priority changes). Every run, read the updates
-    you didn't post (`get_status_updates`) as founder input, alongside this terminal;
+  - a project update on each active project that changed, posted at 20:30 local by `ul-pulse` (UNI-993; health
+    onTrack / atRisk / offTrack, exactly 3 lines `Done:` / `Next:` / `Risk:`, `doc-lint update`). A project that
+    already has an update that day is skipped, so post one by hand only to say something the job can't see. The
+    founder posts their own updates too (new ideas, priority changes). Every run, read the updates no agent
+    posted (`get_status_updates`) as founder input, alongside this terminal;
   - an initiative update on each initiative every Friday (same 3 lines + health), which is what the Initiatives
     page and Pulse show;
   - project target dates on the Projects timeline;
@@ -410,6 +418,8 @@ The work is done by agents, so estimate from **our measured agent times**, never
   your UI test** (issue, one line on what to test, the relaunch command if the worker tab is gone).
 - `list_issues` team `UNI`, state `Todo` (current cycle first, then the active projects' Todo).
 - For each candidate: `get_issue` to read labels, repo, `blockedBy`, parent/sub-issues.
+- **Every open issue carries one Evidence label.** Give any candidate without one a label before ranking it (the
+  lower tier when unsure, with one line in a comment on why).
 - Repos: `ul-langgraph` (deploys from `dev`), `ul-backend`, `ul-frontend`, `unilytics-mcp` (the
   `@unilytics/mcp-server` npm bridge) — all others deploy from `main`.
 - Runner capacity: `curl -s 127.0.0.1:8080/health` (local model up? max 2 local workers at once — count
@@ -431,8 +441,12 @@ An issue is dispatchable only if:
 3. It has Outcome, Context (files/links), Acceptance criteria and Verify. If not, fix the issue text first
    (`save_issue`) — a worker must be able to start cold.
 4. It is ~a day of work. Bigger → break into sub-issues now.
-5. Rank with step 0: P0 security that exposes users' data or credits first, then core issues by ICE
-   (the earliest milestone breaks ties), then the other non-core work. Check the wave mix before you show it.
+5. Rank with step 0: incidents first (P0 security that exposes users' data or credits, data loss, a broken
+   first-run path, a failed `TEST RESULT`, a regression the walkthrough found), then by **Evidence** weight (Sold >
+   User hit it > User asked > Founder idea > Hygiene), then core before non-core by ICE (the earliest milestone
+   breaks ties). Hygiene takes at most ~1 slot in 5 unless it's an incident. The wave mix is a hard rule: if the
+   ranking leaves no core issue, add the highest-Evidence core issue. The wave table has an **Evidence** column (the
+   label, plus who). Check the wave mix before you show it.
 
 Classify In Progress issues by their latest comment:
 - **Resume** — last comment is `CHECKPOINT` (session stopped cleanly) → print a resume command.
@@ -495,10 +509,11 @@ Read the **Current status** and **Trial log** in `docs/handbook/model-runners.md
 
 Show one table and **stop until the human answers**:
 
-| Issue | Repo | Title | Type | ICE (I/C/E) | Recommended runner | Why (what the user gets) | ⚠ |
-|---|---|---|---|---|---|---|---|
+| Issue | Repo | Title | Type | Evidence | ICE (I/C/E) | Recommended runner | Why (what the user gets) | ⚠ |
+|---|---|---|---|---|---|---|---|---|
 
-Type is `core`, `security` or `non-core`. Above the table, give one line on the wave mix (core issues running +
+Type is `core`, `security` or `non-core`. Evidence is the issue's Evidence label and who it came from ("User hit
+it: Axway, 11-06", "Founder idea: founder, 11-06"). Above the table, give one line on the wave mix (core issues running +
 proposed) and the plan sections the wave moves. Under it: the local server status, how many local workers are already running, and "Reply `go`, or change
 runners / drop issues (e.g. `UNI-23 ul, drop UNI-54`)". Apply the edits, show the final table again if
 anything changed, and only then claim and print commands (step 3). Nothing is claimed before `go`.
@@ -550,7 +565,8 @@ Merge at most one PR per repo at a time, and wait for its deploy before the next
 ## 4. Fold in learnings (end of day: the founder says "winding up", or when asked)
 
 Run the product walkthrough (step 0b) first, so tomorrow's wave starts from what the product actually does.
-Then ask for the night's Autopilot queue (step 0c), and post the velocity numbers and project updates (step 0d).
+Then ask for the night's Autopilot queue (step 0c), and post the velocity numbers (step 0d). The project updates
+post themselves at 20:30 (`ul-pulse`); check `ul-pulse status` shows them posted.
 
 This is the only time the main plan (git + its Linear document) changes. Build the update from the handoffs:
 `Changed`, `Plan changes` and Follow-ups go into the plan sections they name, plus the progress markers.
@@ -621,10 +637,11 @@ List what you changed in the Diary.
 1st) at each wave, decision and incident: what happened, why, and the founder's words verbatim when they decided.
 Newest first. It is the record for agents and for later; it has no cap.
 
-**Daily review** (the founder's one daily touchpoint; it replaces a separate morning message): each morning, after
-the walkthrough (step 0b; run at night when it ran at wind-up), one entry at the top of the team document *Daily
-review*: `## YYYY-MM-DD`, then at most 10 lines: what shipped (seen working), what broke, what needs the founder
-(link the *Needs me* view), with links to the walkthrough GIF and clips. Pulse picks it up.
+**Daily review** (the founder's one daily touchpoint; it replaces a separate morning message): one entry a day at
+the top of the team document *Daily review*: `## YYYY-MM-DD`, then at most 10 lines: what shipped, what is
+running, what broke, what needs the founder (the *Needs me* view), blockers. `ul-pulse` writes and posts it from
+07:00 local (UNI-993); the dispatcher adds walkthrough findings (seen working, clips) to the same entry, never a
+second heading, and re-runs `doc-lint daily`.
 
 **Founder-facing caps:** only what the founder reads is capped. These are updates (3 lines: Done · Next · Risk), the
 daily review (≤ 10 lines a day), and briefs and initiative descriptions (≤ 1 page, TL;DR first). Agent comments
