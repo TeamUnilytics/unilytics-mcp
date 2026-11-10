@@ -153,6 +153,10 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   `ul-pulse updates`. After the morning walkthrough (step 0b), you may add what shipped (seen working, with a clip)
   and what broke to that day's entry: edit its lines in place, never add a second `## YYYY-MM-DD` heading, and
   run `doc-lint daily` on the result. This is the founder's daily touchpoint.
+- **The Strategy audit runs by itself too (UNI-1019):** the same job posts the weekly *Strategy audit* on Fridays
+  from 06:00 (`ul-pulse audit`; `tools/dispatch/README.md` "Strategy audit"): one idea or "No idea this week", gated
+  by code against Linear's own data. Never write a strategy recommendation yourself, and never add ideas beside it:
+  the founder asked for one idea or none. What you do with it is the Friday audit (step 5).
 
 ## 0. Be the product manager: read the plan, then rank by user value
 
@@ -623,6 +627,20 @@ correction, a slipped date, a project added or dropped):
    `doc-lint brief` on the new text first.
 3. One line in the next project or initiative update (`Next:` or `Risk:`).
 Commit the git side on a `docs/` branch PR the same day.
+
+**Strategy audit (weekly, Fridays, UNI-1019):** read this week's *Strategy audit* entry (`ul-pulse status` shows
+its verdict; an alarm means it didn't post: fix the cause, then `ul-pulse audit`).
+- **One idea:** file it as one issue (Evidence label from its evidence, the test, deadline and kill metric as
+  Acceptance + Verify), put it at the top of the next wave, and act on its "Stops" line. Nothing else enters as
+  "strategy" that week.
+- **No idea this week:** change nothing; its "Would change it" line says which evidence to go and collect (the
+  marketing and sales work).
+- **Bets marked kill:** stop them the same day (cancel their open issues with the criterion quoted) and log it in the
+  Diary.
+- **Memoir gaps and partials** (UNI-1042): `ul-pulse status` lists them all (the entry names the first 5 of each).
+  Check each one yourself first: a gap needs no reference, so the script can't verify it (week 46 called "research
+  before building" a gap although `/work-on` step 4.6 requires it). Grep the skills and the handbook; file only what
+  is really missing as an issue (search Linear first), label *From founder*, quoting the principle. "Not verified this week" means the coverage map failed its checks: say so in the Diary, never guess it.
 
 **Friday audit (weekly):** compare Linear with the plan and fix the side that is wrong:
 - every active project sits under an initiative, has a brief, an area label and a target date;
