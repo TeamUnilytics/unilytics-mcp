@@ -60,7 +60,9 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
     re-armed like `ul-watch`. Merges and failures wake you instead of waiting for a ping;
   - a ScheduleWakeup heartbeat every 20–30 min.
 - **State file:** `~/.ul-dispatch/state.md` holds the running workers, the ranked queue, the founder's open asks
-  and live config facts. Update it every tick, and re-read it first after any compaction. Your context can be
+  and live config facts. Update it every tick, and re-read it first after any compaction (once the founder has
+  applied UNI-672's settings, `ul-state-hook` puts its first ~9,400 characters back into context by itself, so keep
+  what matters now at the top: running workers, open asks, next steps; history below). Your context can be
   summarised away; this file can't (workers have the same thing in WORKLOG/CHECKPOINT).
 - **Lean main context:** send big reads to a sub-agent and keep only the conclusion: issue dumps, worker logs, CI
   output. `save_issue` echoes the whole description, so prefer comments and relations. You are the orchestrator,
@@ -81,26 +83,58 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
     parallel (2026-11-04: "run parallely"), never past the usage limits;
   - `claude agents --json` (run with `env -u CLAUDE_CONFIG_DIR` to see univ's background sessions),
     `claude logs <id>`, `claude respawn <id>`;
-  - `ul-watch`: the state-change stream for `Monitor`;
+  - `ul-watch` (`--ul` / `--sj` for the other accounts, one per account you launch on): the state-change stream
+    for `Monitor`, with `waiting:<why>` on a blocked worker and `ask:` / `ask-unanswered:` lines (UNI-672);
+  - `ul-answer list|show|allow|deny|answer|pass`: answering a worker's ask (tick step 1b);
   - `~/.ul-dispatch/events.jsonl` (StopFailure / SessionEnd / Notification lines) and `launches.log`.
 - **Each tick:**
   1. Read `ul-limits`, new `events.jsonl` lines, `claude agents --json` and Linear (In Progress, `QUESTION`s,
      handoffs). For every session that is `blocked` or `done`, read the end of `claude logs <id>`. The founder
      sometimes answers in a worker's tab ("shipped already"), and a worker sometimes waits there on a question it
-     never posted.
+     never posted. Also read new founder comments on the *Daily review* document and on project or initiative
+     updates: the founder leaves asks there as well (2026-11-05: a Pulse comment about scraped AEO answers sat
+     unread until the founder asked "any update on this"). Treat each one as a terminal message.
+  1b. **Answer the asks** (UNI-672). A worker's permission prompt, plan approval or question reaches you as an
+     `ask: <id> …` line from `ul-watch`, and `ul-answer list` shows every pending one with its seconds left
+     (~9 min each). For each:
+     - read the whole request with `ul-answer show <id>`, never the one-line summary;
+     - **allow** (`ul-answer allow <id>`) only what you could run yourself under your own permissions and the
+       standing approvals (CLAUDE.md "Standing founder approval", the auto-review allowlist above), in that
+       worker's own worktree and issue scope. Never allow for a worker what your own permissions would refuse;
+     - **answer** a question (`ul-answer answer <id> <label>…`, one per question) only from the plan, the issue
+       or a founder decision on Linear. A plan approval with no plan text means: read the worker's WORKLOG plan
+       first. Approving it is a plan approval like any other: Autopilot issues are approved by their council,
+       anything else is the founder's;
+     - **deny** with the next step (`ul-answer deny <id> -m "…"`) everything founder-only (production writes,
+       secrets, money, access, terms): post the `QUESTION:` on the issue yourself (label Needs input) and say so in
+       the message, so the worker checkpoints instead of asking again.
+     An ask nobody answered (`ask-unanswered:` from `ul-watch`, or `ul-answer list --all`: `answered` by
+     `timeout`, `killed` or `orphaned`) was denied with "post a QUESTION + CHECKPOINT": check the worker did,
+     and post it yourself if it didn't. Never answer an ask in a worker's tab, and never tell the founder to.
+     `ul-answer prune` weekly. Kill switch for the whole mechanism: `touch ~/.ul-dispatch/asks.off`.
   2. **Free the slots.** A session whose issue is Done → `claude rm <id>` (it refuses if anything is unpushed).
      A session parked on another issue (its `CHECKPOINT` names the blocker) → `claude stop <id>`, keeping the
      worktree. Two sessions under one name → stop the older one (`claude stop`, never `rm`: they share the
-     worktree). A finished session still counts toward `ul-launch`'s cap until it's removed.
+     worktree). A finished session still counts toward `ul-launch`'s cap until it's removed. `claude rm` also
+     **deletes the worktree**: use it only when the issue is Done and its branch merged. A worker you will resume
+     (it waits on a founder paste, a merge window or another issue) gets `claude stop` (2026-11-05: `rm` on a
+     parked worker deleted its worktree, and it had to be relaunched from its pushed branch).
+     **Relaunching a stopped worker:** `ul-launch`'s `-w uni-N` fails silently when the worktree's branch isn't
+     `worktree-uni-N` (every `/work-on` worktree is on the issue's branch). Relaunch from inside the worktree:
+     `cd ~/dev/<repo>/.claude/worktrees/uni-N && claude-sj --bg --name UNI-N --model claude-opus-5-5
+     "/work-on UNI-N RESUME: <what changed>"`. Then check that `claude agents` lists it.
   3. **Done unblocks first.** For each issue that moved to Done, launch what it unblocked before anything else
      in the queue. Record every "run X after Y" as a Linear `blockedBy` relation, not only a comment, so
      `list_issues` shows it.
   4. Relaunch what stopped: the same `ul-launch` command; the worktree and WORKLOG resume it.
      **A worker blocked in a dialog** (a plan approval or a question in its own tab) can't read `SendMessage`
      until the dialog closes (2026-11-04: UNI-528 and UNI-545 sat blocked). Label every issue **Autopilot before
-     `ul-launch`**, so it never asks for plan approval. If one is blocked anyway, `claude stop` it and relaunch
+     `ul-launch`**, so it never asks for plan approval. Permission prompts, plan approvals and questions now
+     arrive as asks (step 1b); this stop + relaunch is the fallback for the dialogs the hook doesn't cover
+     (`waiting:sandbox request`, an MCP input request, a login). If one is blocked anyway, `claude stop` it and relaunch
      with the answer in `--prompt`. When the answer must be the founder's own words in that tab (production
-     writes, granting access), open a real Terminal window for them:
+     writes, granting access), open a real Terminal window for them, then run `ul-answer pass <id>` on the
+     pending ask so Claude Code's own dialog appears in that tab (the hook otherwise keeps it):
      `osascript -e 'tell application "Terminal" to do script "env -u CLAUDE_CONFIG_DIR claude attach <id>"'`.
      Never hand them `! claude attach`: inside a Claude session it detaches at once.
   5. Launch the next spec-complete issues from the ranked queue (step 2) within the caps.
@@ -176,6 +210,13 @@ possible.
   place of core work.
 
 **Wave mix (every wave):**
+- **Always one worker on the first-run path** (founder, 2026-11-06: "refocus"). It runs whatever else is going on,
+  client work included: sign-up → connect your AI → first skill run in under 2 minutes, the projects *Onboarding
+  live* and *Kevin onboarded*. Its queue comes from the morning fresh-eyes new-user pass (step 0b), timed against the
+  2-minute goal. A day with no such worker, or no new-user pass, is a miss that goes in the Daily review.
+- **Projects parked to Backlog on 2026-11-06** (Simulation, Connections over MCP, Inbox & Calendar, Websites, Skills
+  public OSS 1, Open-source MCP OSS 2, AI directory listings, Agent Buyer Optimization) get no workers until the
+  founder brings one back. Nothing in them was deleted.
 - **Keep 1–2 core-product issues running at all times**, counting those already In Progress. Core means the
   reason a consultant comes back every day: the Context Manager (Context, Brand Kit, Design System, Knowledge Base),
   the skills (Skill Library, project skills, later the Skill Lab agents), and the MCP that serves both into their
@@ -343,6 +384,10 @@ The work is done by agents, so estimate from **our measured agent times**, never
   runs (killed ones count at their reservation), refused runs and each forced run with its reason. Quote the total
   at wind-up and check every forced reason. Name any member still on a shared key (xAI and Perplexity: the Lambda's own), because each of those still
   drains production's credit.
+- **Every estimate is agent time, measured** (founder, 2026-11-05: "2 to 3 weeks across 2 repositories is a lot of
+  time. I think you are telling me time estimates based on human time estimates"). In wave tables, research docs,
+  issues and founder messages, give issues × the measured median build time (today ~1–2 h per issue) ÷ parallel
+  sessions, plus the founder wait. Never human-team weeks. Brief workers writing research docs to do the same.
 - **Dates:** for each active project, estimate the time left as open issues × median build time ÷ parallel
   sessions, plus the expected founder wait. If that lands well before the target date, propose pulling the date
   in. If it lands after, propose the delay and its cause. Change a date (`save_project` / `save_initiative`) only
