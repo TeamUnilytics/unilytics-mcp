@@ -20,6 +20,7 @@ Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
    latest deploy branch (step 3c), then post the **WORKLOG** comment (step 3b) and keep its comment id.
 2. **While working:** edit that WORKLOG (plan chosen, approach change, gotcha, human correction, Verify run).
 3. **Anything only the human can do** (rotate or revoke a key, console or dashboard changes, prod config):
+   first run the two checks under "Before any founder question or step" (not decided already, not done already), then
    post `QUESTION:` and add the label **Needs input**, even if you mention it in the handoff, so `/dispatch`
    puts it in front of the human. Open and prefill it first, so the human's part is one small step
    ("Handing the founder a step", below).
@@ -174,6 +175,24 @@ Until the council has keys of its own (`COUNCIL_<MEMBER>_API_KEY`), it shares pr
 keys, so a top-up there also restores production's calls. Gemini runs in the council only on its own key
 (UNI-673), so a Gemini top-up is production's alone.
 
+### Before any founder question or step: is it decided? Is it done? (UNI-1091)
+
+Two checks, every time, before a `QUESTION`, a terminal question, a `TEST PROMPT`, a paste or a console step goes
+to the founder. Write what you checked in the WORKLOG.
+- **Decided already? Then don't ask.** Founder, 2026-11-11: "I already told you we need an agent, so why you ask
+  me the same shit? … don't waste my time like this." Search, in this order:
+  1. the Linear document "Founder's memoir" (`get_document` id `3d381567-525f-4797-8fd5-570eff6d2a06`): the
+     founder's lasting rules;
+  2. this issue's description and every comment: `ANSWER:`, `Comments from Saven:`, the founder's own replies;
+  3. the parent's and related issues' comments, and the plan section the issue cites.
+  Found it → act on it and quote it with its date and where it is, instead of asking. Found part of it → ask only
+  the missing part, quoting what was decided. A question nobody has answered yet isn't a re-ask: ask it once, on
+  its issue, and follow up on that same thread (never ask it again somewhere else).
+- **Done already? Then don't hand it over.** Memoir: "Don't hand me something your own work already finished"
+  (founder, 2026-11-05: "its already done by the worker"). Check the live state yourself: the setting's current
+  value, the merged PR and the deploy, the issue's latest Handoff / DEPLOY CHECK / TEST RESULT. Done → remove the
+  `## Your action` block and comment what you saw, instead of asking.
+
 Never hand the founder a list of instructions to follow. Before you post the `QUESTION` or ask in the terminal:
 - **Open it in Chrome** (Claude in Chrome): the console, dashboard, form or settings page, already on the right
   screen. If it needs a sign-in, do the sign-in clicks yourself (account chooser, consent); only a password,
@@ -233,6 +252,12 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   Auth0 client secret) goes in through a **hidden prompt** (`getpass`) into a 0600 file, and that command runs
   only in the human's own Terminal.app: the Claude `!` prompt has no TTY, so `getpass` dies with a termios
   error (UNI-28). Give the plain form for Terminal.app, and the `!` form only for the follow-up that reads the file.
+- **A founder paste script works in its own scratch folder, made fresh for each run** (UNI-1091). Its first lines
+  are `WORK=$(mktemp -d)` and an `EXIT` trap that removes it (`git worktree remove --force "$WORK/src"`, then
+  `rm -rf "$WORK"`). Every checkout (`git worktree add --detach "$WORK/src" origin/<deploy>`, a fresh copy of the
+  deploy branch, never a worker's worktree), `cd`, `npm ci` and `npx` happens inside it. Never use a fixed path: a worker's worktree, `/tmp/<issue>-base` or a folder an earlier step made.
+  Another script, a later step or `claude rm` can delete it. 2026-11-11: UNI-985's `pause-dup-axway` paste failed
+  when `npx` hit ENOENT, because its working folder, a fixed worktree path, had already been removed.
 - Don't re-run a slow full test suite to read a different slice of its output. Save it once
   (`--json --outputFile=…` or `> log`) and read the file.
 - The worktree sandbox refuses commands it can't prove stay in your worktree: `git` chained with other
@@ -474,14 +499,15 @@ parallel, and don't plan first and read afterwards.
 ## 5. If you have a doubt
 
 1. Look it up first: issue Context links → plan section → design doc → `docs/handbook/*` and this repo's `docs/sop/*` → comments on related
-   and blocking issues.
+   and blocking issues. Then run both checks under "Before any founder question or step" (the Founder's memoir and
+   every `ANSWER:` on the issue: decided already? done already?).
 2. Still unsure and it changes the outcome → comment `QUESTION: <one clear question>` (+ options you
    considered, what it blocks), add the label **Needs input**, and ask the human in this terminal.
    **Every founder ask (QUESTION, TEST PROMPT, a command to paste) also goes at the very top of the issue
    description**, in this block, replacing any older one. It is what the founder reads in the *Needs me* view
    (founder, 2026-11-03: "i open one task and its a vomit of text. what exactly is my action"):
    ```
-   ## 👉 Your action
+   ## Your action
    **<the decision or step, one line, plain words>**
    Default: `<one word>` · Reply: comment `ANSWER: <word>` (or: paste `! <command>` in the dispatcher)
    Why: <one line: what it unblocks>
