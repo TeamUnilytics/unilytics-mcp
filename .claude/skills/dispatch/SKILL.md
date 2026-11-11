@@ -40,6 +40,20 @@ The founder runs several companies and has little time:
   - a founder step that blocks work now;
   - something shipped and seen working;
   - an incident (prod broken, data at risk).
+- **Never re-ask what the founder already decided** (founder, 2026-11-11: "I already told you we need an agent, so
+  why you ask me the same shit? … don't waste my time like this."). Before any question to the founder (terminal,
+  a `QUESTION:` you post, the 2d wave table's open decisions, an ask you deny for a worker), search the Linear
+  document "Founder's memoir" (`3d381567-525f-4797-8fd5-570eff6d2a06`), the issue's description and comments
+  (`ANSWER:`, `Comments from Saven:`, the founder's replies), its parent's and related issues' comments, and the
+  founder's asks in `~/.ul-dispatch/state.md`. Found → act on it and quote it (date + where); found in part → ask only
+  the rest. A question still open isn't a re-ask: follow up on its own thread, never ask it again elsewhere. Workers
+  run the same check (`/work-on` → "Before any founder question or step").
+- **Never hand the founder something already done** (memoir: "Don't hand me something your own work already
+  finished"; founder 2026-11-05: "its already done by the worker"). Before you pass on any founder step (a paste, a
+  console click, a TEST PROMPT, a review), check the live state yourself: the setting's current value, the merged PR
+  and its deploy, the issue's latest Handoff / DEPLOY CHECK / TEST RESULT, the worker's `claude logs`, `ul-answer
+  list`. Done → close the ask (comment what you saw, remove the `## Your action` block) and leave it out of the
+  update.
 - **Don't ask for obvious or small things** (founder, 2026-11-04: "don't be asking me to do stuff or wait on me
   for silly stuff"). Decide reversible calls yourself, record them on the issue, and tell the founder in the
   update. Ask only for:
@@ -78,8 +92,10 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
 - **Tools** (`tools/dispatch/`, linked into `~/.local/bin`; README there):
   - `ul-limits` (`--json`): both accounts' 5-hour and weekly usage, from the status line;
   - `ul-launch UNI-123 <repo> [univ|ul|univ-api]`: starts `/work-on` as a background session (`--bg --name
-    UNI-123 -w uni-123`, Opus 5.5). It refuses at 5h ≥ 70%, week ≥ 80% or 4 running on the account. A refusal
-    is an answer; use `--force` only to go past the 4-session cap when the founder has asked for work to run in
+    UNI-123 -w uni-123`, Opus 5.5). It refuses at 5h ≥ 70%, week ≥ 100% (`UL_WEEK_CAP` lowers it; founder
+    2026-11-07: "run past the 80% weekly guard, up to 100% of each account") or 4 running on the account. When
+    more than one account has room, launch on the one whose weekly window resets first (`ul-limits` shows the reset
+    times), so no account's week expires unused. A refusal is an answer; use `--force` only to go past the 4-session cap when the founder has asked for work to run in
     parallel (2026-11-04: "run parallely"), never past the usage limits;
   - `claude agents --json` (run with `env -u CLAUDE_CONFIG_DIR` to see univ's background sessions),
     `claude logs <id>`, `claude respawn <id>`;
@@ -202,7 +218,7 @@ possible.
   from the outcome they're after. Write the outcome as the issue's Outcome, the hard requirements as Acceptance
   criteria, and how they'll judge it as Verify. Mark anything you inferred as an assumption in the issue so the
   human can correct it.
-- **Flag the one-way doors.** In the ⚠ column, mark decisions that are hard to undo: auth model, data schema,
+- **Flag the one-way doors.** In the One-way column, mark decisions that are hard to undo: auth model, data schema,
   public repos, anything outward-facing. Name any assumption that would flip the ranking. Take two-way doors fast.
   A big architecture or pivot decision (project model, positioning, a source of truth) is never built without the
   founder's sign-off: research it, post options + a recommendation with Needs input, and wait (founder,
@@ -267,7 +283,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
 
 **The founder watches the run live (2026-11-01), so the order matters:**
 1. First, **what shipped**, one item at a time on screen, with one line each in the terminal as you go
-   ("UNI-95 Projects search: '1 of 22' ✅").
+   ("UNI-95 Projects search: '1 of 22': works").
 2. Then **the new-guy audit**, which they may not watch. It uses real actions on test data: upload a file and
    search for it, export or download a skill, open every menu and dialog, load collaborators, and press buttons to
    find ones that do nothing or aren't needed any more (2026-11-01: the header Publish).
@@ -279,7 +295,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
    - Issues Done since then: `list_issues state:Done completedAt:<date>`.
    - One row per change: what a user should now see or be able to do, and where (screen, API or MCP tool).
      Backend and MCP changes get a row too; test them through the screen or tool that uses them.
-   Check every row on prod. A row is ✅ only when you saw it working. Mark it ❌ broken, ⚠ partly, or "not
+   Check every row on prod. A row is **works** only when you saw it working. Mark it **broken**, **partly**, or "not
    testable read-only" with the reason, and get that one tested by its issue's worker or a TEST PROMPT.
 2. **Two passes, two kinds of eyes.**
    - **New-user pass (fresh eyes).** Spawn a subagent with no project context. Give it only the persona ("an SEO
@@ -348,7 +364,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
 7. **Write it up** in the Linear document "Product walkthrough" (a document of the initiative *Design partner live*; it
    is for agents and has no cap), newest date on top, then put the founder's ≤ 10-line summary in *Daily review*
    (step 5) with a link to it. The full write-up, in this order:
-   - the shipped table (✅/❌/⚠ per row);
+   - the shipped table (works / broken / partly per row);
    - one table per screen (FE);
    - backend and MCP findings;
    - the new-user pass (where it hesitated, with times);
@@ -358,7 +374,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
    Every finding gets a home: search for an existing issue first, then add it there or create an issue in the
    Standard task format. Bugs go to the right project, gaps to their plan section. Batch paper cuts into one
    issue per repo ("Paper cuts <date>").
-8. Use the result as the first input to step 2. A broken or "coming soon" core screen, a ❌ shipped row, or a
+8. Use the result as the first input to step 2. A broken or "coming soon" core screen, a broken shipped row, or a
    new-user dead end outranks anything a user can't see.
 
 ### 0c. Autopilot queue: work that runs while the founder is away (every evening, before wind-up)
@@ -372,7 +388,7 @@ Founder time is the bottleneck. Measured 2026-10-18: build time is about an hour
    - no one-way door left undecided.
    For each, also list the one decision that would unlock it, if any.
 2. **Ask once, in one short table:** `Issue (what, why) · what the worker will do · the limits · your call`.
-   Ask any unlocking questions in the same message. Default: approve the ones marked ✅.
+   Ask any unlocking questions in the same message. Default: approve the ones marked **Recommended**.
 3. **On approval:** add the label **Autopilot** to each. Add a line under its Context:
    `Autopilot — approved by founder <date>: <scope and limits as approved>`. Then claim it and print the launch
    commands as usual. Prefer the background form (`--bg`) so they run overnight.
@@ -513,7 +529,7 @@ Read the **Current status** and **Trial log** in `docs/handbook/model-runners.md
 
 Show one table and **stop until the human answers**:
 
-| Issue | Repo | Title | Type | Evidence | ICE (I/C/E) | Recommended runner | Why (what the user gets) | ⚠ |
+| Issue | Repo | Title | Type | Evidence | ICE (I/C/E) | Recommended runner | Why (what the user gets) | One-way |
 |---|---|---|---|---|---|---|---|---|
 
 Type is `core`, `security` or `non-core`. Evidence is the issue's Evidence label and who it came from ("User hit
@@ -600,8 +616,8 @@ left in the handoff. Sync any git design doc a worker changed into its Linear do
   and whenever this run sees issues that moved to Done:
   - **Progress:** for each issue Done since the last update, find the plan section it implements (issues cite
     it, e.g. "Plan §9") and mark it in place, right under that section's heading:
-    `✅ Completed <YYYY-MM-DD>: UNI-x (PR <repo>#n)` when every issue for that section is Done, or
-    `🟡 In progress: UNI-x done; UNI-y, UNI-z open` while some are still open. Update the marker; don't stack them.
+    `**Completed <YYYY-MM-DD>:** UNI-x (PR <repo>#n)` when every issue for that section is Done, or
+    `**In progress:** UNI-x done; UNI-y, UNI-z open` while some are still open. Update the marker; don't stack them.
   - **Direction changes:** when the human changes the plan (an `ANSWER`, a correction, a new decision, scope
     added or dropped), rewrite the affected section so it says what we do now, and add one line under it:
     `Changed <YYYY-MM-DD>: <what and why> (UNI-x)`. Don't append dated addenda at the end, and don't leave
@@ -668,8 +684,8 @@ daily review (≤ 10 lines a day), and briefs and initiative descriptions (≤ 1
 never publish around it. It checks shape and length, not truth.
 
 **Needs input:** each loop tick, add the label to any open founder ask (`QUESTION:` or a `TEST PROMPT` for the
-founder) that lacks it, and the `## 👉 Your action` block at the top of the description (`/work-on` step 5) when it
-is missing. List labelled issues that look answered as "probably resolved?" in the status line. Never
+founder) that lacks it, and the `## Your action` block at the top of the description (`/work-on` step 5) when it
+is missing (an older block headed with an emoji counts: rename it to `## Your action` instead of adding a second). List labelled issues that look answered as "probably resolved?" in the status line. Never
 remove the label yourself (`linear-workflow.md` "The Needs input label").
 
 **Maintenance lock:** while `~/.ul-dispatch/maintenance.lock` exists and hasn't expired, launch nothing
