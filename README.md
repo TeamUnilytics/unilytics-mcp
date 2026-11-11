@@ -12,7 +12,7 @@ You don't need to install Node, edit a config file or keep your key in a text fi
 4. In the chat box, click the settings icon → **Tool access** → **Load tools when needed**. Unilytics has many tools, and with "Tools already loaded" Claude leaves them out of the chat.
 5. Start a new chat and ask: *"List my projects on Unilytics."*
 
-Full guide: [docs/user/claude-desktop-extension.md](docs/user/claude-desktop-extension.md).
+Full guide: [Install the Unilytics extension for Claude Desktop](https://github.com/TeamUnilytics/unilytics-mcp/blob/main/docs/user/claude-desktop-extension.md).
 
 Prefer not to use a key? Claude can also connect with one link and your Google account: see [Connect Claude to Unilytics](https://unilytics.ai/docs/connect/).
 
@@ -44,7 +44,25 @@ Pass the key with `UNILYTICS_API_KEY` (recommended) or `--api-key=ulk_live_xxx`.
 
 ## Tools
 
-About 90 tools, served by Unilytics, so they stay current without updating anything here. Your AI lists them when it connects. Some use credits from your account.
+The tools are served by Unilytics, so new and changed tools reach you without updating anything here. Your AI lists every tool when it connects. Some use credits from your account. These are the groups, with a few tools from each:
+
+| Group | What it's for | For example |
+|---|---|---|
+| Skills | Find, read and write your saved playbooks | `find_skill`, `list_skills`, `get_skill`, `create_skill`, `update_skill` |
+| Client context | Each client's Brand Kit, Context records and settings | `list_projects`, `get_project_context`, `propose_context_record`, `propose_brand_kit`, `list_context_gaps` |
+| Knowledge Base and files | Store and search each client's documents, pages and files | `kb_search`, `kb_write_text`, `kb_add_urls`, `upload_file_to_project`, `create_upload_link` |
+| SEO research | Keywords, search results, on-page checks and page speed | `keyword_research`, `serp_results`, `on_page_audit`, `page_speed_audit`, `google_trends` |
+| AEO and AI search | Prompts to track, and how AI answers mention and cite a brand | `aeo_generate_prompts`, `aeo_prompt_volume`, `brand_visibility`, `ai_citation_check` |
+| Web pages | Read, crawl and screenshot websites | `content_scrape`, `js_scrape`, `site_crawl`, `site_map`, `page_screenshot` |
+| Competitors and ads | Watch competitor pages for changes; see their ads and audiences | `watch_competitor`, `get_competitor_changes`, `google_ads_transparency`, `meta_ads_library` |
+| Account | Your credit balance, and the accounts linked to a project in the app | `get_credit_balance`, `list_connections` |
+
+Competitor watches (`watch_competitor`) run on a schedule, and each run uses credits.
+
+### What isn't included
+
+- **Google Search Console and GA4 data.** Unilytics doesn't serve your first-party analytics. Connect your AI to them with your own connector (for example a Search Console or GA4 MCP server), and the skills use it.
+- **Backlink lists, ranking keywords, top pages and traffic history.** Use your own Semrush or Ahrefs connection. `backlink_analysis` returns a domain's Moz Brand Authority score, not a list of backlinks.
 
 ## How it works
 
