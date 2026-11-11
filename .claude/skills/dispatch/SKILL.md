@@ -40,11 +40,39 @@ The founder runs several companies and has little time:
   - a founder step that blocks work now;
   - something shipped and seen working;
   - an incident (prod broken, data at risk).
+- **Never re-ask what the founder already decided** (founder, 2026-11-11: "I already told you we need an agent, so
+  why you ask me the same shit? … don't waste my time like this."). Before any question to the founder (terminal,
+  a `QUESTION:` you post, the 2d wave table's open decisions, an ask you deny for a worker), search the Linear
+  document "Founder's memoir" (`3d381567-525f-4797-8fd5-570eff6d2a06`), the issue's description and comments
+  (`ANSWER:`, `Comments from Saven:`, the founder's replies), its parent's and related issues' comments, and the
+  founder's asks in `~/.ul-dispatch/state.md`. Found → act on it and quote it (date + where); found in part → ask only
+  the rest. A question still open isn't a re-ask: follow up on its own thread, never ask it again elsewhere. Workers
+  run the same check (`/work-on` → "Before any founder question or step").
+- **Never hand the founder something already done** (memoir: "Don't hand me something your own work already
+  finished"; founder 2026-11-05: "its already done by the worker"). Before you pass on any founder step (a paste, a
+  console click, a TEST PROMPT, a review), check the live state yourself: the setting's current value, the merged PR
+  and its deploy, the issue's latest Handoff / DEPLOY CHECK / TEST RESULT, the worker's `claude logs`, `ul-answer
+  list`. Done → close the ask (comment what you saw, remove the `## Your action` block) and leave it out of the
+  update.
 - **Don't ask for obvious or small things** (founder, 2026-11-04: "don't be asking me to do stuff or wait on me
   for silly stuff"). Decide reversible calls yourself, record them on the issue, and tell the founder in the
   update. Ask only for:
   - money, secrets, granting access, terms, a password, 2FA or CAPTCHA;
   - a real product or privacy trade-off that is the founder's taste (e.g. a server-side Google favicon fallback).
+- **Asks wait for the check-in, ranked, with everything attached** (founder, 2026-11-11: "you just send that list
+  maybe when I do the check-in, because that's when I have time" · "I'm working on 100 different things at the same
+  time … When I come back to you … I don't know what the fuck you're talking about"). Asks queue in *Needs me* (at
+  most 8, ranked by the whole product: the FOCUS order, then security and money, never by which worker finished
+  last). The first message of each check-in gives the top ones in full: what and why in two lines, the URL, the page
+  already open in Chrome, the default, and the size (quick: a yes or no, 10–15 can come together; long: a real review,
+  with its minutes, at most 2 a day). Never a bare "reply yes or no". Only an ask that blocks urgent work right now
+  interrupts between check-ins.
+- **Clickable URLs, never file names** (founder, 2026-11-11: "If you're gonna give me like file names, I'm not gonna
+  go to GitHub and search"). A file in git is linked as
+  `https://github.com/TeamUnilytics/<repo>/blob/<deploy branch>/<path>`; a Linear item by its URL.
+- **Show the system, not "done"** (founder, 2026-11-11: "I want to know which file you updated, or which in your
+  system you changed, or your skill file"). Every system change you report names the file, links it, quotes the new
+  rule, and says how it's enforced.
 
 ## Loop mode: `/dispatch --loop` (UNI-405, founder 2026-11-02)
 
@@ -59,8 +87,16 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   - **`Monitor` on `ul-gh-watch`** (GitHub events: a PR merged, CI failed on an open PR, a deploy run failed),
     re-armed like `ul-watch`. Merges and failures wake you instead of waiting for a ping;
   - a ScheduleWakeup heartbeat every 20–30 min.
-- **State file:** `~/.ul-dispatch/state.md` holds the running workers, the ranked queue, the founder's open asks
-  and live config facts. Update it every tick, and re-read it first after any compaction (once the founder has
+- **Day boundaries (founder, 2026-11-11: "you're running at night, and then I wake up, and what should I tell
+  you?").** The founder says nothing. At 23:00 (the Mac's local time) the session runs the end of day itself (step 4:
+  Diary entry, measured speed, walkthrough, lessons folded into the rulebooks, state file trimmed). At 07:00 the Pulse
+  schedule starts a fresh dispatch session, and the night session stops. A new session reads, in this order, before
+  anything else: this rulebook, the Founder's memoir, the FOCUS list (`docs/handbook/linear-workflow.md`), the master
+  plan, the state file, yesterday's Diary entry, the GTM agent's journal, new founder comments on the Daily review,
+  and the usage line. One session running for days is why the end of day never ran from 2026-11-04 to 11-10.
+- **State file:** `~/.ul-dispatch/state.md` holds only running state (under 20 KB): the running workers, the founder's open asks
+  and live config facts. Rules never live there; they live in this rulebook (2026-11-11: five standing rules sat only
+  in the state file, so a fresh session didn't have them). History moves to the Diary at the end of day. Update it every tick, and re-read it first after any compaction (once the founder has
   applied UNI-672's settings, `ul-state-hook` puts its first ~9,400 characters back into context by itself, so keep
   what matters now at the top: running workers, open asks, next steps; history below). Your context can be
   summarised away; this file can't (workers have the same thing in WORKLOG/CHECKPOINT).
@@ -78,9 +114,13 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
 - **Tools** (`tools/dispatch/`, linked into `~/.local/bin`; README there):
   - `ul-limits` (`--json`): both accounts' 5-hour and weekly usage, from the status line;
   - `ul-launch UNI-123 <repo> [univ|ul|univ-api]`: starts `/work-on` as a background session (`--bg --name
-    UNI-123 -w uni-123`, Opus 5.5). It refuses at 5h ≥ 70%, week ≥ 80% or 4 running on the account. A refusal
-    is an answer; use `--force` only to go past the 4-session cap when the founder has asked for work to run in
-    parallel (2026-11-04: "run parallely"), never past the usage limits;
+    UNI-123 -w uni-123`, Opus 5.5). It refuses at 5h ≥ 70%, week ≥ 100% (`UL_WEEK_CAP` lowers it; founder
+    2026-11-07: "run past the 80% weekly guard, up to 100% of each account") or 4 running on the account. When
+    more than one account has room, launch on the one whose weekly window resets first (`ul-limits` shows the reset
+    times), so no account's week expires unused. A refusal is an answer; use `--force` only to go past the 4-session cap when the founder has asked for work to run in
+    parallel (2026-11-04: "run parallely"), never past the usage limits. It also refuses an issue outside a
+    FOCUS project (unless labelled Incident or Security) or with a blocker that isn't Done (UNI-1130; `ul-launch
+    --check UNI-123` asks without launching); `--force-reason "<why>"` overrides only that check and logs the reason;
   - `claude agents --json` (run with `env -u CLAUDE_CONFIG_DIR` to see univ's background sessions),
     `claude logs <id>`, `claude respawn <id>`;
   - `ul-watch` (`--ul` / `--sj` for the other accounts, one per account you launch on): the state-change stream
@@ -157,6 +197,11 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   from 06:00 (`ul-pulse audit`; `tools/dispatch/README.md` "Strategy audit"): one idea or "No idea this week", gated
   by code against Linear's own data. Never write a strategy recommendation yourself, and never add ideas beside it:
   the founder asked for one idea or none. What you do with it is the Friday audit (step 5).
+- **A link "for the strategist" goes in the market-signals file the same day (UNI-1114):** when the founder shares
+  a link for the strategist (a product, a launch, a post), read it and add an entry at the top of
+  `docs/research/market-signals.md`, in the shape the file shows (link, who shared it with their exact words, what
+  it is, why it might matter), committed on a `docs/` branch PR that day. The audit reads every entry each week as
+  context only; it never counts as user evidence. Your own read of it goes in the entry, not in a strategy idea.
 
 ## 0. Be the product manager: read the plan, then rank by user value
 
@@ -202,7 +247,7 @@ possible.
   from the outcome they're after. Write the outcome as the issue's Outcome, the hard requirements as Acceptance
   criteria, and how they'll judge it as Verify. Mark anything you inferred as an assumption in the issue so the
   human can correct it.
-- **Flag the one-way doors.** In the ⚠ column, mark decisions that are hard to undo: auth model, data schema,
+- **Flag the one-way doors.** In the One-way column, mark decisions that are hard to undo: auth model, data schema,
   public repos, anything outward-facing. Name any assumption that would flip the ranking. Take two-way doors fast.
   A big architecture or pivot decision (project model, positioning, a source of truth) is never built without the
   founder's sign-off: research it, post options + a recommendation with Needs input, and wait (founder,
@@ -219,14 +264,51 @@ possible.
 - **Avoid fake work.** Refactors, doc trims, branch pruning and tooling are filler. They take free slots, never the
   place of core work.
 
+**The FOCUS list decides first (founder, 2026-11-11: "What good is fixing the KB search if we have no fucking
+users, man? … there are important things or core initiatives that we should focus on").** The list (at most 5) has one
+home: `docs/handbook/linear-workflow.md`, "FOCUS". Link it, never copy it. Rules:
+- Every slot goes to a FOCUS project first. Outside it, only an incident (step 2 item 5) or P0 security launches.
+- **Finish what we start** (Kanban's "stop starting, start finishing"; a definition of done as in the Scrum Guide;
+  founder: "Maybe the worker logs something which is a big issue to be fully, to fully finish what it started, and we
+  just completely miss out on that"). A worker's follow-up is sorted in two: **needed to finish** its project's "Done
+  when" stays in that project at the same priority and goes next; **anything else** goes to Backlog with no project.
+  A project is done when its "Done when" is met, not when its first issue merges.
+- **Before any launch:** every `blockedBy` is Done (2026-11-11: UNI-871 and UNI-1090 were launched blocked) and the
+  issue sits in a FOCUS project or is an incident.
+- **A FOCUS item blocked on the founder is chased daily** in the check-in list, with its default; its worker-side steps
+  run meanwhile (2026-11-11: directory listings waited 17 days on one approval).
+- **Linear is the record of what's built** (founder: "you already have issues, you have versioning, you have
+  initiatives, you have projects"). Before saying something exists, works, is set up or has users, check its Linear
+  issue (Done with a Handoff), the merged PR on GitHub, the live product, or the usage line. Never a local clone or
+  memory (2026-11-11: "PostHog isn't set up" was said from a stale clone; it shipped 2026-11-09 as UNI-918).
+- **Read the whole open list daily** (founder: "it's important that we read through this whole list of issues"): a
+  sub-agent walks every open issue in both teams against FOCUS each morning and returns candidates per item.
+- **Before any plan:** list every initiative and memoir priority and place each one (in, or parked with a reason).
+- **Standing rules** (moved here from the state file, 2026-11-11):
+  - sell before build: no new feature without a named user, sale or user-hit bug (exceptions: security, data
+    integrity, the first-run path);
+  - billing and pricing defaults: pick the revenue-favouring option yourself (founder, 2026-11-10);
+  - never sign the founder out of a Google account in Chrome in an unattended run;
+  - account switch: at 93% of an account's weekly usage, stop launching on it and move to the next account
+    (founder, 2026-11-11).
+
+**Founder input becomes a coverage table before any work starts** (founder, 2026-11-11: "I want to see exactly
+based on that brain dump what exactly did you change in your system"; 2026-11-11 a brain dump was acted on
+first). After a brain dump or major feedback, the same day: (1) every lasting principle into the Founder's memoir,
+in their words; (2) a "Coverage" table appended to the brain-dump document: each point → the memoir entry, rulebook
+line or issue it became, with its URL, and its status; (3) the table shown to the founder before any worker starts
+on work that came from it. The Daily review flags a brain-dump document with no Coverage table after 24 hours.
+
 **Wave mix (every wave):**
 - **Always one worker on the first-run path** (founder, 2026-11-06: "refocus"). It runs whatever else is going on,
   client work included: sign-up → connect your AI → first skill run in under 2 minutes, the projects *Onboarding
   live* and *Kevin onboarded*. Its queue comes from the morning fresh-eyes new-user pass (step 0b), timed against the
   2-minute goal. A day with no such worker, or no new-user pass, is a miss that goes in the Daily review.
-- **Projects parked to Backlog on 2026-11-06** (Simulation, Connections over MCP, Inbox & Calendar, Websites, Skills
-  public OSS 1, Open-source MCP OSS 2, AI directory listings, Agent Buyer Optimization) get no workers until the
-  founder brings one back. Nothing in them was deleted.
+- **Projects parked to Backlog on 2026-11-06** (Simulation, Inbox & Calendar, Open-source MCP OSS 2, Agent Buyer
+  Optimization) get no workers until the founder brings one back. Brought back: Skills public OSS 1 (2026-11-10), AI
+  directory listings, Websites and Connections over MCP (2026-11-11: "getting listed on Grok and Open AI was a prio /
+  Open source was a prio"). A parked founder priority is raised again in the weekly Strategy audit & alignment,
+  never left parked in silence.
 - **Keep 1–2 core-product issues running at all times**, counting those already In Progress. Core means the
   reason a consultant comes back every day: the Context Manager (Context, Brand Kit, Design System, Knowledge Base),
   the skills (Skill Library, project skills, later the Skill Lab agents), and the MCP that serves both into their
@@ -267,7 +349,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
 
 **The founder watches the run live (2026-11-01), so the order matters:**
 1. First, **what shipped**, one item at a time on screen, with one line each in the terminal as you go
-   ("UNI-95 Projects search: '1 of 22' ✅").
+   ("UNI-95 Projects search: '1 of 22': works").
 2. Then **the new-guy audit**, which they may not watch. It uses real actions on test data: upload a file and
    search for it, export or download a skill, open every menu and dialog, load collaborators, and press buttons to
    find ones that do nothing or aren't needed any more (2026-11-01: the header Publish).
@@ -279,7 +361,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
    - Issues Done since then: `list_issues state:Done completedAt:<date>`.
    - One row per change: what a user should now see or be able to do, and where (screen, API or MCP tool).
      Backend and MCP changes get a row too; test them through the screen or tool that uses them.
-   Check every row on prod. A row is ✅ only when you saw it working. Mark it ❌ broken, ⚠ partly, or "not
+   Check every row on prod. A row is **works** only when you saw it working. Mark it **broken**, **partly**, or "not
    testable read-only" with the reason, and get that one tested by its issue's worker or a TEST PROMPT.
 2. **Two passes, two kinds of eyes.**
    - **New-user pass (fresh eyes).** Spawn a subagent with no project context. Give it only the persona ("an SEO
@@ -348,7 +430,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
 7. **Write it up** in the Linear document "Product walkthrough" (a document of the initiative *Design partner live*; it
    is for agents and has no cap), newest date on top, then put the founder's ≤ 10-line summary in *Daily review*
    (step 5) with a link to it. The full write-up, in this order:
-   - the shipped table (✅/❌/⚠ per row);
+   - the shipped table (works / broken / partly per row);
    - one table per screen (FE);
    - backend and MCP findings;
    - the new-user pass (where it hesitated, with times);
@@ -358,7 +440,7 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
    Every finding gets a home: search for an existing issue first, then add it there or create an issue in the
    Standard task format. Bugs go to the right project, gaps to their plan section. Batch paper cuts into one
    issue per repo ("Paper cuts <date>").
-8. Use the result as the first input to step 2. A broken or "coming soon" core screen, a ❌ shipped row, or a
+8. Use the result as the first input to step 2. A broken or "coming soon" core screen, a broken shipped row, or a
    new-user dead end outranks anything a user can't see.
 
 ### 0c. Autopilot queue: work that runs while the founder is away (every evening, before wind-up)
@@ -372,7 +454,7 @@ Founder time is the bottleneck. Measured 2026-10-18: build time is about an hour
    - no one-way door left undecided.
    For each, also list the one decision that would unlock it, if any.
 2. **Ask once, in one short table:** `Issue (what, why) · what the worker will do · the limits · your call`.
-   Ask any unlocking questions in the same message. Default: approve the ones marked ✅.
+   Ask any unlocking questions in the same message. Default: approve the ones marked **Recommended**.
 3. **On approval:** add the label **Autopilot** to each. Add a line under its Context:
    `Autopilot — approved by founder <date>: <scope and limits as approved>`. Then claim it and print the launch
    commands as usual. Prefer the background form (`--bg`) so they run overnight.
@@ -464,7 +546,7 @@ Classify In Progress issues by their latest comment:
   few hours → print the launch command again, or ask whether to release it (`RELEASED — not launched`,
   back to Todo).
 
-Also flag: issues labelled **Needs input** (show each `QUESTION:` so the human can answer with
+Also flag: issues labelled **Needs input** that pass the blocking-issues gate (step 5, "Blocking issues: the quality gate"; show each `QUESTION:` so the human can answer with
 `ANSWER: …` and remove the label), PRs waiting in review (the human's queue), and anything In Progress with no activity for a day.
 
 **On the MVP, these are not human-only.** Workers do them and log the before value, the after value and how to
@@ -513,7 +595,7 @@ Read the **Current status** and **Trial log** in `docs/handbook/model-runners.md
 
 Show one table and **stop until the human answers**:
 
-| Issue | Repo | Title | Type | Evidence | ICE (I/C/E) | Recommended runner | Why (what the user gets) | ⚠ |
+| Issue | Repo | Title | Type | Evidence | ICE (I/C/E) | Recommended runner | Why (what the user gets) | One-way |
 |---|---|---|---|---|---|---|---|---|
 
 Type is `core`, `security` or `non-core`. Evidence is the issue's Evidence label and who it came from ("User hit
@@ -572,10 +654,12 @@ Run the product walkthrough (step 0b) first, so tomorrow's wave starts from what
 Then ask for the night's Autopilot queue (step 0c), and post the velocity numbers (step 0d). The project updates
 post themselves at 20:30 (`ul-pulse`); check `ul-pulse status` shows them posted.
 
-This is the only time the main plan (git + its Linear document) changes. Build the update from the handoffs:
-`Changed`, `Plan changes` and Follow-ups go into the plan sections they name, plus the progress markers.
-Workers update dev docs (CLAUDE.md, SOPs, architecture, skills) in their own PRs; fold in only what they
-left in the handoff. Sync any git design doc a worker changed into its Linear document.
+This is the only time the main plan changes. Edit it in git only: its Linear document, and the Context Manager
+design's and Skill Lab spec's, are generated from git when the PR merges to dev (UNI-1135; `docs/handbook/linear-workflow.md`
+"Handbook in Linear"). Never edit a Linear copy: the publisher then refuses to overwrite it and the run fails.
+Build the update from the handoffs: `Changed`, `Plan changes` and Follow-ups go into the plan sections they name,
+plus the progress markers. Workers update dev docs (CLAUDE.md, SOPs, architecture, skills) in their own PRs; fold
+in only what they left in the handoff.
 
 - Read handoff comments on issues updated since the last dispatch (`list_issues updatedAt -P1D`). Include
   In Progress issues too: a worker blocked on a `QUESTION` posts its `Handoff` while the issue stays In Progress.
@@ -600,16 +684,16 @@ left in the handoff. Sync any git design doc a worker changed into its Linear do
   and whenever this run sees issues that moved to Done:
   - **Progress:** for each issue Done since the last update, find the plan section it implements (issues cite
     it, e.g. "Plan §9") and mark it in place, right under that section's heading:
-    `✅ Completed <YYYY-MM-DD>: UNI-x (PR <repo>#n)` when every issue for that section is Done, or
-    `🟡 In progress: UNI-x done; UNI-y, UNI-z open` while some are still open. Update the marker; don't stack them.
+    `**Completed <YYYY-MM-DD>:** UNI-x (PR <repo>#n)` when every issue for that section is Done, or
+    `**In progress:** UNI-x done; UNI-y, UNI-z open` while some are still open. Update the marker; don't stack them.
   - **Direction changes:** when the human changes the plan (an `ANSWER`, a correction, a new decision, scope
     added or dropped), rewrite the affected section so it says what we do now, and add one line under it:
     `Changed <YYYY-MM-DD>: <what and why> (UNI-x)`. Don't append dated addenda at the end, and don't leave
     the old text in place.
   - Keep the "Progress at a glance" table at the top of the plan in sync: one row per numbered section, with
     status (not started / in progress / completed <date>) and its open issues.
-  - Then sync the Linear team document "Pivot plan — consultant skill platform" to match.
-- Commit these doc changes on a `docs/` branch and open one PR.
+- Commit these doc changes on a `docs/` branch and open one PR. Its merge to dev publishes the Linear copies
+  (workflow *Handbook to Linear*): check that run is green.
 
 ## 5. Plan sync, Diary and founder-facing caps (UNI-409, founder-approved 2026-11-02)
 
@@ -621,12 +705,13 @@ its structure; it is never split or rewritten (founder, 2026-11-02).
 correction, a slipped date, a project added or dropped):
 1. The pivot plan's affected § (`docs/plans/pivot-consultant-skill-platform.md`): rewrite it to say what we do now
    and add one line under its heading: `Changed YYYY-MM-DD: <what> · <why> · <who>` (the founder's words quoted
-   when it was their call). Update the **Progress at a glance** row. Sync the Linear copy.
+   when it was their call). Update the **Progress at a glance** row. Edit git only, never the Linear copy: the merge
+   publishes it (UNI-1135).
 2. The initiative's description (Goal · Done when · Projects · Follows the plan) and, if a deliverable changed,
    the project's brief (Outcome · Scope · Done when · Links) and target date. Run `doc-lint initiative` /
    `doc-lint brief` on the new text first.
 3. One line in the next project or initiative update (`Next:` or `Risk:`).
-Commit the git side on a `docs/` branch PR the same day.
+Commit the plan change on a `docs/` branch PR and merge it the same day; the merge publishes the Linear copy.
 
 **Strategy audit (weekly, Fridays, UNI-1019):** read this week's *Strategy audit* entry (`ul-pulse status` shows
 its verdict; an alarm means it didn't post: fix the cause, then `ul-pulse audit`).
@@ -651,9 +736,13 @@ its verdict; an alarm means it didn't post: fix the cause, then `ul-pulse audit`
 - post the initiative updates (3 lines + health).
 List what you changed in the Diary.
 
-**Diary:** one dated entry in the Linear team document *Diary · Dispatcher · YYYY-MM* (create next month's on the
-1st) at each wave, decision and incident: what happened, why, and the founder's words verbatim when they decided.
-Newest first. It is the record for agents and for later; it has no cap.
+**Diary:** one dated entry a day in the Linear team document *Diary · Dispatcher · YYYY-MM* (create next month's on
+the 1st), written at the end of day (Day boundaries), newest first, no cap. Write it so a reader a year later can
+follow it without anything else open (founder, 2026-11-11: "after a year, if you were to go through that diary, you
+should be able to go through it"). The same headings every day: **Set out to do** · **What happened** (shipped, with
+links) · **Decisions** (the founder's exact words, with where they said them) · **Mistakes and the rule each one
+changed** (file + link) · **Open threads**. Waves and incidents during the day go into that day's entry. The Daily
+review alarms when yesterday's entry is missing (2026-11-04 to 11-10 had none).
 
 **Daily review** (the founder's one daily touchpoint; it replaces a separate morning message): one entry a day at
 the top of the team document *Daily review*: `## YYYY-MM-DD`, then at most 10 lines: what shipped, what is
@@ -663,14 +752,37 @@ second heading, and re-runs `doc-lint daily`.
 
 **Founder-facing caps:** only what the founder reads is capped. These are updates (3 lines: Done · Next · Risk), the
 daily review (≤ 10 lines a day), and briefs and initiative descriptions (≤ 1 page, TL;DR first). Agent comments
-(WORKLOG, Handoff, CHECKPOINT) are never capped. Run `doc-lint <update|daily|brief|initiative> <file>`
+(WORKLOG, Handoff, CHECKPOINT) are never capped. Run `doc-lint <update|daily|brief|initiative|ask> <file>`
 (`tools/dispatch/doc-lint`, linked into `~/.local/bin`) on the text before publishing it. Fix what it reports;
-never publish around it. It checks shape and length, not truth.
+never publish around it. It checks shape and length, not truth. **Every ask too** (UNI-1132): every ask you hand
+the founder (a `QUESTION:`, a `TEST PROMPT`, a paste, a review) has its `## Your action` block at the top of the
+issue description; save that block to a scratch file and run `doc-lint ask <file>` on it before you post it. Each
+ask needs a link (the URL of what the founder reviews or clicks), `Default:` (what happens if they don't answer) and
+`Size:` `quick` or `long (N min)` (founder, 2026-11-11: "you want to make sure you give me maximum context, URLs,
+things open on the Google Chrome tab ready for me to review"). Format and a passing example:
+`docs/handbook/linear-workflow.md` "The Needs input label".
 
 **Needs input:** each loop tick, add the label to any open founder ask (`QUESTION:` or a `TEST PROMPT` for the
-founder) that lacks it, and the `## 👉 Your action` block at the top of the description (`/work-on` step 5) when it
-is missing. List labelled issues that look answered as "probably resolved?" in the status line. Never
-remove the label yourself (`linear-workflow.md` "The Needs input label").
+founder) that passes the quality gate and lacks it, and the `## Your action` block at the top of the description
+(`/work-on` step 5) when it is missing (an older block headed with an emoji counts: rename it to `## Your action`
+instead of adding a second); run `doc-lint ask` on the block before you save it. List labelled issues that look answered, or fail the gate, as "probably resolved?" in
+the status line. Don't remove the label on your own (`linear-workflow.md` "The Needs input label").
+
+**Blocking issues: the quality gate** (founder, 2026-11-11, UNI-995: "the blocking issues should have only actual
+blocking issues ... you really have to have a good quality gate when you list out what goes into blocking issues";
+"there are a few tasks inside your blocking list that's also actually completed"). Before an ask goes on ANY
+founder list (the status line's "needs you", the daily review, an update, the 2d wave table's open decisions, the
+*Needs me* view), it passes all four, or it's left out:
+1. **A named founder step blocks it**: one step only the founder can take (decision, money, secret, access, terms,
+   password / 2FA / CAPTCHA, a test only they can run). Not "try it when you can", not FYI.
+2. **It blocks a FOCUS item** (`linear-workflow.md` "The Needs input label" holds the dated FOCUS list), **or it's
+   security or money.**
+3. **It isn't done**: you checked the live state this tick (merged PR + deploy, latest Handoff / DEPLOY CHECK /
+   TEST RESULT, the setting's value). Done → close the ask, never list it.
+4. **One-line ask + default**: the `## Your action` line, its link, `Default:` and `Size:` (`doc-lint ask` passes),
+   and the FOCUS item it unblocks.
+At most 7 on a list: FOCUS asks first, in FOCUS order, then security and money. **Urgent** follows the same FOCUS list: at most 10 Urgent issues
+at a time, each moving a FOCUS item now; when an 11th is needed, demote the one that moves its item least.
 
 **Maintenance lock:** while `~/.ul-dispatch/maintenance.lock` exists and hasn't expired, launch nothing
 (`ul-launch` refuses with exit 4) and make no bulk Linear writes; report the lock's reason in the status line.
