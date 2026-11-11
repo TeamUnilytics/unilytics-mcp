@@ -54,8 +54,8 @@ The tools are served by Unilytics, so new and changed tools reach you without up
 | SEO research | Keywords, search results, on-page checks and page speed | `keyword_research`, `serp_results`, `on_page_audit`, `page_speed_audit`, `google_trends` |
 | AEO and AI search | Prompts to track, and how AI answers mention and cite a brand | `aeo_generate_prompts`, `aeo_prompt_volume`, `brand_visibility`, `ai_citation_check` |
 | Web pages | Read, crawl and screenshot websites | `content_scrape`, `js_scrape`, `site_crawl`, `site_map`, `page_screenshot` |
-| Competitors and ads | Watch competitor pages for changes; see their ads and audiences | `watch_competitor`, `get_competitor_changes`, `google_ads_transparency`, `meta_ads_library` |
-| Account | Your credit balance, and the accounts linked to a project in the app | `get_credit_balance`, `list_connections` |
+| Competitors and ads | Watch competitor pages for changes and see the ads they run; browse ad audiences for your own campaigns | `watch_competitor`, `get_competitor_changes`, `google_ads_transparency`, `meta_ads_library`, `audience_segments` |
+| Account | Your credit balance, and which accounts are linked to a project in the app (it doesn't read their data) | `get_credit_balance`, `list_connections` |
 
 Competitor watches (`watch_competitor`) run on a schedule, and each run uses credits.
 
@@ -89,6 +89,7 @@ npm test                # bridge tests
 npm run build:mcpb      # dist-mcpb/unilytics.mcpb
 npm run test:mcpb       # unpacks it outside the repo and runs the same tests on it
 npm run test:live       # the live endpoint still answers with JSON (no key needed, uses a made-up one)
+npm run test:docs       # every tool this README and the manifest name is still served (also weekly in CI)
 ```
 
 Only the packages allowed in `scripts/build-mcpb.mjs` may enter the bundle. The build stops if a dependency update brings in another one.

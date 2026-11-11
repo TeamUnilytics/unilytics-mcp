@@ -29,5 +29,9 @@ jobs:
       - name: The live endpoint still keeps the contract installed bridges rely on
         if: matrix.os == 'ubuntu-latest'
         run: npm run test:live
+      # Not in a release (workflow_call): a tool renamed on the server must not block a bridge fix from shipping.
+      - name: Every tool the README and manifest name is still served
+        if: matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request'
+        run: npm run test:docs
       - name: No known vulnerabilities in what ships
         run: npm audit --omit=dev --audit-level=high
