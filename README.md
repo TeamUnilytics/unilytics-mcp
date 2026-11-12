@@ -54,7 +54,7 @@ The tools are served by Unilytics, so new and changed tools reach you without up
 | SEO research | Keywords, search results, on-page checks and page speed | `keyword_research`, `serp_results`, `on_page_audit`, `page_speed_audit`, `google_trends` |
 | AEO and AI search | Prompts to track, and how AI answers mention and cite a brand | `aeo_generate_prompts`, `aeo_prompt_volume`, `brand_visibility`, `ai_citation_check` |
 | Web pages | Read, crawl and screenshot websites | `content_scrape`, `js_scrape`, `site_crawl`, `site_map`, `page_screenshot` |
-| Competitors and ads | Watch competitor pages for changes and see the ads they run; browse ad audiences for your own campaigns | `watch_competitor`, `get_competitor_changes`, `google_ads_transparency`, `meta_ads_library`, `audience_segments` |
+| Competitors and ads | Watch competitor pages for changes and see the ads they run; browse ad audiences for your own campaigns | `watch_competitor`, `get_competitor_changes`, `google_ads_transparency`, `audience_segments` |
 | Account | Your credit balance, and which accounts are linked to a project in the app (it doesn't read their data) | `get_credit_balance`, `list_connections` |
 
 Competitor watches (`watch_competitor`) run on a schedule, and each run uses credits.
@@ -62,7 +62,7 @@ Competitor watches (`watch_competitor`) run on a schedule, and each run uses cre
 ### What isn't included
 
 - **Google Search Console and GA4 data.** Unilytics doesn't serve your first-party analytics. Connect your AI to them with your own connector (for example a Search Console or GA4 MCP server), and the skills use it.
-- **Backlink lists, ranking keywords, top pages and traffic history.** Use your own Semrush or Ahrefs connection. `backlink_analysis` returns a domain's Moz Brand Authority score, not a list of backlinks.
+- **Backlinks, ranking keywords, top pages and traffic history.** Use your own Semrush or Ahrefs connection.
 
 ## How it works
 
