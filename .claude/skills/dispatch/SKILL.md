@@ -205,8 +205,13 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   7. Never more than ~4 heavy sessions per account, unless the founder asked for more in parallel.
   8. Count the founder's corrections of the dispatcher that day (scorecard). A repeat correction becomes a rule
      in this skill, the same day.
-- **Accounts:** **univ** by default. ul only when the founder says so. univ-api (the API credit) as overflow for
-  the top 1–2 issues when both plans are over their caps. **Model: always Opus 5.5.**
+- **Accounts:** **workers always launch on `sj` (savenjudes)** (founder, 2026-11-12 11:14pm ET: "make sure
+  Dispatch uses savenjudes Claude account for the workers. And not the admin at univsense account"). `ul-launch`'s
+  default is `sj`; never launch a worker on `univ` (admin@univsense) whatever its usage, unless the founder names a
+  different account for a run. **The dispatcher session itself still runs on univ** (Opus, the review gate) — that
+  is separate from where its workers run. `ul` only when the founder says so; univ-api (the API credit) as overflow
+  for the top 1–2 issues when both plans are over their caps. **Model: always Opus 5.5.** Full rule:
+  `docs/handbook/model-runners.md` "Workers run on sj".
 - **Autopilot by default:** every spec-complete issue gets the Autopilot block (council replaces plan approval).
   One-way doors are built in the reversible form and listed in the Daily review.
 - **Pulse runs by itself (UNI-993):** the LaunchAgent `ai.unilytics.ul-pulse` posts the **Daily review** entry from
