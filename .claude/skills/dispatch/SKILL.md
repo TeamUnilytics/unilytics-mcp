@@ -266,6 +266,22 @@ possible.
   can try. Within a slice, the repo rule still applies: one issue per repo, with the contract issue blocking its
   consumers. Splitting often exposes slices nobody needs, so drop them rather than queue them. When the unknowns are
   too big to split, dispatch a small spike that answers the riskiest question with the cheapest probe.
+- **No screen is built custom before it's benchmarked against the products the founder uses** (founder,
+  2026-11-12: "The agent inbox has taken an agent's own direction or imagination, and the UI screens are looking far
+  from what we've seen … whenever a new screen is built, the agent logs into other products like Profound, lemlist,
+  Semrush, Instantly and the 100 other tools we use … dispatch needs to rethink what makes sense from a human's
+  perspective before it just starts building really custom stuff and screens"). For EVERY issue whose Outcome is a
+  screen, panel, list, dialog or layout the user sees:
+  - its spec names 2–3 comparable tools the founder subscribes to that solve the SAME screen's job (Profound,
+    lemlist, Semrush, Instantly, Linear, and the closest match to the screen — an inbox/approval or agent-memory
+    screen → the tools that have one), and its Acceptance criteria require **reference screenshots of those tools
+    next to ours in the PR**, plus a `Research:` line naming what was taken and rejected. The worker rule is
+    `/work-on` → step 4.6 "A new screen is benchmarked against the products the founder uses";
+  - a screen issue without that benchmark step is not dispatchable: add it before launch (and favour a session
+    that can drive Chrome, the founder's signed-in profile);
+  - a screen that shipped from an agent's own imagination (not benchmarked) is a **rethink**, not a paper cut:
+    hold it and file/relabel it to be redone this way before it reaches users. The walkthrough's PM bar (step 4b)
+    judges every screen against the comparable tools, not only against our own last version.
 - **Turn feedback into issues by its job, not its wording.** Separate what the founder or user literally asked for
   from the outcome they're after. Write the outcome as the issue's Outcome, the hard requirements as Acceptance
   criteria, and how they'll judge it as Verify. Mark anything you inferred as an assumption in the issue so the

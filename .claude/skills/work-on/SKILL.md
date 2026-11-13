@@ -470,6 +470,21 @@ parallel, and don't plan first and read afterwards.
      own keys and add an import/export adapter. On a Next.js app, Resource Timing caps at ~250 entries and
      misses chunks: list `script[src]`, grep the chunks in-page with `fetch()`, and return file names only
      (URLs trip the privacy filter).
+   - **A new screen is benchmarked against the products the founder uses, BEFORE you design it** (founder,
+     2026-11-12: "whenever a new screen is built, the agent logs into other products like Profound, lemlist,
+     Semrush, Instantly and the 100 other tools we use … dispatch needs to rethink what makes sense from a human's
+     perspective before it just starts building really custom stuff and screens"). For ANY issue whose Outcome is
+     a screen, panel, list, dialog or layout the user sees, before designing it: sign in with Claude in Chrome to
+     2–3 comparable tools the founder subscribes to that solve the SAME screen's job (Profound, lemlist, Semrush,
+     Instantly, Linear, and the closest match to this screen — an inbox/approval or agent-memory screen → the
+     tools that have one), and capture how each one lays it out, names things, and handles empty/loading/error and
+     dense states. Design from what works there; don't invent custom UI when a convention exists. The accounts the
+     founder is signed into live in his Chrome profile (the session's Claude in Chrome); if none covers this
+     screen, ask the dispatcher which of his subscriptions is the closest comparable. **The PR must carry
+     reference screenshots of those tools next to a screenshot of ours, and the WORKLOG `Research:` line names the
+     tools, what you took and what you rejected.** A screen PR without the reference shots is not ready to show
+     the founder. No session can drive Chrome → hand the dispatcher the list of tools to capture, or defer the
+     screen; never build a screen blind.
    - **Best practice and primary sources:** the official docs, specs and RFCs for what you touch (MCP spec,
      OAuth RFCs, Mongo, FastMCP, React or Tailwind docs, AWS docs), and well-regarded open-source
      implementations. Use WebSearch or WebFetch, and prefer primary sources over blog summaries.
