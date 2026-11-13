@@ -102,6 +102,10 @@ node .claude/skills/consult-the-council/council.mjs --spend                     
 
 High effort can take a few minutes, so give the Bash call a long timeout (up to 600000 ms).
 
+The script keeps no copy of its output. Redirect it to a file in your scratchpad (`… > <scratchpad>/council-r1.out
+2>&1`) and read that, never `| tail -N`: UNI-934 lost a member's whole Issues section to a tail and couldn't get it
+back without paying for the run again.
+
 **Refused at the daily cap?** The run says so, sends nothing and exits 3. Don't work around it: say in the WORKLOG that the
 council was skipped because of the cap, and go on with a fresh-context review. Only work that truly can't wait
 (security, billing or a migration about to merge) uses `--force --reason "<issue: why it can't wait>"`.
