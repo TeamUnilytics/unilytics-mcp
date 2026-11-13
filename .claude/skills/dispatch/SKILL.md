@@ -94,7 +94,15 @@ The founder runs several companies and has little time:
 The founder wants code built from the plan without being at the keyboard. In loop mode you launch, watch and
 relaunch workers yourself; **never hand the founder a launch command** ("why are you asking me to run stuff").
 - **Start:** `ul-loop-start` (caffeinate on power plus this dispatcher on univ in its own Terminal window). Run
-  as `/loop` with no interval, self-paced. Three wake signals, because workers don't always ping (2026-11-02:
+  as `/loop` with no interval, self-paced.
+- **Caffeinate self-heal (founder 2026-11-13: "make sure you caffeinate from next time so the work gets done").**
+  `day.py ensure_caffeinate()` starts a persistent `caffeinate -s -i` at both the Pulse 07:00 start and
+  `ul-loop-start`, but a session started off-path (a `claude respawn`, a manual `--bg`) skips it, so the loop can
+  run a whole night with nothing holding sleep off. At session start AND on every tick, verify it yourself:
+  `pgrep -qf 'caffeinate -s -i'`; if it's absent, `nohup caffeinate -s -i >/dev/null 2>&1 &`. `caffeinate -s` only
+  holds on AC power and macOS still sleeps on lid close, so this is not a substitute for the founder keeping the
+  machine on power with the lid open — say so if an overnight run came up short.
+- Three wake signals, because workers don't always ping (2026-11-02:
   UNI-216 merged and UNI-231 parked without a ping, so UNI-410 waited until the founder noticed):
   - a worker ping;
   - **`Monitor` on `ul-watch`** (one line per worker-session state change: started, blocked, done), re-armed at
