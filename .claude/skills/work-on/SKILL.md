@@ -20,6 +20,7 @@ Do these in order. Get timestamps from `date -u +%FT%TZ`; never guess them.
    latest deploy branch (step 3c), then post the **WORKLOG** comment (step 3b) and keep its comment id.
 2. **While working:** edit that WORKLOG (plan chosen, approach change, gotcha, human correction, Verify run).
 3. **Anything only the human can do** (rotate or revoke a key, console or dashboard changes, prod config):
+   first run the two checks under "Before any founder question or step" (not decided already, not done already), then
    post `QUESTION:` and add the label **Needs input**, even if you mention it in the handoff, so `/dispatch`
    puts it in front of the human. Open and prefill it first, so the human's part is one small step
    ("Handing the founder a step", below).
@@ -174,6 +175,30 @@ Until the council has keys of its own (`COUNCIL_<MEMBER>_API_KEY`), it shares pr
 keys, so a top-up there also restores production's calls. Gemini runs in the council only on its own key
 (UNI-673), so a Gemini top-up is production's alone.
 
+### Before any founder question or step: is it decided? Is it done? (UNI-1091)
+
+Two checks, every time, before a `QUESTION`, a terminal question, a `TEST PROMPT`, a paste or a console step goes
+to the founder. Write what you checked in the WORKLOG.
+- **Decided already? Then don't ask.** Founder, 2026-11-11: "I already told you we need an agent, so why you ask
+  me the same shit? … don't waste my time like this." Search, in this order:
+  1. the Linear document "Founder's memoir" (`get_document` id `3d381567-525f-4797-8fd5-570eff6d2a06`): the
+     founder's lasting rules;
+  2. this issue's description and every comment: `ANSWER:`, `Comments from Saven:`, the founder's own replies;
+  3. the parent's and related issues' comments, and the plan section the issue cites.
+  Found it → act on it and quote it with its date and where it is, instead of asking. Found part of it → ask only
+  the missing part, quoting what was decided. A question nobody has answered yet isn't a re-ask: ask it once, on
+  its issue, and follow up on that same thread (never ask it again somewhere else).
+- **Is it the founder's at all?** On an Autopilot issue, a plan or scope call (split a part off into another
+  issue, accept a council point after the last round, an approach both reviewers accept) belongs to the council
+  and the dispatcher, not the founder. Post it as a `DECISION NEEDED (dispatcher)` comment without Needs input, ping the dispatcher
+  (`SendMessage` to `dispatch`; the comment is enough when it isn't reachable from your account), then keep building. A founder `QUESTION` is only for
+  money, secrets, access, terms, a password / 2FA / CAPTCHA, or a product or privacy taste call. 2026-11-12: UNI-50,
+  UNI-178 and UNI-179 each posted a founder QUESTION the dispatcher then decided.
+- **Done already? Then don't hand it over.** Memoir: "Don't hand me something your own work already finished"
+  (founder, 2026-11-05: "its already done by the worker"). Check the live state yourself: the setting's current
+  value, the merged PR and the deploy, the issue's latest Handoff / DEPLOY CHECK / TEST RESULT. Done → remove the
+  `## Your action` block and comment what you saw, instead of asking.
+
 Never hand the founder a list of instructions to follow. Before you post the `QUESTION` or ask in the terminal:
 - **Open it in Chrome** (Claude in Chrome): the console, dashboard, form or settings page, already on the right
   screen. If it needs a sign-in, do the sign-in clicks yourself (account chooser, consent); only a password,
@@ -233,6 +258,12 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   Auth0 client secret) goes in through a **hidden prompt** (`getpass`) into a 0600 file, and that command runs
   only in the human's own Terminal.app: the Claude `!` prompt has no TTY, so `getpass` dies with a termios
   error (UNI-28). Give the plain form for Terminal.app, and the `!` form only for the follow-up that reads the file.
+- **A founder paste script works in its own scratch folder, made fresh for each run** (UNI-1091). Its first lines
+  are `WORK=$(mktemp -d)` and an `EXIT` trap that removes it (`git worktree remove --force "$WORK/src"`, then
+  `rm -rf "$WORK"`). Every checkout (`git worktree add --detach "$WORK/src" origin/<deploy>`, a fresh copy of the
+  deploy branch, never a worker's worktree), `cd`, `npm ci` and `npx` happens inside it. Never use a fixed path: a worker's worktree, `/tmp/<issue>-base` or a folder an earlier step made.
+  Another script, a later step or `claude rm` can delete it. 2026-11-11: UNI-985's `pause-dup-axway` paste failed
+  when `npx` hit ENOENT, because its working folder, a fixed worktree path, had already been removed.
 - Don't re-run a slow full test suite to read a different slice of its output. Save it once
   (`--json --outputFile=…` or `> log`) and read the file.
 - The worktree sandbox refuses commands it can't prove stay in your worktree: `git` chained with other
@@ -403,8 +434,9 @@ parallel, and don't plan first and read afterwards.
    (`get_document` id `767abece-ac8b-43ba-b7eb-932a0eaf9369`). It holds the product direction, phases and
    decisions; read the sections that touch the issue in full and skim the rest. For Context Manager, Brand
    Kit, Knowledge Base or Personal Context work, also read the Linear document "Context Manager design"
-   (`e66939fa-8eff-4a4d-b6f6-e597dc6d486b`). The Linear copies are current; another repo's local checkout
-   may be stale. The pivot plan is ~100k characters, over the tool-result limit: the result is saved to a
+   (`e66939fa-8eff-4a4d-b6f6-e597dc6d486b`). Both are generated from ul-langgraph git on every merge to `dev`
+   (UNI-1135), so they normally match dev (the first line names the commit); another repo's local checkout may be
+   stale. The pivot plan is ~100k characters, over the tool-result limit: the result is saved to a
    file; list its headings (`json.loads(...)["content"]`, then the `\n## ` / `\n### ` offsets) and read the
    sections you need by character range (UNI-98).
 2. **The issue:** its description, parent, attached documents, comments, and the handoffs of its blocking
@@ -474,18 +506,29 @@ parallel, and don't plan first and read afterwards.
 ## 5. If you have a doubt
 
 1. Look it up first: issue Context links → plan section → design doc → `docs/handbook/*` and this repo's `docs/sop/*` → comments on related
-   and blocking issues.
+   and blocking issues. Then run both checks under "Before any founder question or step" (the Founder's memoir and
+   every `ANSWER:` on the issue: decided already? done already?).
 2. Still unsure and it changes the outcome → comment `QUESTION: <one clear question>` (+ options you
    considered, what it blocks), add the label **Needs input**, and ask the human in this terminal.
+   The label goes on only when the ask passes the blocking-issues gate (`linear-workflow.md` "The Needs input
+   label": a named founder step, it blocks a FOCUS item or is security / money, not done, one line + a default).
+   Otherwise decide it yourself and record why, or leave it as a comment with no label (founder, 2026-11-11).
    **Every founder ask (QUESTION, TEST PROMPT, a command to paste) also goes at the very top of the issue
    description**, in this block, replacing any older one. It is what the founder reads in the *Needs me* view
    (founder, 2026-11-03: "i open one task and its a vomit of text. what exactly is my action"):
    ```
-   ## 👉 Your action
+   ## Your action
    **<the decision or step, one line, plain words>**
-   Default: `<one word>` · Reply: comment `ANSWER: <word>` (or: paste `! <command>` in the dispatcher)
+   Link: <the URL of what to review or click: the PR, the page you opened in Chrome, the comment>
+   Default: `<one word>`, <what happens if you don't answer> · Size: quick | long (<N> min) · Reply: comment `ANSWER: <word>` (or: paste `! <command>` in the dispatcher)
    Why: <one line: what it unblocks>
    ```
+   `Size:` is exactly `quick` (a yes or no) or `long (N min)` (a real review, with its minutes). Several asks go in
+   one block as numbered items (`1. **…**`), each with its own link, default and size.
+   **Run `doc-lint ask <file>` on the block before you post it** (the block saved to a scratch file; `doc-lint` is on PATH, else `~/dev/ul-langgraph/tools/dispatch/doc-lint`). It fails an ask with no link, no
+   `Default:` or no `Size:` and names what's missing: fix it, never post around it (UNI-1132; founder, 2026-11-11:
+   "you want to make sure you give me maximum context, URLs, things open on the Google Chrome tab ready for me to
+   review"). An example that passes: `docs/handbook/linear-workflow.md` "The Needs input label".
    When it is answered, delete the block. The detail stays in the comment.
 3. Continue with whatever the question doesn't block; otherwise stop and say so. Never guess on scope,
    data deletion, pricing or anything that deploys a breaking change.
@@ -552,11 +595,12 @@ parallel, and don't plan first and read afterwards.
   - Add a dated line to `docs/user/CHANGELOG.md`: `YYYY-MM-DD: <what changed for the user>`.
 - Dev docs (`CLAUDE.md`, `docs/handbook/*` (ul-langgraph), the repo's `docs/sop/*`, `docs/architecture/*`, skills): update them in your PR when your work
   makes them stale or teaches a gotcha (`/update-learnings` is fine), and list them in the handoff.
-- **The main plan is the dispatcher's:** `docs/plans/pivot-consultant-skill-platform.md` and the Linear document
-  "Pivot plan — consultant skill platform". Never edit either, even if the human asks mid-session
-  (founder, 2026-10-18). Reply that the dispatcher updates the plan at wind-up, and write it under
-  `Plan changes` in the handoff. Other Linear documents (e.g. "Context Manager design"): edit the git copy
-  if the issue needs it and name it in the handoff so the dispatcher syncs the Linear copy.
+- **The main plan is the dispatcher's:** `docs/plans/pivot-consultant-skill-platform.md` (its Linear document
+  "Pivot plan — consultant skill platform" is generated from it). Never edit either, even if the human asks
+  mid-session (founder, 2026-10-18). Reply that the dispatcher updates the plan at wind-up, and write it under
+  `Plan changes` in the handoff. The Context Manager design (`docs/brainstorms/pivot-context-manager-design.md`)
+  and the Skill Lab spec (`docs/plans/skill-lab-spec.md`): edit the git file if the issue needs it; the merge
+  publishes the Linear copy (UNI-1135). Never edit a generated Linear copy.
 
 ## 7b. Hand back to Opus (local only)
 
