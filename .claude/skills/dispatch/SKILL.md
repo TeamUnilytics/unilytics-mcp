@@ -102,6 +102,18 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   `pgrep -qf 'caffeinate -s -i'`; if it's absent, `nohup caffeinate -s -i >/dev/null 2>&1 &`. `caffeinate -s` only
   holds on AC power and macOS still sleeps on lid close, so this is not a substitute for the founder keeping the
   machine on power with the lid open — say so if an overnight run came up short.
+  Run the check as its own Bash call: a compound command the worktree guard refuses never runs it (2026-11-13:
+  the first check was refused and never re-run, so nothing held sleep off for 30 min).
+- **After a restart, relaunch the workers (2026-11-13: the Mac rebooted at 09:28 and every session ended; nothing
+  ran for 9.5 h).** At session start, run `last reboot | head -1` and read `events.jsonl` for a burst of
+  `SessionEnd` lines. For each issue In Progress whose latest comment is a WORKLOG or Started from the last 24 h,
+  with its worktree still on disk and no live session under its name, relaunch it from its worktree with a RESUME
+  prompt (tick step 2, "Relaunching a stopped worker"). UNI-1176 automates this at login.
+- **Check you're on univ.** The Claude in Chrome extension is signed in on univ, so a dispatcher running on another
+  account has no browser. On 2026-11-13 the evening dispatcher ran on sj, and the walkthrough and three live tests
+  had to wait for the morning. At start, `echo $CLAUDE_CONFIG_DIR` (sj = `~/.claude-savenjudes`) and call
+  `list_connected_browsers`. On the wrong account, say so in the first update and leave the Chrome tasks for the
+  07:00 session; never hand them to the founder.
 - Three wake signals, because workers don't always ping (2026-11-02:
   UNI-216 merged and UNI-231 parked without a ping, so UNI-410 waited until the founder noticed):
   - a worker ping;
