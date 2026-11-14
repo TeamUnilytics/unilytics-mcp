@@ -693,7 +693,14 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    - **ul-langgraph `skill-lab-gate` is green** (UNI-173). GitHub Free can't make it required, so this rule is what
      enforces it. Red means the PR changes a Skill Lab agent's inputs without a gate record for exactly this change:
      run `skill_lab/.venv/bin/python -m skill_lab.evals.eval_agent run --agent <name> --experiment <name>` and commit
-     `skill_lab/gates/<name>.json` (paid, capped; skill-lab.md "The eval gate"). Merge origin/dev into the PR first:
+     `skill_lab/gates/<name>.json` (paid, capped; skill-lab.md "The eval gate"). **Only on the Skill Lab's own key**
+     (founder memoir, Spend: "never let internal tooling drain production's credit"): before any gate, eval or Skill
+     Lab run, check `grep -q '^SKILL_LAB_ANTHROPIC_API_KEY=.' ~/.claude/secrets.env`. If it's missing, run nothing.
+     First keep the gate inputs out of the change (a server-only module, as `tool_parts.py` and
+     `connections/pricing.py` do; prove it with `gate_verify`). If that can't be done, CHECKPOINT "gate record
+     blocked on UNI-946's Skill Lab key". 2026-11-14: UNI-281 and UNI-239 spent $13.68 of production's credit,
+     because `model_key()` silently fell back to the repo `.env`'s production key (UNI-1180 removes the fallback).
+     Merge origin/dev into the PR first:
      the check doesn't re-run when dev moves, and re-running an old run keeps its old merge commit.
      **Missing blocks like red** (UNI-669: the first version never ran, and four PRs merged without it). Pending,
      cancelled and skipped block too. With no `skill-lab-gate` row in `gh pr checks <n>`:
