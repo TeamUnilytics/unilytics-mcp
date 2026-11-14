@@ -722,7 +722,10 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    branch; the local one goes with the worktree (UNI-258).
 3. **Watch the deploy:** `gh run watch <run id> -R <owner/repo> --exit-status`. If it fails: read the log, tell
    the human, post a CHECKPOINT and stop (don't merge anything else). unilytics-mcp has no deploy; publishing to
-   npm is manual, so say so.
+   npm is manual, so say so. A green run is not proof of a deploy: since UNI-575 (2026-11-14) ul-backend's Deploy
+   run holds the tests, and a run superseded by a newer one ends green with its `deploy` job skipped. Check the
+   `deploy` job itself ran and succeeded (`gh run view <id> --json jobs`), or that the live version already
+   contains your commit (ul-langgraph: the `lambda_release.py status` sha).
 4. **Deploy check, every change except docs-only.** Exercise the changed behaviour on the DEPLOYED version yourself:
    call the live endpoint or MCP tool the change touches with a test account or project (never real customer
    data, never anything that charges, emails customers or deletes), confirm the response is what the Acceptance

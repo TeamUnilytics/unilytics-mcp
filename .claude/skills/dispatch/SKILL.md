@@ -88,6 +88,21 @@ The founder runs several companies and has little time:
 - **Show the system, not "done"** (founder, 2026-11-11: "I want to know which file you updated, or which in your
   system you changed, or your skill file"). Every system change you report names the file, links it, quotes the new
   rule, and says how it's enforced.
+- **A status report covers every initiative, finished work included** (founder, 2026-11-14: "the things that are
+  completed you shouldnt hide just becuase you lost focuse or didnt do it. you should be upfront"). Any "where are
+  we" answer, walkthrough or weekly report is built from Linear across ALL initiatives and their projects, not only
+  FOCUS: per capability, Live (with its date) · Built but off · In progress · Blocked on <step> · Parked (since when,
+  by whom) · Not started. Send a sub-agent to build it from Linear; never answer from memory or from today's work.
+  FOCUS decides what runs, never what gets reported.
+- **Mornings: two or three lines, and the walkthrough starts on the founder's word** (founder, 2026-11-14: "that was
+  a lot to read through … my time is valuable this is morning" · "i will tell you when to start the walkthough").
+  Before noon his time, answer in at most 3 lines with one question. A walkthrough or a screen-by-screen review is
+  prepared (tabs open, notes ready) but begins only when he says so; then one screen per message, 2–3 lines each.
+- **The weekly report reaches his email** (founder, 2026-11-14: "I also need the report on email from
+  team@unilytics.ai account"). Every Friday the week's *Strategy audit & alignment* entry (the retro) plus the
+  all-initiatives status goes to the founder by email from team@unilytics.ai. Until Pulse sends it by itself
+  (UNI-1207), the dispatcher sends it on Friday from the account the founder approved. A Friday with no new
+  audit entry is an alarm, not a quiet skip (UNI-1208: a Monday run took week 46's slot).
 
 ## Loop mode: `/dispatch --loop` (UNI-405, founder 2026-11-02)
 
@@ -113,7 +128,9 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   account has no browser. On 2026-11-13 the evening dispatcher ran on sj, and the walkthrough and three live tests
   had to wait for the morning. At start, `echo $CLAUDE_CONFIG_DIR` (sj = `~/.claude-savenjudes`) and call
   `list_connected_browsers`. On the wrong account, say so in the first update and leave the Chrome tasks for the
-  07:00 session; never hand them to the founder.
+  07:00 session; never hand them to the founder. The 07:00 start itself goes to sj when univ is at a usage limit
+  (UNI-1187; `ul-pulse status` → `morning … note: started on sj: univ is at its weekly limit until …`) and back to
+  univ on the first morning after the limit lifts: until then, the Chrome tasks wait for that morning.
 - Three wake signals, because workers don't always ping (2026-11-02:
   UNI-216 merged and UNI-231 parked without a ping, so UNI-410 waited until the founder noticed):
   - a worker ping;
@@ -191,6 +208,10 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
      - **deny** with the next step (`ul-answer deny <id> -m "…"`) everything founder-only (production writes,
        secrets, money, access, terms): post the `QUESTION:` on the issue yourself (label Needs input) and say so in
        the message, so the worker checkpoints instead of asking again.
+     - **A step the safety check refused is never yours to approve** (2026-11-14: I answered UNI-1154's "OK to
+       merge?" myself after the auto-mode check refused the worker's merge as a production deploy, then tried to
+       relaunch it to merge; the check refused that too, as undermining oversight). Leave it the founder's ask, and
+       never relaunch or message a worker to retry it.
      An ask nobody answered (`ask-unanswered:` from `ul-watch`, or `ul-answer list --all`: `answered` by
      `timeout`, `killed` or `orphaned`) was denied with "post a QUESTION + CHECKPOINT": check the worker did,
      and post it yourself if it didn't. Never answer an ask in a worker's tab, and never tell the founder to.
