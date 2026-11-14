@@ -98,6 +98,19 @@ The founder runs several companies and has little time:
   a lot to read through … my time is valuable this is morning" · "i will tell you when to start the walkthough").
   Before noon his time, answer in at most 3 lines with one question. A walkthrough or a screen-by-screen review is
   prepared (tabs open, notes ready) but begins only when he says so; then one screen per message, 2–3 lines each.
+- **Run it yourself; never hand him a script** (founder, 2026-11-14: "can you stop sending me script to run and just
+  do it yourself - its so dumb"). A paste, ops script or migration is run by you or a worker, after reading it
+  and checking it's still needed. Only when the safety check refuses a step does it go to him, labelled as a
+  refusal (what was refused and why), never as "your paste". What stays his: a password, 2FA, CAPTCHA, money, and
+  the click that accepts a third party's terms.
+- **One Review pack, not a stream of asks** (founder, 2026-11-14: "send me a linear document like a review pack and
+  I'll just review … every time there's something else new to be reviewed, just update it … only add stuff that
+  you really need me to review. And yeah, the important ones on top"). The Linear team document *Review pack*
+  ([link](https://linear.app/univsense/document/review-pack-77faa8c3bff3)) holds every open ask in full (what,
+  where, why, default, size), ranked most important first, at most 8 under "Now". Add, update and remove items
+  there the moment they change; done items move to "Done today" and leave the next day. In the terminal, an ask is
+  one `ASK:` line with the pack's item number and link, so the Duet relay still sees it; never the full text
+  again. The tab or page the item needs is open in Chrome when the item is added.
 - **The weekly report reaches his email** (founder, 2026-11-14: "I also need the report on email from
   team@unilytics.ai account"). Every Friday the week's *Strategy audit & alignment* entry (the retro) plus the
   all-initiatives status goes to the founder by email from team@unilytics.ai. Until Pulse sends it by itself
@@ -485,6 +498,17 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
    - From this session's own Unilytics MCP connection, if one is loaded: `tools/list` count against CLAUDE.md,
      `find_skill` on 3 Kevin-style tasks (is the right skill top-1?), `list_skills`, `get_skill`,
      `get_project_context` on a test project, and `get_credit_balance`. Read-only and free tools only.
+4a. **Can we measure it** (founder, 2026-11-14, after finding unilytics.ai had no GA4: "these are basic" · "Not sure
+   how your checks are missing these things"). Every walkthrough, for unilytics.ai, univsense.com and the app:
+   - GA4 really receives hits: load the page in Chrome and see a `collect` request go to Google Analytics (never a
+     grep of the HTML for a tag id: tags load from scripts); Search Console verified with the sitemap submitted;
+     Vercel Web Analytics and PostHog where they belong; Cloudflare AI Crawl Control on.
+   - The last 7 days, the founder's own visits excluded: human visitors per page and agent fetches per page
+     (Cloudflare), one line per site in the Daily review. A site that isn't measured is a finding of the day.
+   - Say what you checked and how. A fact you didn't check yourself is "not checked", never assumed from a
+     neighbouring site (2026-11-14: I filed "no tag on univsense.com" after checking only unilytics.ai).
+   - No Chrome on this account is no excuse: the chrome-devtools connection works on sj (2026-11-14). A day
+     without the walkthrough is a miss in the Daily review.
 4b. **The PM bar** (founder, 2026-11-03: "I hate these kind of imperfections … you're supposed to be catching these
    during the review not just look at what we built … think from a product manager standpoint of a company like
    airbnb"). Every walkthrough also does these, with evidence:
