@@ -285,6 +285,9 @@ Parallel workers share this Mac and the human's main checkouts hold uncommitted 
   range between two text anchors (UNI-94, UNI-291 `Left-Container.tsx`). The Edit tool does the same to the end of
   `new_string`: an edit that stops mid-line after a space (`actor = `) leaves `actor =f"…"`. End every Edit
   `old_string` and `new_string` at a line end (UNI-735).
+- In those zsh scripts, brace every variable that a `:` follows: `$new:refs/heads/main` reads `:r` as a modifier
+  (it strips an "extension"), and `$COMMIT:skills/x` reads `:s` as a substitution ("bad substitution"). Write
+  `"${new}:refs/heads/main"`. Never name a variable `path`: it overwrites PATH (`command not found: git`) (UNI-1038).
 - A staged `git rm` goes into the next commit even when you `git add` only other files. Commit a deletion on
   its own, or right before the commit it belongs to (UNI-291).
 - A second issue in the same session gets its own worktree: `git fetch origin`, then
@@ -757,7 +760,12 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      - **Open the tab:** `ul-open <url>` opens the URL in that profile. Never use the MCP's `new_page`: it can land in
        another profile window.
      - **Attach to it:** `list_pages`, then `select_page` on that tab, then `take_snapshot` / `click` / `fill`.
-     - Chrome may ask the founder to Allow the first connection; a 403 means retry after they click it.
+     - Chrome may ask to Allow the first connection; a 403 means retry once.
+   - **No browser at all** (the MCP times out waiting on Chrome's "Allow remote debugging?", or another session
+     holds the one DevTools connection): write the live test as exact steps (or one console snippet) in a
+     `TEST PROMPT` comment addressed to the **dispatcher**, tell the dispatcher, and park with a CHECKPOINT. No
+     Needs input label, no `## Your action` block: the dispatcher's browser runs it and posts the TEST RESULT
+     (2026-11-14: five workers asked the founder for a paste or a click the dispatcher then ran in minutes).
      - `chrome://` URLs can't be opened through it.
    - **Sign in yourself, every click.** Unilytics is an MVP with no users yet, so you test sign-in and the task on
      the live app every time the task needs it; never tell the founder you can't log in (founder, 2026-10-24). The
