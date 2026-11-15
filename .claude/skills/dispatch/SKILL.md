@@ -116,6 +116,17 @@ The founder runs several companies and has little time:
   all-initiatives status goes to the founder by email from team@unilytics.ai. Until Pulse sends it by itself
   (UNI-1207), the dispatcher sends it on Friday from the account the founder approved. A Friday with no new
   audit entry is an alarm, not a quiet skip (UNI-1208: a Monday run took week 46's slot).
+- **The daily standup opens itself** (founder, 2026-11-14: "just open up those reports on a daily basis … keep the
+  retro for weekly … it's like a quick standup between you and me"). Pulse builds the page from Linear, GitHub and
+  the Review pack after the Daily review and opens it on the Mac (north stars and their status, progress, blockers,
+  the Review pack's top 3, what's running; tools/dispatch/README.md "The daily standup page"). Don't hand-build one;
+  when it's wrong or missing, fix Pulse (`ul-pulse status`, `ul-pulse standup`). Keep the Review pack's "Now" items in
+  `**N. Title** · size` form: the page reads its top 3 from that.
+  **Its north stars read your note, so write it every end of day** (2026-11-14: v1 without notes was a ticket dump
+  that called the live open-source skills "at risk" and the listings "0 done"). Write
+  `~/.ul-dispatch/standup-notes.md`, one section per FOCUS item: `## N. name`, `Status: on track|at risk|blocked`,
+  one plain sentence of where it really stands, then any `Blocker: what · on whom · since when` lines. A note
+  older than 24 h shows as "No fresh note" in orange. Preview: `ul-pulse standup --dry-run`.
 
 ## Loop mode: `/dispatch --loop` (UNI-405, founder 2026-11-02)
 
@@ -144,6 +155,19 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   07:00 session; never hand them to the founder. The 07:00 start itself goes to sj when univ is at a usage limit
   (UNI-1187; `ul-pulse status` → `morning … note: started on sj: univ is at its weekly limit until …`) and back to
   univ on the first morning after the limit lifts: until then, the Chrome tasks wait for that morning.
+  **On sj, chrome-devtools is your browser** (2026-11-14): its default context is Chrome's own profile, already
+  signed in to app.unilytics.ai, so the dispatcher's live tests and walkthroughs run there (new background pages,
+  never another session's tab). **A worker with no browser** (sj workers' chrome-devtools waits on Chrome's "Allow
+  remote debugging?" prompt, and only one DevTools client connects at a time) never hands its live test to the
+  founder: the dispatcher runs it, through a test sub-agent in that default context, posts the TEST RESULT and closes
+  the issue (2026-11-14: five workers, the Context archive and skill-save fixes among them, asked the founder for a
+  paste or a click; each ran here in minutes).
+- **No merge into a repo while a migration there waits on its deploy** (2026-11-14: the dispatcher's sync-PR merge
+  redeployed ul-backend in the middle of UNI-567's invite-token cleanup, which stopped and had to run again). Before
+  merging anything, check `~/.ul-dispatch/state.md` and the running background jobs for a migration on that repo.
+- **"Waiting for CI" over 15 minutes: look at the PR yourself** (2026-11-14: UNI-129 waited 40 min on PR #333,
+  which was `CONFLICTING`, so no check ever started). `gh pr view <n> --json mergeable,statusCheckRollup`:
+  `CONFLICTING` or no checks → tell the worker to merge origin/main (or dev) and push.
 - Three wake signals, because workers don't always ping (2026-11-02:
   UNI-216 merged and UNI-231 parked without a ping, so UNI-410 waited until the founder noticed):
   - a worker ping;
@@ -371,6 +395,14 @@ home: `docs/handbook/linear-workflow.md`, "FOCUS". Link it, never copy it. Rules
   just completely miss out on that"). A worker's follow-up is sorted in two: **needed to finish** its project's "Done
   when" stays in that project at the same priority and goes next; **anything else** goes to Backlog with no project.
   A project is done when its "Done when" is met, not when its first issue merges.
+  **A handoff's "still needs" becomes a linked issue the same day** (2026-11-14: UNI-324's 11-02 handoff said
+  "unilytics.ai still needs the same GA4 loader"; nobody filed it, and the founder found the site unmeasured 12 days
+  later). Read every handoff's open ends at the tick it lands and file each one, related to its parent.
+- **Before dropping a piece of a FOCUS deliverable, say what it blocks** (2026-11-14: the founder said "make a copy
+  is not even a prio" and the dispatcher stopped UNI-129 without noting that Kevin's onboarding needed it; that
+  evening: "we have fallen behind with the skill management side … I was hoping to onboard Kevin this week"). When
+  a piece is called low priority, by him or by you, check its project's "Done when" and the founder's dated goals
+  first, and if it blocks one, say so in one line before it stops.
 - **Before any launch:** every `blockedBy` is Done (2026-11-11: UNI-871 and UNI-1090 were launched blocked) and the
   issue sits in a FOCUS project or is an incident.
 - **A FOCUS item blocked on the founder is chased daily** in the check-in list, with its default; its worker-side steps
@@ -445,6 +477,11 @@ account is signed in before and after, and switch back if you changed it. Real d
 delete real data, change settings or send anything to people. Test data is fine: write it into the Simbex
 project, name it TEST or "walkthrough", and say in the write-up what you left behind.
 
+**Grade every screen yourself before the founder sees it** (2026-11-14: the dispatcher walked him into the Agent
+Inbox unchecked, and he found the internal review panel and test proposals on it). Open each screen first, read it
+as a new consultant would, fix or note what's wrong, and only then show it; a screen with an open problem is shown
+with that problem named.
+
 **The founder watches the run live (2026-11-01), so the order matters:**
 1. First, **what shipped**, one item at a time on screen, with one line each in the terminal as you go
    ("UNI-95 Projects search: '1 of 22': works").
@@ -505,6 +542,9 @@ project, name it TEST or "walkthrough", and say in the write-up what you left be
      Vercel Web Analytics and PostHog where they belong; Cloudflare AI Crawl Control on.
    - The last 7 days, the founder's own visits excluded: human visitors per page and agent fetches per page
      (Cloudflare), one line per site in the Daily review. A site that isn't measured is a finding of the day.
+   - Since UNI-1211 Pulse runs the marketing sites' checks and counts every morning (the Daily review's "Sites"
+     section; `ul-pulse traffic --dry-run`; a gap alarms in `ul-pulse status`). The walkthrough still loads each
+     page in Chrome: the script sees a tag in the bundle, not a `collect` request leaving a real browser.
    - Say what you checked and how. A fact you didn't check yourself is "not checked", never assumed from a
      neighbouring site (2026-11-14: I filed "no tag on univsense.com" after checking only unilytics.ai).
    - No Chrome on this account is no excuse: the chrome-devtools connection works on sj (2026-11-14). A day
