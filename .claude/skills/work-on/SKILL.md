@@ -767,6 +767,11 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      Needs input label, no `## Your action` block: the dispatcher's browser runs it and posts the TEST RESULT
      (2026-11-14: five workers asked the founder for a paste or a click the dispatcher then ran in minutes).
      - `chrome://` URLs can't be opened through it.
+   - **A fresh account, or an admin@univsense.com sign-in, is the dispatcher's step.** The Gmail signed in to
+     Chrome (`mail.google.com/mail/u/0`) is admin@univsense.com, so the email codes for admin@ and for a new
+     `admin+<anything>@univsense.com` account arrive there; a worker's safety check refuses reading that mailbox
+     (2026-11-16: UNI-1271 and UNI-1272). Test what you can on an account already signed in, then put the
+     fresh-account or admin@ steps in a `TEST PROMPT` for the dispatcher, as above; never for the founder.
    - **Sign in yourself, every click.** Unilytics is an MVP with no users yet, so you test sign-in and the task on
      the live app every time the task needs it; never tell the founder you can't log in (founder, 2026-10-24). The
      main test account is **savenjudes@gmail.com** (a test Google account with the founder's skills and dummy
