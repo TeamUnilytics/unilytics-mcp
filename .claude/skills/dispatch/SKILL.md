@@ -520,7 +520,9 @@ with that problem named.
    - **Speed:** first load and reload, timed. Over 2 s is slow. Note skeletons or wrong values while it loads
      (e.g. credits showing 0.00).
    - **Errors:** `read_console_messages` (onlyErrors) and `read_network_requests` (any 4xx/5xx, any call over
-     1 s, duplicate calls).
+     1 s, duplicate calls). A failing request you or a test sub-agent see in the network panel is checked against
+     the backend's own logs (CloudWatch, LangSmith) before it's filed (2026-11-15: a test runner filed UNI-1265 from
+     the panel alone; the backend showed it wasn't a bug, and it was cancelled).
    - **States:** empty, populated, loading and error (only an error you can trigger read-only, such as a bad deep
      link). Then deep-link to the page, reload it, and press Back.
    - **Every control:** hover or read every button, link and menu. Open the non-destructive ones. Note dead links,
