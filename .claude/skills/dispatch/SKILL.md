@@ -418,6 +418,18 @@ home: `docs/handbook/linear-workflow.md`, "FOCUS". Link it, never copy it. Rules
   - sell before build: no new feature without a named user, sale or user-hit bug (exceptions: security, data
     integrity, the first-run path);
   - billing and pricing defaults: pick the revenue-favouring option yourself (founder, 2026-11-10);
+  - **a price quote is researched, built to make money, and compared with the real competitor** (founder,
+    2026-11-16, after Axway took the 500-prompt package: "you see how good research helps … Goal is to make
+    money. This is a cheap deal and we need to think bigger … we shouldnt compare with [companies that get a first
+    user for $20], we need to compare against profound etc."). Before any quote:
+    - read what the buyer pays now and what the competitor quoted them (their own account, their email);
+    - measure our full cost per unit (every vendor and the per-run calls, never one line item), and say which
+      cadence it assumes;
+    - lay out packages with the tiering research: a middle tier that's a small step for a lot more, and a high
+      top tier as the anchor (2026-11-16: 300 / 500 / 1,000 at $399 / $499 / $999, against Profound's $1,200 for
+      300; she picked 500);
+    - write the message in the founder's enterprise voice (no hedging asides).
+    A design-partner price is a starting point, not the plan: say so, and name the bigger number we grow it to;
   - never sign the founder out of a Google account in Chrome in an unattended run;
   - account switch: at 93% of an account's weekly usage, stop launching on it and move to the next account
     (founder, 2026-11-11).
