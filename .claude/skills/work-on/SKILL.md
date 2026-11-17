@@ -768,7 +768,8 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      (2026-11-14: five workers asked the founder for a paste or a click the dispatcher then ran in minutes).
      - `chrome://` URLs can't be opened through it.
    - **A fresh account, or an admin@univsense.com sign-in, is the dispatcher's step.** The Gmail signed in to
-     Chrome (`mail.google.com/mail/u/0`) is admin@univsense.com, so the email codes for admin@ and for a new
+     Chrome holds admin@univsense.com (open it as `mail.google.com/mail/?authuser=admin@univsense.com`: the `u/0`,
+     `u/1` order changes when accounts are added, e.g. on 2026-11-16 `u/0` became team@), so the email codes for admin@ and for a new
      `admin+<anything>@univsense.com` account arrive there; a worker's safety check refuses reading that mailbox
      (2026-11-16: UNI-1271 and UNI-1272). Test what you can on an account already signed in, then put the
      fresh-account or admin@ steps in a `TEST PROMPT` for the dispatcher, as above; never for the founder.
