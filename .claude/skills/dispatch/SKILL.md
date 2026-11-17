@@ -534,7 +534,10 @@ with that problem named.
    - **Errors:** `read_console_messages` (onlyErrors) and `read_network_requests` (any 4xx/5xx, any call over
      1 s, duplicate calls). A failing request you or a test sub-agent see in the network panel is checked against
      the backend's own logs (CloudWatch, LangSmith) before it's filed (2026-11-15: a test runner filed UNI-1265 from
-     the panel alone; the backend showed it wasn't a bug, and it was cancelled).
+     the panel alone; the backend showed it wasn't a bug, and it was cancelled). A test runner's side finding is
+     also checked against the founder's decisions (the memoir, the issue that built the feature, its `ANSWER`s)
+     before it's filed: 2026-11-16, UNI-1294 ("PostHog keeps recording after Decline") was the founder's own
+     2026-11-14 decision on UNI-918 and was cancelled.
    - **States:** empty, populated, loading and error (only an error you can trigger read-only, such as a bad deep
      link). Then deep-link to the page, reload it, and press Back.
    - **Every control:** hover or read every button, link and menu. Open the non-destructive ones. Note dead links,
