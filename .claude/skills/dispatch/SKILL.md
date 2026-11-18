@@ -404,7 +404,13 @@ home: `docs/handbook/linear-workflow.md`, "FOCUS". Link it, never copy it. Rules
   a piece is called low priority, by him or by you, check its project's "Done when" and the founder's dated goals
   first, and if it blocks one, say so in one line before it stops.
 - **Before any launch:** every `blockedBy` is Done (2026-11-11: UNI-871 and UNI-1090 were launched blocked) and the
-  issue sits in a FOCUS project or is an incident.
+  issue sits in a FOCUS project or is an incident. Read the issue's Context too: a change it builds on that is still
+  an open PR blocks it as surely as a relation does (2026-11-17: UNI-1148 built on UNI-1142's unmerged PR #482 and
+  parked at once).
+- **No browser in this session? Another dispatch session's browser runs the live tests** (2026-11-17: this loop ran
+  on sj with no Chrome, chrome-devtools refused with EPERM on DevToolsActivePort, and every TEST PROMPT went to the
+  interactive dispatch session, which ran them all). Send each TEST PROMPT there with its link and the real-data
+  rule, and say which session posts the TEST RESULT.
 - **A FOCUS item blocked on the founder is chased daily** in the check-in list, with its default; its worker-side steps
   run meanwhile (2026-11-11: directory listings waited 17 days on one approval).
 - **Linear is the record of what's built** (founder: "you already have issues, you have versioning, you have
@@ -485,9 +491,18 @@ then any consent screen. Unilytics is an MVP with no users yet, so every sign-in
 founder's (founder, 2026-10-24 and 2026-10-31); only a password, 2FA code or CAPTCHA prompt goes to them. A blocked
 sign-in is the first finding to fix. The extension must be allowed on accounts.google.com and auth.unilytics.ai,
 or the account chooser click is refused (2026-11-01). Parallel sessions share one Chrome profile: note which
-account is signed in before and after, and switch back if you changed it. Real data stays read-only: never pay,
-delete real data, change settings or send anything to people. Test data is fine: write it into the Simbex
-project, name it TEST or "walkthrough", and say in the write-up what you left behind.
+account is signed in before and after, and switch back if you changed it. Never pay, delete real data, change
+settings or send anything to people.
+
+**Live tests run on the founder's real data, then restore it** (founder, 2026-11-05, and again 2026-11-17, angry:
+"i have told you multiple times to only test with actual data. not some dumb hivelight talentra bs"). Every live
+test (yours, a test sub-agent's, and the worker's TEST PROMPT) runs as savenjudes@gmail.com on his real projects,
+skills, Knowledge Base files and Agent Inbox, never on admin@'s fixture skills or a TEST skill. Record the item's
+state first, run the test, put it back exactly, and say in the TEST RESULT what changed and how it was restored.
+The one exception is a test that needs a brand-new user (sign-up, first run, creating and deleting a first
+project): a fresh email-code test account. A feature flagged to another account only is switched on for
+savenjudes first (Review pack #31 on 11-17 was the Agent Inbox), never tested on the other account instead. Read
+every TEST PROMPT you forward: one that names admin@ fixtures goes back to its worker.
 
 **Grade every screen yourself before the founder sees it** (2026-11-14: the dispatcher walked him into the Agent
 Inbox unchecked, and he found the internal review panel and test proposals on it). Open each screen first, read it

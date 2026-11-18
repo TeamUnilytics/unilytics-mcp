@@ -791,9 +791,14 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      tests run on production after the merge (UNI-109).
    - Parallel sessions share one Chrome profile and can switch the app.unilytics.ai account under you: check which
      user is signed in before each UI step (UNI-49, UNI-95).
-   - **Where to write test data:** the client projects in the founder's account are dummies (founder: "you can
-     use the simbex project"). The account is at its `max_projects` cap, so write into "Simbex - SEO + AEO Audit"
-     (or Cass), label everything TEST, and clean it up afterwards (UNI-139, UNI-107).
+   - **Test on the founder's real data, then restore it** (founder 2026-11-05, repeated 2026-11-17: "i have told
+     you multiple times to only test with actual data. not some dumb hivelight talentra bs"). Live tests and every
+     TEST PROMPT run as savenjudes@gmail.com on his real projects, skills, KB files and Agent Inbox, never on
+     admin@'s fixture skills (Talentra, Hivelight) or a TEST skill. Record the item's state first, put it back
+     exactly afterwards, and say in the TEST RESULT what changed and how it was restored. The one exception is a
+     test that needs a brand-new user (sign-up, first run, a first project created and deleted): a fresh
+     email-code test account. A feature flagged to another account only is switched on for savenjudes first (ask
+     the dispatcher), never tested on the other account instead.
    - Check every Acceptance item, not only the TEST PROMPT steps. An item written for a screen that has since been
      redesigned is checked in its new form, and the TEST RESULT says how it differs (UNI-94).
    - **Test cases first, as Gherkin scenarios** (`Given … When … Then …`, the Cucumber format and the most
@@ -814,7 +819,7 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      If Linear refuses, list it under `Found (for the dispatcher):` in the handoff. Never fix it in this PR.
    - Beyond the steps: never pay, change billing or send anything to real people. Settings changes and deletions
      follow "MVP: make the console change yourself": the low-risk ones you do and log, and the rest go to the
-     founder. Use a test project where you can, delete the test data you created, and close your tab when done.
+     founder. Restore every real item you changed, delete any test data you created, and close your tab when done.
    - Post `TEST RESULT · run by worker in Chrome · <sha>` with `Scenario N — PASS/FAIL — what you saw` and the GIF
      or screenshot paths. The issue doesn't close until every scenario passes. Then show the founder a 2-line summary (what changed and why, PASS or FAIL).
    - All pass → Done (step 6). Any fail → fix it on a new branch and go back to 1.
