@@ -28,4 +28,4 @@ Call `list_projects` and show the names. Then offer three things to try, based o
 ## Limits
 
 - Unilytics doesn't serve Google Search Console or GA4 data. Use the user's own connector for those.
-- Built-in and Unilytics skills are read-only. To change one, make a copy with `create_skill` first.
+- Built-in and Unilytics skills are read-only. To change one, make the user's own copy first: `create_skill` with `extends` set to its `skill_id`.
