@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "unilytics",
+  "description": "Unilytics for Claude: your saved skills, client context and Knowledge Base, and SEO, content and AEO research tools",
+  "owner": {
+    "name": "Unilytics",
+    "url": "https://unilytics.ai"
+  },
+  "plugins": [
+    {
+      "name": "unilytics",
+      "source": "./plugins/unilytics",
+      "description": "The Unilytics connector (sign in with your Unilytics account) and a skill that starts every task from your saved skills and your client's context",
+      "category": "productivity",
+      "tags": ["seo", "aeo", "content", "marketing", "skills"]
+    }
+  ]
+}
