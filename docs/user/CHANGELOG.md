@@ -1,6 +1,6 @@
 # Changelog
 
-2026-11-19: Unilytics is now a Claude plugin. Upload one file or add our marketplace under Customize → Plugins, then sign in with your Unilytics account. It works where a company's Claude blocks custom connectors but allows plugins. See [Install the Unilytics plugin for Claude](claude-plugin.md).
+2026-11-19: Unilytics is now a Claude plugin. Upload one file or add our marketplace under Customize → Plugins, then sign in with your Unilytics account. It's for a company's Claude that allows plugins but not custom connectors; your Claude owner may still need to allow the Unilytics connector. See [Install the Unilytics plugin for Claude](claude-plugin.md).
 
 2026-11-12: The npm package page no longer lists the Meta Ad Library and Moz backlink tools. Unilytics has paused both while their data providers are unavailable.
 

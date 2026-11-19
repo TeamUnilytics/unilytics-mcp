@@ -16,7 +16,7 @@ You sign in with your Unilytics account. No API key is stored in the plugin.
 
 ## When should I use the plugin instead of a connector?
 
-Use it when your company's Claude doesn't let you add a custom connector, but lets you add plugins (Customize → Plugins). If you can add a custom connector, [Connect Claude to Unilytics](https://unilytics.ai/docs/connect/) works the same.
+Use it when your company's Claude doesn't let you add a custom connector, but lets you add plugins (Customize → Plugins). Whether the plugin can then connect Unilytics depends on your organization's settings: see "What if I don't see the Plugins option or the Connect button?" below. If you can add a custom connector, [Connect Claude to Unilytics](https://unilytics.ai/docs/connect/) works the same.
 
 ## How do I install it in Claude (web or desktop app)?
 

@@ -33,12 +33,11 @@ const body = await response.json();
 const tools = body.result?.tools;
 assert.ok(Array.isArray(tools) && tools.length > 0, "tools/list: expected a non-empty tool list");
 const live = new Set(tools.map((tool) => tool.name));
-// Every argument name a live tool takes, e.g. `project_id`: the plugin's skill names them as well as tools.
-const liveArguments = new Set(tools.flatMap((tool) => Object.keys(tool.inputSchema?.properties ?? {})));
+const argumentsOf = new Map(tools.map((tool) => [tool.name, Object.keys(tool.inputSchema?.properties ?? {})]));
 
-function check(where, names, served = live) {
+function check(where, names) {
   assert.ok(names.size > 0, `${where}: expected it to name some tools`);
-  const missing = [...names].filter((name) => !served.has(name)).sort();
+  const missing = [...names].filter((name) => !live.has(name)).sort();
   assert.deepEqual(missing, [], `${where} names tools the live server doesn't serve: ${missing.join(", ")}`);
   console.log(`${where}: all ${names.size} tools it names are in the live tools/list (${live.size} tools).`);
 }
@@ -47,12 +46,18 @@ function check(where, names, served = live) {
 const inlineTools = (text) => new Set([...text.matchAll(/`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`/g)].map((match) => match[1]));
 check("README.md", inlineTools(readFileSync(README, "utf8")));
 // The Claude plugin's skill (UNI-1363) tells the AI which tools to call, so a renamed tool would break every first run.
-// It names their arguments too, so there a name passes if it is a live tool or an argument one of them takes.
-check(
-  "plugins/unilytics/skills/use-unilytics/SKILL.md",
-  inlineTools(readFileSync(PLUGIN_SKILL, "utf8")),
-  new Set([...live, ...liveArguments]),
-);
+// It names their arguments too (`project_id`): each must be one that a tool the skill names takes, live.
+{
+  const where = "plugins/unilytics/skills/use-unilytics/SKILL.md";
+  const names = inlineTools(readFileSync(PLUGIN_SKILL, "utf8"));
+  const named = [...names].filter((name) => live.has(name));
+  const taken = new Set(named.flatMap((name) => argumentsOf.get(name)));
+  const args = [...names].filter((name) => !live.has(name));
+  assert.ok(named.length > 0, `${where}: expected it to name some tools`);
+  const wrong = args.filter((name) => !taken.has(name)).sort();
+  assert.deepEqual(wrong, [], `${where} names what is neither a live tool nor an argument of the tools it names: ${wrong.join(", ")}`);
+  console.log(`${where}: all ${named.length} tools and ${args.length} arguments it names are live (${live.size} tools).`);
+}
 
 const manifest = JSON.parse(readFileSync(MANIFEST, "utf8"));
 check("mcpb/manifest.json", new Set((manifest.tools ?? []).map((tool) => tool.name)));

@@ -2,14 +2,18 @@
 // on claude.ai and the Claude apps (UNI-1363). The archive holds the plugin's contents at its top level, with one
 // .claude-plugin/plugin.json, as claude.ai accepts.
 //
-// Standard library only. The zip is deterministic (sorted entries, fixed timestamps, no extra fields), so the same
-// commit always gives the same bytes and a release can be checked against a rebuild.
+// Standard library and git only. The zip holds the files git tracks under plugins/unilytics, read from HEAD, so an
+// untracked or edited file can't slip into a release, and line endings are git's (.gitattributes: -text). It is
+// deterministic (sorted entries, fixed timestamps, no extra fields): the same commit always gives the same bytes.
 //
 //   node scripts/build-plugin.mjs            build
-//   node scripts/build-plugin.mjs --check    build, then re-read the archive and check it
+//   node scripts/build-plugin.mjs --check    build, then re-read the archive and check it, and check the doc links
+//
+// Releasing: scripts/release-plugin.mjs (never marked "latest", README "Install in Claude (plugin)").
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, sep } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 
@@ -27,16 +31,42 @@ function fail(message) {
   process.exit(1);
 }
 
-function listFiles(dir) {
-  const out = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.name === ".DS_Store") continue;
-    if (entry.isSymbolicLink()) fail(`${relative(ROOT, full)} is a symlink; plugins must hold real files`);
-    if (entry.isDirectory()) out.push(...listFiles(full));
-    else if (entry.isFile()) out.push(full);
+const git = (...args) => execFileSync("git", args, { cwd: ROOT, maxBuffer: 16 * MAX_BYTES });
+
+// The plugin's files as committed at HEAD: path (relative to the plugin folder) and bytes.
+function committedFiles() {
+  const dirty = git("status", "--porcelain", "--untracked-files=all", "--", "plugins/unilytics", ".claude-plugin")
+    .toString()
+    .trim();
+  if (dirty) fail(`commit or remove these first, the zip is built from HEAD:\n${dirty}`);
+  const prefix = "plugins/unilytics/";
+  return git("ls-tree", "-r", "-z", "HEAD", "--", prefix)
+    .toString()
+    .split("\0")
+    .filter(Boolean)
+    .map((line) => {
+      const [meta, path] = line.split("\t");
+      const [mode, type, object] = meta.split(" ");
+      if (type !== "blob" || mode === "120000") fail(`${path} is not a regular file; plugins must hold real files`);
+      return { name: path.slice(prefix.length), object };
+    })
+    .sort((a, b) => (a.name < b.name ? -1 : 1))
+    .map(({ name, object }) => {
+      const data = git("cat-file", "blob", object);
+      if (data.length > MAX_BYTES) fail(`${name} is over ${MAX_BYTES} bytes`);
+      return { name, data };
+    });
+}
+
+// The README and the guide link to the release of this exact version.
+function checkDocLinks(version) {
+  const expected = `releases/download/plugin-v${version}/unilytics-plugin.zip`;
+  for (const doc of ["README.md", "docs/user/claude-plugin.md"]) {
+    const links = [...readFileSync(join(ROOT, doc), "utf8").matchAll(/releases\/download\/[^/\s)]+\/unilytics-plugin\.zip/g)];
+    if (links.length === 0 || links.some((m) => m[0] !== expected)) {
+      fail(`${doc} must link to ${expected} (plugin.json version ${version})`);
+    }
   }
-  return out;
 }
 
 // The checks claude.ai and the docs don't make for us: the connector is ours, and no key or header is in a file.
@@ -125,27 +155,47 @@ function buildZip(entries) {
   return Buffer.concat([...locals, centralBuf, end]);
 }
 
-// Re-reads the archive from its central directory and compares every entry with the source file.
+// Re-reads the archive from its central directory and checks every entry against its local header and its source
+// file: signatures, name, CRC and both sizes, and that the directory sits exactly where the end record says.
 function checkZip(zip, entries) {
   const endAt = zip.length - 22;
   if (zip.readUInt32LE(endAt) !== 0x06054b50) fail("zip: no end-of-central-directory record");
   const count = zip.readUInt16LE(endAt + 10);
-  if (count !== entries.length) fail(`zip: ${count} entries, expected ${entries.length}`);
-  let at = zip.readUInt32LE(endAt + 16);
+  if (count !== entries.length || zip.readUInt16LE(endAt + 8) !== count) fail(`zip: ${count} entries, expected ${entries.length}`);
+  const centralAt = zip.readUInt32LE(endAt + 16);
+  let at = centralAt;
+  let expectedLocalAt = 0;
   const names = [];
   for (let i = 0; i < count; i++) {
     if (zip.readUInt32LE(at) !== 0x02014b50) fail("zip: bad central directory entry");
-    const size = zip.readUInt32LE(at + 20);
+    const crc = zip.readUInt32LE(at + 16);
+    const packedSize = zip.readUInt32LE(at + 20);
+    const size = zip.readUInt32LE(at + 24);
     const nameLen = zip.readUInt16LE(at + 28);
     const localAt = zip.readUInt32LE(at + 42);
     const name = zip.subarray(at + 46, at + 46 + nameLen).toString("utf8");
+    if (localAt !== expectedLocalAt || zip.readUInt32LE(localAt) !== 0x04034b50) fail(`zip: ${name}: bad local header`);
     const localNameLen = zip.readUInt16LE(localAt + 26);
+    const localName = zip.subarray(localAt + 30, localAt + 30 + localNameLen).toString("utf8");
+    if (
+      localName !== name ||
+      zip.readUInt32LE(localAt + 14) !== crc ||
+      zip.readUInt32LE(localAt + 18) !== packedSize ||
+      zip.readUInt32LE(localAt + 22) !== size
+    ) {
+      fail(`zip: ${name}: local header doesn't match the central directory`);
+    }
     const dataAt = localAt + 30 + localNameLen + zip.readUInt16LE(localAt + 28);
-    const data = inflateRawSync(zip.subarray(dataAt, dataAt + size));
+    const data = inflateRawSync(zip.subarray(dataAt, dataAt + packedSize));
     const source = entries.find((e) => e.name === name);
+    if (data.length !== size || crc32(data) !== crc) fail(`zip: ${name}: size or CRC is wrong`);
     if (!source || !data.equals(source.data)) fail(`zip: ${name} doesn't match its source file`);
     names.push(name);
+    expectedLocalAt = dataAt + packedSize;
     at += 46 + nameLen + zip.readUInt16LE(at + 30) + zip.readUInt16LE(at + 32);
+  }
+  if (expectedLocalAt !== centralAt || at !== endAt || zip.readUInt32LE(endAt + 12) !== endAt - centralAt) {
+    fail("zip: the central directory isn't where the end record says");
   }
   if (names.filter((n) => n === ".claude-plugin/plugin.json").length !== 1) {
     fail("zip: must hold exactly one .claude-plugin/plugin.json, at the top level");
@@ -153,18 +203,17 @@ function checkZip(zip, entries) {
   if (names.some((n) => n.startsWith("/") || n.split("/").includes(".."))) fail("zip: unsafe path");
 }
 
+const entries = committedFiles();
 const version = checkPlugin();
-const files = listFiles(PLUGIN).map((full) => relative(PLUGIN, full).split(sep).join("/")).sort();
-if (files.length > MAX_FILES) fail(`${files.length} files, more than ${MAX_FILES}: check what got into plugins/unilytics`);
-const entries = files.map((name) => {
-  const full = join(PLUGIN, name);
-  if (statSync(full).size > MAX_BYTES) fail(`${name} is over ${MAX_BYTES} bytes`);
-  return { name, data: readFileSync(full) };
-});
+if (entries.length > MAX_FILES) fail(`${entries.length} files, more than ${MAX_FILES}: check what got into plugins/unilytics`);
 const zip = buildZip(entries);
-if (process.argv.includes("--check")) checkZip(zip, entries);
+if (process.argv.includes("--check")) {
+  checkZip(zip, entries);
+  checkDocLinks(version);
+}
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(OUT, zip);
 const sha256 = createHash("sha256").update(zip).digest("hex");
-console.log(`build-plugin: ${relative(ROOT, OUT)} · plugin v${version} · ${entries.length} files · ${zip.length} bytes · sha256 ${sha256}`);
-for (const name of files) console.log(`  ${name}`);
+const commit = git("rev-parse", "--short", "HEAD").toString().trim();
+console.log(`build-plugin: ${relative(ROOT, OUT)} · plugin v${version} · commit ${commit} · ${entries.length} files · ${zip.length} bytes · sha256 ${sha256}`);
+for (const { name } of entries) console.log(`  ${name}`);
