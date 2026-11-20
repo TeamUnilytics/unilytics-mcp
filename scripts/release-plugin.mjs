@@ -16,7 +16,10 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = "TeamUnilytics/unilytics-mcp";
 const ZIP = join(ROOT, "dist-plugin", "unilytics-plugin.zip");
+// run() returns the command's stdout; show() streams it to the terminal instead (execFileSync returns null when
+// stdout is inherited, so the two can't share one helper).
 const run = (cmd, args, opts = {}) => execFileSync(cmd, args, { cwd: ROOT, encoding: "utf8", ...opts }).trim();
+const show = (cmd, args) => execFileSync(cmd, args, { cwd: ROOT, stdio: ["ignore", "inherit", "inherit"] });
 
 function fail(message) {
   console.error(`release-plugin: ${message}`);
@@ -29,7 +32,7 @@ run("git", ["fetch", "origin", "main"]);
 const head = run("git", ["rev-parse", "HEAD"]);
 if (head !== run("git", ["rev-parse", "origin/main"])) fail("HEAD is not origin/main; pull first");
 
-run("node", ["scripts/build-plugin.mjs", "--check"], { stdio: ["ignore", "inherit", "inherit"] });
+show("node", ["scripts/build-plugin.mjs", "--check"]);
 const version = JSON.parse(readFileSync(join(ROOT, "plugins/unilytics/.claude-plugin/plugin.json"), "utf8")).version;
 const tag = `plugin-v${version}`;
 
