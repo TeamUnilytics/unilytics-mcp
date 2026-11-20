@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "unilytics": {
+      "type": "http",
+      "url": "https://mcp.unilytics.ai/mcp"
+    }
+  }
+}

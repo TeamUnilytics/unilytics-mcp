@@ -1,0 +1,19 @@
+{
+  "name": "unilytics",
+  "displayName": "Unilytics",
+  "version": "1.0.0",
+  "description": "Connects Claude to your Unilytics account: your saved skills, each client's Brand Context, Context records and Knowledge Base, and SEO, content and AEO research tools. You sign in with your Unilytics account; no key goes in a file.",
+  "author": {
+    "name": "Unilytics",
+    "url": "https://unilytics.ai"
+  },
+  "homepage": "https://unilytics.ai/docs/connect/",
+  "repository": "https://github.com/TeamUnilytics/unilytics-mcp",
+  "license": "MIT",
+  "keywords": ["seo", "aeo", "content", "marketing", "skills", "mcp"],
+  "icon": "./.claude-plugin/icon.png",
+  "documentationUrl": "https://unilytics.ai/docs/connect/",
+  "supportUrl": "https://github.com/TeamUnilytics/unilytics-mcp/issues",
+  "privacyPolicyUrl": "https://unilytics.ai/privacy-policy/",
+  "termsOfServiceUrl": "https://unilytics.ai/terms/"
+}

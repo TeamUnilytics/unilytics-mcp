@@ -16,6 +16,15 @@ Full guide: [Install the Unilytics extension for Claude Desktop](https://github.
 
 Prefer not to use a key? Claude can also connect with one link and your Google account: see [Connect Claude to Unilytics](https://unilytics.ai/docs/connect/).
 
+## Install in Claude (plugin)
+
+For a company Claude that blocks custom connectors but allows plugins. The plugin brings the Unilytics connector (you sign in with your Unilytics account, no key) and a "Use Unilytics" skill that starts each task from your saved skills.
+
+- **Claude (web and desktop):** Customize → Plugins → Add → Upload plugin, with **[unilytics-plugin.zip](https://github.com/TeamUnilytics/unilytics-mcp/releases/download/plugin-v1.0.0/unilytics-plugin.zip)**. Or add the marketplace `https://github.com/TeamUnilytics/unilytics-mcp`. Then open the plugin's **Connectors** tab and click **Connect**.
+- **Claude Code:** `/plugin marketplace add TeamUnilytics/unilytics-mcp`, then `/plugin install unilytics@unilytics`, then `/mcp` to sign in.
+
+Full guide: [Install the Unilytics plugin for Claude](https://github.com/TeamUnilytics/unilytics-mcp/blob/main/docs/user/claude-plugin.md). The plugin lives in `plugins/unilytics`, and the marketplace in `.claude-plugin/marketplace.json`. `npm run build:plugin` rebuilds the zip in `dist-plugin/` from the committed files. To release: bump `version` in `plugins/unilytics/.claude-plugin/plugin.json` and the two zip links (here and in the guide; the build fails until they agree), merge, then run `node scripts/release-plugin.mjs` on `main`. It publishes `plugin-v<version>`, never marked "latest", and checks that `releases/latest/download/unilytics.mcpb` still serves the Desktop extension. Marketplace installs pick up a change only when that `version` changes.
+
 ## Other MCP clients (npm)
 
 For Claude Code and other stdio clients. Needs Node 18 or newer.
@@ -48,8 +57,8 @@ The tools are served by Unilytics, so new and changed tools reach you without up
 
 | Group | What it's for | For example |
 |---|---|---|
-| Skills | Find, read and write your saved playbooks | `find_skill`, `list_skills`, `get_skill`, `create_skill`, `update_skill` |
-| Client context | Each client's Brand Kit, Context records and settings | `list_projects`, `get_project_context`, `propose_context_record`, `propose_brand_kit`, `list_context_gaps` |
+| Skills | Find, read and write your saved skills | `find_skill`, `list_skills`, `get_skill`, `create_skill`, `update_skill` |
+| Client context | Each client's Brand Context, Context records and settings | `list_projects`, `get_project_context`, `propose_context_record`, `propose_brand_kit`, `list_context_gaps` |
 | Knowledge Base and files | Store and search each client's documents, pages and files | `kb_search`, `kb_write_text`, `kb_add_urls`, `upload_file_to_project`, `create_upload_link` |
 | SEO research | Keywords, search results, on-page checks and page speed | `keyword_research`, `serp_results`, `on_page_audit`, `page_speed_audit`, `google_trends` |
 | AEO and AI search | Prompts to track, and how AI answers mention and cite a brand | `aeo_generate_prompts`, `aeo_prompt_volume`, `brand_visibility`, `ai_citation_check` |
