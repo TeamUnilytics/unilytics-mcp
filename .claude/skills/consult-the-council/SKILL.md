@@ -83,8 +83,11 @@ never inside the repo: `.claude/tmp/` isn't gitignored. If `$ARGUMENTS` names a 
 The models see only this file, so make it stand alone. Never include secrets, customer data or client names
 that aren't needed. When the input summarises a longer doc, say so and say where the sources live ("every figure
 has a primary source in the doc's §8"); otherwise a member flags "unsourced precision" that is an artefact of the
-summary, not a real gap (UNI-265). Source can hold secrets too: ul-langgraph's `mcp_server/auth.py` embeds a
-fallback Mongo URI with a password until UNI-10 lands, so redact it before pasting that file (UNI-169).
+summary, not a real gap (UNI-265). Source can hold secrets too: check what you paste for a key, a token or a
+credentialed URI and redact it (UNI-169). Redact the whole file, not only the secret your issue is about: a diff's
+context lines carry their neighbours, and UNI-10's input, with its Mongo URI redacted, still sent `helpers/settings.py`'s
+hardcoded Neon `POSTGRES_URI` to two providers. Before running, `grep -nE '[a-z+]+://[^/@ ]+:[^@ ]+@'` the input
+file and expect nothing but `<REDACTED>` placeholders.
 
 **Keep it under 30,000 characters.** The script refuses anything longer and tells you to trim it to the diff and
 the relevant excerpts. `--force-size --reason "<why>"` sends it anyway, with a warning and the reason in the spend log:
