@@ -410,7 +410,10 @@ home: `docs/handbook/linear-workflow.md`, "FOCUS". Link it, never copy it. Rules
 - **No browser in this session? Another dispatch session's browser runs the live tests** (2026-11-17: this loop ran
   on sj with no Chrome, chrome-devtools refused with EPERM on DevToolsActivePort, and every TEST PROMPT went to the
   interactive dispatch session, which ran them all). Send each TEST PROMPT there with its link and the real-data
-  rule, and say which session posts the TEST RESULT.
+  rule, and say which session posts the TEST RESULT. Only an interactive session has a browser: no background
+  session on any account can open app.unilytics.ai (2026-11-18: a univ `--bg` runner found Claude in Chrome's site
+  permissions block the app and DevTools refuse it with EPERM; a Terminal window opened by `osascript` timed out on
+  macOS's automation prompt). With no interactive session, the tests wait on one founder ask; don't retry these.
 - **A FOCUS item blocked on the founder is chased daily** in the check-in list, with its default; its worker-side steps
   run meanwhile (2026-11-11: directory listings waited 17 days on one approval).
 - **Linear is the record of what's built** (founder: "you already have issues, you have versioning, you have
@@ -562,6 +565,11 @@ with that problem named.
    - **Heuristics:** judge "confusing" against Nielsen's 10 usability heuristics, and name the one it breaks.
 4. **Backend and MCP pass** (the same day, for the walkthrough window and since the last entry):
    - `/aws-status`: Lambda errors, throttles and duration for both functions, recent error logs.
+   - `~/dev/ul-langgraph/.venv/bin/python -m mcp_server.ops.alarms status` (from a ul-langgraph checkout): the
+     dispatcher is the daily review owner of the on-call alarms (UNI-1381, `docs/sop/on-call.md`). Every alarm under
+     `FIRING NOW` gets an owner that day: its Linear issue (new, label Bug, or the existing one), named in the Daily
+     review. CloudWatch emails once per change, so an alarm in ALARM with no issue is the 15-day dead-rows failure
+     again. `DRIFT` (a silent alarm, an unconfirmed inbox) is fixed or filed the same way.
    - LangSmith `UnilyticsMCP`: errored and slow traces since the last walkthrough
      (`langsmith trace list --since …`).
    - From this session's own Unilytics MCP connection, if one is loaded: `tools/list` count against CLAUDE.md,

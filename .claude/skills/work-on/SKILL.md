@@ -725,7 +725,8 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    branch; the local one goes with the worktree (UNI-258).
 3. **Watch the deploy:** `gh run watch <run id> -R <owner/repo> --exit-status`. If it fails: read the log, tell
    the human, post a CHECKPOINT and stop (don't merge anything else). unilytics-mcp has no deploy; publishing to
-   npm is manual, so say so. A green run is not proof of a deploy: since UNI-575 (2026-11-14) ul-backend's Deploy
+   npm is manual, so say so. A docs-only ul-langgraph merge (`docs/**`, a root `*.md`) starts no deploy run at all
+   (UNI-608): say so instead of waiting for one. A green run is not proof of a deploy: since UNI-575 (2026-11-14) ul-backend's Deploy
    run holds the tests, and a run superseded by a newer one ends green with its `deploy` job skipped. Check the
    `deploy` job itself ran and succeeded (`gh run view <id> --json jobs`), or that the live version already
    contains your commit (ul-langgraph: the `lambda_release.py status` sha).
@@ -742,7 +743,8 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      classifier until the founder approves it in chat: ask once, early, and record the answer as a `Comments from
      Saven` comment (UNI-212). Sending injection payloads to prod with a real token stays blocked; cover those
      with the test suite and forged-token calls (UNI-224).
-   Timing checks (UNI-81): every merge, docs-only included, redeploys the Lambda and makes every container
+   Timing checks (UNI-81): every merge that deploys (in ul-langgraph, every one but a docs-only merge, UNI-608;
+   elsewhere, docs-only included) redeploys the Lambda and makes every container
    cold, so run "after N min idle" checks at least that long after the **last** merge to the repo. Numbers
    measured from outside India include ~0.45 s of TCP+TLS on a fresh connection; report first-call and warm
    (connection reused) separately, and read server time from `Server-Timing` or CloudWatch.
