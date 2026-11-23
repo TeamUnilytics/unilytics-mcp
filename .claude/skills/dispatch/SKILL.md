@@ -103,6 +103,12 @@ The founder runs several companies and has little time:
   and checking it's still needed. Only when the safety check refuses a step does it go to him, labelled as a
   refusal (what was refused and why), never as "your paste". What stays his: a password, 2FA, CAPTCHA, money, and
   the click that accepts a third party's terms.
+- **Before acting on a suggestion by hand, read all of it and do its preconditions first** (2026-11-22: on the
+  founder's "It was good, archiving braintrust" the dispatcher archived both Braintrust skills, skipping the flag's own
+  first step, copying their Braintrust-only data into the replacement; nothing was lost, and UNI-1484 had to draft the
+  carry-over afterwards). When the founder accepts an Agent Inbox item or any other agent's suggestion and you carry it
+  out yourself, open the full proposal (its brief, `suggest` lines and question), do every step it puts before the
+  change, and only then make the change.
 - **One Review pack, not a stream of asks** (founder, 2026-11-14: "send me a linear document like a review pack and
   I'll just review … every time there's something else new to be reviewed, just update it … only add stuff that
   you really need me to review. And yeah, the important ones on top"). The Linear team document *Review pack*
@@ -175,7 +181,10 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
     every 30-min expiry;
   - **`Monitor` on `ul-gh-watch`** (GitHub events: a PR merged, CI failed on an open PR, a deploy run failed),
     re-armed like `ul-watch`. Merges and failures wake you instead of waiting for a ping;
-  - a ScheduleWakeup heartbeat every 20–30 min.
+  - a ScheduleWakeup heartbeat every 20–30 min. **Not while idle on a nearly spent account** (2026-11-22: ten
+    hourly no-op ticks plus four founder tasks took sj from 77% to 96% in one afternoon): when no worker runs and the
+    account this dispatcher runs on is above 85% of its week, stop the heartbeat (ScheduleWakeup `stop`) and wait for
+    the founder's message or a monitor event.
 - **Remote Control is on for every dispatch session, titled `/dispatch --loop orchestrator`** (founder, 2026-11-12:
   "Remote Control must be on every time a dispatch session starts … I shouldn't ever have to type /remote-control").
   Claude in the founder's Duet channel finds this session by that title and reads it; that is how `ASK:` blocks reach
