@@ -612,6 +612,13 @@ with that problem named.
      - AI drafts for Brand Kit and Context: accurate, sourced, in the client's voice?
      - AEO answers.
      File quality issues with examples, not "it loads".
+   - **Agent Inbox dogfood** (founder, 2026-11-23: "this dogfooding is important"). Read every open suggestion in
+     savenjudes's Agent Inbox the way he would, read-only (his answers and approvals are his tests of the product, never
+     yours to carry out), and open the skill each one targets. Judge three things: is it worth doing for this skill,
+     can a consultant read it at a glance, and can it be acted on from the Inbox. Put the findings on the feature's
+     issues, one consolidated comment each with the exact examples, and any lasting rule in `docs/plans/skill-lab-spec.md`
+     §6.1.1 ("What a suggestion must be"). Tell the founder the result in 2–3 plain lines, never a dense table
+     (founder, 2026-11-23: "even your analysis is too complicated for me to read … I just want it fixed").
    - **What would make it great.** For each feature you touched, give one line on the next improvement, any new
      idea the result suggests, and what breaks at 10× and 100× (users, skills, KB size, runs). File the good ones in
      Backlog with an ICE score and an Evidence label.
