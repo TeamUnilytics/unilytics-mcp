@@ -650,9 +650,10 @@ you're repeating an action; you're unsure the approach is right; or the human ty
 
 ## 9. Ship + hand off
 
-- `/ship` (PR title starts with `UNI-123:`; Linear moves the issue to In Review automatically).
-  **Local:** open it as a draft (`gh pr create --draft …`, or `gh pr ready <n> --undo` right after
-  `/ship`). The dispatcher's Opus review marks it ready for the human.
+- `/ship`, **as a draft** (PR title starts with `UNI-123:`): `gh pr create --draft …`, or `gh pr ready <n> --undo`
+  right after `/ship` (UNI-1494: a draft runs no test suite or image build, so the review rounds, the council on the
+  diff, fix-ups and origin/<deploy> merges cost no CI minutes). It's marked ready at the merge gate (step 10), which
+  runs the full CI once. **Local:** it stays a draft; the dispatcher's Opus review marks it ready.
 - `save_comment` handoff on the issue:
   ```
   Handoff — PR <url> · runner <univ|ul|univ-api|local>
@@ -678,12 +679,26 @@ you're repeating an action; you're unsure the approach is right; or the human ty
 
 The human tests only on the deployed product, never locally. So an Opus worker finishes its own issue end to end.
 1. **Merge gate.** Merge only if ALL of these hold. Otherwise say which one failed, post a `QUESTION:` (+ Needs
-   input) if the human must act, and stop:
+   input) if the human must act, and stop. **Mark it ready last (UNI-1494):** when every other item below holds, you
+   have merged the latest origin/<deploy> and the last draft push's runs have finished, run
+   `gh pr ready <n> -R <owner/repo>`. That starts the PR's full CI run (tests, image builds), which skipped every job
+   while it was a draft. The draft's checks are already finished, so `gh pr checks --watch` can return at once:
+   first wait until the run for `ready_for_review` exists (`gh run list -R <owner/repo> --branch <branch> --event
+   pull_request --limit 3` shows a newer run than the draft's), then `--watch`. The proof the full run happened is a
+   check that only a draft skips: in ul-langgraph `pytest` (and `changes`) must be **pass** on the PR's current head.
+   Other jobs may still show "skipping" where that run's `changes` decided so (egress-image when its inputs didn't
+   change; the image and Lab jobs on a docs-only PR; `lambda-image-again` / `egress-image-again` whenever
+   public.ecr.aws didn't refuse the first job, UNI-1547). When a twin did run, its result is the image check: a green
+   `lambda-image` that warns `public.ecr.aws quota (retrying on a fresh runner)` built nothing, so the twin must be
+   **pass**. Every job shows "skipping" again after `gh pr ready` (a late
+   draft push's run can cancel the ready run): `gh pr ready <n> --undo`, then `gh pr ready <n>` again. A fix after
+   this pushes to the ready PR and runs CI again, so fix everything you can while it is still a draft:
    - Verify is green and the fresh-context review found nothing blocking.
    - Important work (step 6): the council ran on the plan (and on the diff for security, billing or migrations),
      and every REVISE point is fixed or answered in the WORKLOG.
    - No band-aid in the diff (engineering bar). If a reviewer would call something a workaround, it isn't ready.
-   - The PR isn't a draft, its title has no "DO NOT MERGE", and the issue isn't parked (e.g. under UNI-73).
+   - You marked the PR ready at this step (a local runner's draft waits for the dispatcher), its title has no "DO NOT
+     MERGE", and the issue isn't parked (e.g. under UNI-73). GitHub refuses to merge a draft.
    - Every `blockedBy` issue is Done (merged and deployed), so multi-repo features land in dependency order.
    - No other deploy is running in this repo (`gh run list -R <owner/repo> --limit 3`: nothing in progress).
    - Nothing the deploy needs is missing: an env var or secret, a migration, a manual step. Never merge first
@@ -703,6 +718,10 @@ The human tests only on the deployed product, never locally. So an Opus worker f
      `connections/pricing.py` do; prove it with `gate_verify`). If that can't be done, CHECKPOINT "gate record
      blocked on UNI-946's Skill Lab key". 2026-11-14: UNI-281 and UNI-239 spent $13.68 of production's credit,
      because `model_key()` silently fell back to the repo `.env`'s production key (UNI-1180 removes the fallback).
+     A key that's there can still be at its workspace's monthly limit (every call a 400 "You have reached your
+     specified workspace API usage limits"): make one tiny call on it before a gate run. A gate run on it errors every
+     item, yet still re-pins its errored baseline in LangSmith and overwrites the record file (UNI-1524; UNI-525
+     restored the Linter's pin by hand). At the limit, the agent half goes to its own issue, as UNI-1557 did.
      Merge origin/dev into the PR first:
      the check doesn't re-run when dev moves, and re-running an old run keeps its old merge commit.
      **Missing blocks like red** (UNI-669: the first version never ran, and four PRs merged without it). Pending,
@@ -725,7 +744,7 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    branch; the local one goes with the worktree (UNI-258).
 3. **Watch the deploy:** `gh run watch <run id> -R <owner/repo> --exit-status`. If it fails: read the log, tell
    the human, post a CHECKPOINT and stop (don't merge anything else). unilytics-mcp has no deploy; publishing to
-   npm is manual, so say so. A docs-only ul-langgraph merge (`docs/**`, a root `*.md`) starts no deploy run at all
+   npm is manual, so say so. A docs-only ul-langgraph merge (`docs/**`, a root `*.md`, `.claude/**`) starts no deploy run at all
    (UNI-608): say so instead of waiting for one. A green run is not proof of a deploy: since UNI-575 (2026-11-14) ul-backend's Deploy
    run holds the tests, and a run superseded by a newer one ends green with its `deploy` job skipped. Check the
    `deploy` job itself ran and succeeded (`gh run view <id> --json jobs`), or that the live version already
