@@ -256,7 +256,7 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   - `ul-slack handoff|ask|post|reply|react|read` and `ul-slack-watch`: the agents channel (below);
   - `~/.ul-dispatch/events.jsonl` (StopFailure / SessionEnd / Notification lines) and `launches.log`.
 - **Each tick:**
-  1. Read `ul-limits`, new `events.jsonl` lines, `claude agents --json` and Linear (In Progress, `QUESTION`s,
+  1. Read `ul-limits` (and pace the week: "Pace the week to finish near 100%" below), new `events.jsonl` lines, `claude agents --json` and Linear (In Progress, `QUESTION`s,
      `DECISION NEEDED (dispatcher)` comments, handoffs). Decide each `DECISION NEEDED` the same tick and reply on it
      (`/work-on` "Is it the founder's at all?"). For every session that is `blocked` or `done`, read the end of `claude logs <id>`. The founder
      sometimes answers in a worker's tab ("shipped already"), and a worker sometimes waits there on a question it
@@ -325,6 +325,28 @@ relaunch workers yourself; **never hand the founder a launch command** ("why are
   is separate from where its workers run. `ul` only when the founder says so; univ-api (the API credit) as overflow
   for the top 1–2 issues when both plans are over their caps. **Model: always Opus 5.5.** Full rule:
   `docs/handbook/model-runners.md` "Workers run on sj".
+- **Pace the week to finish near 100%** (founder, 2026-11-24: "on every check-in, read the 7-day usage utilization
+  and its reset time. If the reset is within 24 hours and utilization is below where it should be to finish the
+  week near 100%, raise the worker count from the backlog until it is on track"). Every tick:
+  1. `ul-limits --json`: for the account workers run on, `seven_day_pct` and `seven_day_resets_at`. Append
+     `<ISO time> <account> <pct> <reset> <workers running>` to `~/.ul-dispatch/usage-pace.log`.
+  2. Burn rate = the % rise per hour since the read about an hour earlier in that log, at the workers that ran then
+     (no earlier read yet: count ~0.7% per worker-hour, measured 2026-11-24: 52% → 56% in ~1.3 h at ~4 workers).
+  3. When the reset is ≤ 24 h away: projected = pct + rate × hours left. Below 95%, launch more workers from the
+     ranked queue (FOCUS first, then the backlog by priority: `--force-reason "pacing: <account> <pct>% with <h> h
+     to reset"`, which this rule authorises) until rate × hours left ≥ 100 − pct − 5, about
+     workers × (100 − pct − 5) / (rate × hours left). Re-check next tick; never past the 5-hour limit or 100%.
+     Everything else still holds: one worker per issue, one merge at a time per repo, repo + Area clashes, and
+     nothing that needs the founder's yes (money, secrets, sends) goes ahead without it.
+  4. **A limit that stops a worker or the dispatcher is recorded, never guessed** (founder, same day: "if a limit
+     stops you, record which limit it was … so a stop on one cap doesn't leave the rest of the weekly usage idle").
+     Read the refusal text (`claude logs <id>`, `events.jsonl` StopFailure): which limit (the 5-hour window, the
+     7-day overall limit, or a model-specific weekly cap such as Opus), the account, and its reset time. Write one
+     line under `## LIMITS` at the top of `~/.ul-dispatch/state.md` and in the Diary. A model-specific cap stops
+     only that model: if the 7-day overall limit still has room, carry on with work that cap doesn't cover rather
+     than leave the week idle; workers stay on Opus 5.5 unless the founder names another model (`/work-on` has no
+     non-Opus runner today), so in practice that means the other accounts' room and the dispatcher's own
+     non-worker steps. Relaunch the stopped workers at that limit's reset.
 - **Autopilot by default:** every spec-complete issue gets the Autopilot block (council replaces plan approval).
   One-way doors are built in the reversible form and listed in the Daily review.
 - **Pulse runs by itself (UNI-993):** the LaunchAgent `ai.unilytics.ul-pulse` posts the **Daily review** entry from
