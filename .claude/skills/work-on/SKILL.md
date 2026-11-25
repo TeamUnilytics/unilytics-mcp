@@ -736,13 +736,13 @@ The human tests only on the deployed product, never locally. So an Opus worker f
    `gh pr merge <n> -R <owner/repo> --merge --delete-branch`. If the safety check blocks it, ask the human
    "OK to merge PR #<n> into <branch>? It deploys to production." and merge after they say yes.
    Right after a push, `gh pr merge` fails with "not mergeable" until the PR's checks finish: run
-   `gh pr checks <n> -R <owner/repo> --watch` first. If another PR merged meanwhile, `git merge origin/<deploy>`,
+   `gh pr checks <n> -R <owner/repo> --watch --interval 90` first. If another PR merged meanwhile, `git merge origin/<deploy>`,
    push, and wait for the checks again (UNI-94). Right after `gh pr create`, `--watch` exits 1 with "no checks
    reported" because the workflow hasn't queued yet: take the run id from `gh pr view <n> --json statusCheckRollup`
-   and `gh run watch <id> --exit-status` (UNI-258). In a worktree you took over, `git fetch origin` and merge the
+   and `gh run watch <id> -i 90 --exit-status` (UNI-258). **Never poll GitHub faster than every 60 s** (`--interval 90` / `-i 90`; the defaults are 10 s and 3 s): every session on one `gh` login shares one API limit, and ~16 parallel sessions on the defaults used it up on 2026-11-23 and 11-24, so every worker's merge stalled. In a worktree you took over, `git fetch origin` and merge the
    deploy branch right before merging (UNI-212). `--delete-branch` run from the worktree deletes only the remote
    branch; the local one goes with the worktree (UNI-258).
-3. **Watch the deploy:** `gh run watch <run id> -R <owner/repo> --exit-status`. If it fails: read the log, tell
+3. **Watch the deploy:** `gh run watch <run id> -R <owner/repo> -i 90 --exit-status`. If it fails: read the log, tell
    the human, post a CHECKPOINT and stop (don't merge anything else). unilytics-mcp has no deploy; publishing to
    npm is manual, so say so. A docs-only ul-langgraph merge (`docs/**`, a root `*.md`, `.claude/**`) starts no deploy run at all
    (UNI-608): say so instead of waiting for one. A green run is not proof of a deploy: since UNI-575 (2026-11-14) ul-backend's Deploy
