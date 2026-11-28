@@ -122,7 +122,11 @@ a ping is the doorbell.
   blocker), make it a Linear `blockedBy` relation, ping, then end the session. A finished or parked session that
   stays open holds one of the account's 4 launch slots. The dispatcher relaunches you in the same worktree when
   the blocker is Done (2026-11-02: UNI-231 waited idle on UNI-410 and the founder had to step in).
-- **Done means exit.** After the Handoff, the Done move and the last ping, end the session.
+- **Done means exit, and the Handoff is not Done.** End the session only after step 10: merged, deploy checked,
+  TEST RESULT posted, the Done move and the last ping. The step 9 Handoff is written while the PR is still a draft,
+  so go straight on to step 10 in the same session (2026-11-27: UNI-1617, UNI-1614 and UNI-1437 ended right after a
+  draft-PR Handoff, and each needed a relaunch to merge). The only stops before step 10 are a merge-gate failure
+  (its `QUESTION` + `CHECKPOINT`) and a local runner's draft.
 - **Autopilot issues:** after the claim, run the rest under
   `/goal the issue's Verify passed and the Handoff comment is posted, or stop after 40 turns`.
   After a usage-limit stop you're relaunched in the same worktree: re-read the WORKLOG and carry on. Don't start
@@ -232,6 +236,9 @@ around to answer. So:
 ## Worktree safety — every runner (trial 2026-10-15, UNI-55)
 
 Parallel workers share this Mac and the human's main checkouts hold uncommitted work.
+- The worktree guard refuses a command whose text names `github` together with a redirect or a loop (e.g.
+  `gh api …/contents/… > file`, a `for` loop over `gh` calls) and `python3 - <<EOF` edits. Write the command to a
+  script in the job's tmp folder and run that (UNI-1653, UNI-1643, 2026-11-27).
 - Run every command inside **your** worktree. Never `cd` into `~/dev/<repo>` (the main checkout) or another
   worktree.
 - Never `git stash` (the stash is shared across worktrees) and never `git checkout` another branch here.
@@ -671,6 +678,10 @@ you're repeating an action; you're unsure the approach is right; or the human ty
   ```
   The dispatcher folds these into the target file's existing section (no dated addenda). Write each so it
   makes sense to someone who never saw this session.
+  **Name who decided, exactly.** A decision is the founder's only when his own words are quoted with their date and
+  place (a comment, an `ANSWER:`, the memoir). An answer to your ask from `ul-answer`, a dispatcher `DECISION`
+  comment or the council is "the dispatcher" or "the council", never "Saven" (2026-11-27: five Handoffs, UNI-1615,
+  1618, 1624, 1635 and 1643, credited dispatcher answers to the founder, and each needed a correction).
 - New bugs or follow-ups you found → new issues in the right project, linked `relatedTo`/`blockedBy`.
 - **Opus runners (univ, ul, univ-api): continue with step 10.** You merge, watch the deploy and hand the human a
   test prompt. **Local:** stop at the draft PR. The dispatcher reviews it, then does step 10 for it.
